@@ -1,0 +1,22 @@
+[project]
+name = "justchess"
+version = "0.1.0"
+description = "Anonymous multiplayer chess and interactive opening training"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.30,<1",
+  "jinja2>=3.1,<4",
+  "python-chess>=1.999",
+  "python-multipart>=0.0.9",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8,<10",
+  "httpx>=0.27,<1",
+]
+
+[tool.uv]
+package = false
