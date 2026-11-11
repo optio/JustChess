@@ -1,26 +1,35 @@
 # JustChess
 
-Minimal anonymous multiplayer chess with FastAPI, HTMX, WebSockets, SQLite and python-chess.
+**Play. Learn. Improve.** Anonymous two-player chess with room codes and interactive opening lessons.
 
-## Run
+Built with FastAPI, HTMX, lightweight JavaScript, WebSockets, SQLite and python-chess. No accounts, subscriptions, matchmaking or computer-opponent games.
+
+## Getting started (uv)
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app:app --reload
+git clone https://github.com/optio/JustChess.git
+cd JustChess
+uv sync
+uv run uvicorn app:app --reload
 ```
 
-Open http://localhost:8000 in two browser tabs. Create a room, share its code, and join from the other tab. Players are identified by private per-room browser tokens, not accounts.
+Open http://localhost:8000 in two browser tabs. Create a room, share the six-character code and join in the second tab.
 
-## MVP features
+Use `uv sync --dev` to install development dependencies, and `uv run pytest` once tests are added. Run `uv lock` and commit the generated `uv.lock` to pin resolved dependencies for reproducible installs.
 
-- Legal move highlights, castling, en passant, promotion, checkmate and draws through python-chess
-- Live two-player updates with WebSockets and reconnect snapshots
-- Room-code invitations and session scoreboard
-- Guided Italian Game and Monte Carlo opening practice
-- In-tab notifications when a player joins or moves (requires permission)
+## Implemented in the initial prototype
 
-## Limitations
+- Room-code invitations and anonymous per-room player tokens stored in sessionStorage
+- Legal move validation with python-chess, including castling, en passant and promotion
+- Click/tap board with legal move highlights, WebSocket state updates and reconnect snapshots
+- Minimal SQLite game persistence and win scoreboard
+- Linear Italian Game and French Defense Monte Carlo walkthrough/practice
+- Notification API alerts while the browser session is active and permission is granted
 
-Run a **single Uvicorn worker**: WebSocket fan-out is in-process. For multiple workers, add Redis pub/sub. SQLite persists games, but not WebSocket connections. Browser push when the tab is closed is not implemented. Training lines are curated; unknown opponent moves are not evaluated by an engine. No accounts or matchmaking. Room tokens are stored in sessionStorage and are lost when that browser session is cleared.
+See [REQUIREMENTS.md](REQUIREMENTS.md) for the full product specification, feature acceptance criteria and roadmap. Items listed there are **not necessarily implemented**.
+
+## Current limitations
+
+This is an unverified MVP, not a production release. Run with **one Uvicorn worker** because WebSocket fan-out uses in-process memory. Multi-worker deployments require shared pub/sub. No service-worker Web Push for closed tabs yet. Lessons are curated linear lines; no opponent-branching decision tree, arbitrary-move evaluation, Monaco lesson, or comprehensive automated tests yet. Room tokens are lost when the browser session storage is cleared. For production, add abuse controls, expiry, accessibility checks and tests.
