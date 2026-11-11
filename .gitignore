@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# JustChess local data
+justchess.sqlite3
+justchess.sqlite3-*
+*.sqlite3
+*.sqlite3-*
