@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JustChess — Play. Learn. Improve.</title>
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header><h1>♞ JustChess</h1><p>No accounts. No subscriptions. Just chess.</p></header>
+<main>
+<section class="panel" id="lobby"><h2>Play with a friend</h2>
+<button id="create">Create game</button>
+<form id="join"><input id="code" maxlength="6" placeholder="6-character room code" required><button>Join game</button></form>
+<p id="lobby-error" role="alert"></p></section>
+<section class="panel hidden" id="game">
+<div class="heading"><h2>Room <span id="room-code"></span></h2><button id="copy">Copy code</button></div>
+<p id="game-status"></p><div id="board" class="board" aria-label="Chessboard"></div>
+<p id="score"></p><p id="moves"></p><p id="game-error" role="alert"></p>
+<button id="notify">Enable notifications</button></section>
+<section class="panel"><h2>Learn openings</h2><p>Watch the moves, then practice from memory.</p>
+<select id="lesson"><option value="italian">Italian Game</option><option value="monte-carlo">Monte Carlo Variation</option></select>
+<button id="load-lesson">Load lesson</button>
+<div id="training" class="hidden"><p id="lesson-title"></p><div id="training-board" class="board"></div>
+<p id="lesson-note"></p><div class="controls"><button id="prev-step">Back</button><button id="next-step">Next</button><button id="practice">Practice</button><button id="reset-lesson">Restart</button></div></div>
+</section>
+</main>
+<script src="/static/app.js"></script>
+</body></html>
