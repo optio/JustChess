@@ -66,6 +66,8 @@ DEFAULTS: dict = {
     "blunder_check": {"time_budget_ms": 250},
     "client": {"capture_animation_ms": 260, "your_games_refresh_seconds": 60, "computer_retry_limit": 3,
                "computer_retry_delay_seconds": 5, "join_poll_seconds": 3},
+    "endgames": {"defender_skill": 20, "defender_think_seconds": 1.0, "hold_moves": 30, "max_plies": 300,
+                 "play_per_minute": 30, "refusal_queue": 16, "wait_limit_seconds": 30},
 }
 
 
@@ -120,6 +122,9 @@ SPEC: dict = {
     "client": {"capture_animation_ms": _integer(0, 2000), "your_games_refresh_seconds": _number(10, 3600),
                "computer_retry_limit": _integer(0, 20), "computer_retry_delay_seconds": _number(1, 300),
                "join_poll_seconds": _number(1, 60)},
+    "endgames": {"defender_skill": _integer(0, 20), "defender_think_seconds": _number(0.05, 10),
+                 "hold_moves": _integer(1, 200), "max_plies": _integer(10, 1000), "play_per_minute": _integer(1, 1000),
+                 "refusal_queue": _integer(0, 1000), "wait_limit_seconds": _number(1, 300)},
 }
 
 
@@ -160,6 +165,19 @@ class Level:
 
 
 @dataclass(frozen=True)
+class EndgameSettings:
+    """P2 U6: the endgame trainer's defender, hold target, attempt cap, limits and wait (times in seconds)."""
+
+    defender_skill: int = 20
+    defender_think: float = 1.0
+    hold_moves: int = 30
+    max_plies: int = 300
+    play_per_minute: int = 30
+    refusal_queue: int = 16
+    wait_limit: float = 30.0
+
+
+@dataclass(frozen=True)
 class Gameplay:
     """The loaded settings, times in seconds, plus where they came from."""
 
@@ -182,6 +200,7 @@ class Gameplay:
     idle_room_retention: float
     blunder_budget_ms: int
     client: dict[str, int] = field(default_factory=dict)
+    endgames: EndgameSettings = field(default_factory=EndgameSettings)
     source: str = BUILT_IN
 
     def client_json(self) -> dict[str, int]:
@@ -194,6 +213,10 @@ def _build(values: dict, source: str) -> Gameplay:
     if engine["hint_refusal_queue"] > engine["queue_cap"]:
         raise GameplayError(f"{source}: engine.hint_refusal_queue must not be above engine.queue_cap "
                             f"(got {engine['hint_refusal_queue']} > {engine['queue_cap']})")
+    endgame = values["endgames"]
+    if endgame["refusal_queue"] > engine["queue_cap"]:
+        raise GameplayError(f"{source}: endgames.refusal_queue must not be above engine.queue_cap "
+                            f"(got {endgame['refusal_queue']} > {engine['queue_cap']})")
     levels = {level: Level(level, LEVEL_NAMES[level], row["skill"], float(row["think_seconds"]), row["depth"],
                            float(row["random_move_chance"]))
               for level, row in values["computer"]["levels"].items()}
@@ -224,6 +247,15 @@ def _build(values: dict, source: str) -> Gameplay:
             "computerRetryDelayMs": round(client["computer_retry_delay_seconds"] * 1000),
             "joinPollMs": round(client["join_poll_seconds"] * 1000),
         },
+        endgames=EndgameSettings(
+            defender_skill=endgame["defender_skill"],
+            defender_think=float(endgame["defender_think_seconds"]),
+            hold_moves=endgame["hold_moves"],
+            max_plies=endgame["max_plies"],
+            play_per_minute=endgame["play_per_minute"],
+            refusal_queue=endgame["refusal_queue"],
+            wait_limit=float(endgame["wait_limit_seconds"]),
+        ),
         source=source,
     )
 

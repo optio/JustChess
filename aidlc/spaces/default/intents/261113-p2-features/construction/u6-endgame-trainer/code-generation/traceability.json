@@ -1,0 +1,23 @@
+{
+  "stage": "code-generation",
+  "unit": "u6-endgame-trainer",
+  "upstream_ids": ["FR6.7","FR8.1","FR8.2","BR1.1","BR1.2","BR2.1","BR2.2","BR2.3","BR2.4","BR2.6","BR2.5","BR3.1","BR3.2","BR3.3","BR4.1","BR4.2"],
+  "coverage": [
+    { "id": "FR6.7", "status": "OK", "target": "tests/core/test_endgames_api.py" },
+    { "id": "FR8.1", "status": "OK", "target": "static/js/training/endgame-state.js" },
+    { "id": "FR8.2", "status": "OK", "target": "justchess/endgames.py" },
+    { "id": "BR1.1", "status": "OK", "target": "justchess/endgames.py" },
+    { "id": "BR1.2", "status": "OK", "target": "tests/test_endgames_content.py" },
+    { "id": "BR2.1", "status": "OK", "target": "tests/test_endgame_judge.py" },
+    { "id": "BR2.2", "status": "OK", "target": "tests/test_endgame_judge.py" },
+    { "id": "BR2.3", "status": "OK", "target": "tests/test_endgame_judge.py" },
+    { "id": "BR2.4", "status": "OK", "target": "justchess/endgames.py" },
+    { "id": "BR2.6", "status": "OK", "target": "justchess/endgames.py" },
+    { "id": "BR2.5", "status": "OK", "target": "justchess/api.py" },
+    { "id": "BR3.1", "status": "OK", "target": "justchess/api.py" },
+    { "id": "BR3.2", "status": "OK", "target": "tests/core/test_endgames_api.py" },
+    { "id": "BR3.3", "status": "OK", "target": "justchess/gameplay.py" },
+    { "id": "BR4.1", "status": "OK", "target": "tests/js/endgame-tab.test.mjs" },
+    { "id": "BR4.2", "status": "OK", "target": "static/js/training/endgame.js" }
+  ]
+}

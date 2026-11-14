@@ -1,0 +1,25 @@
+# Queen mate: king and queen against a lone king. Goal: checkmate.
+# Schema: see "Endgame trainer" in README.md. The player is the side to move.
+# Every position was checked with python-chess (legal, not over) and is a forced mate.
+positions:
+  - id: queen-first-steps
+    title: First steps with the queen
+    fen: 8/8/8/4k3/8/8/8/3QK3 w - - 0 1
+    goal: mate
+    hint: >-
+      Use the queen to fence the king into a smaller and smaller box, a knight's
+      move away from it. Then walk your own king up to help deliver mate.
+  - id: queen-mind-the-stalemate
+    title: Mind the stalemate
+    fen: k7/8/8/2Q5/8/8/8/6K1 w - - 0 1
+    goal: mate
+    hint: >-
+      The cornered king has almost no squares. Do not take the last one: leave
+      it a move, bring your king closer first, then mate.
+  - id: queen-mate-as-black
+    title: Queen mate as Black
+    fen: 4k3/8/2q5/8/8/8/5K2/8 b - - 0 1
+    goal: mate
+    hint: >-
+      The same plan from the other side: cut the white king off with the queen,
+      push it to the edge, then bring your king down to finish.

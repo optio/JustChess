@@ -68,6 +68,14 @@ unchanged. CC0 asks for no credit, but the app shows "Puzzles from the Lichess
 puzzle database, released under CC0." under the Tactics list and on the puzzle
 screen. Nothing is downloaded at runtime.
 
+## Endgame positions (data, outside `static/`)
+
+The endgame trainer's positions in `endgames/*.yaml` (project root, one file
+per category: `queen-mate`, `rook-mate`, `king-pawn`, `opposition`) were
+written for JustChess. The positions are standard textbook endgame ideas, and
+every title and hint is in our own words. No third-party file, no licence
+needed, nothing downloaded.
+
 ## Project-made files
 
 - `logo.svg`: the JustChess mark (2×2 checker in a walnut tile with a brass

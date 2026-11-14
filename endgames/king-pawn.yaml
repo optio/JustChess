@@ -1,0 +1,26 @@
+# King and pawn against king. Goal: promote the pawn, or (as the lone king) hold the draw.
+# Schema: see "Endgame trainer" in README.md. The player is the side to move.
+# Every position was checked with python-chess (legal, not over); the results were
+# confirmed with Stockfish's king-and-pawn knowledge.
+positions:
+  - id: kp-king-leads
+    title: The king leads the way
+    fen: 8/8/4k3/8/4K3/8/4P3/8 w - - 0 1
+    goal: promote
+    hint: >-
+      Keep your king in front of the pawn and step forward with it. Stepping
+      back gives the black king the squares it needs to stop the pawn.
+  - id: kp-count-the-square
+    title: Count the square
+    fen: 8/8/8/5k2/P7/8/8/6K1 w - - 0 1
+    goal: promote
+    hint: >-
+      Picture a square from the pawn to the last rank. The black king is just
+      outside it, so the pawn can run alone. Push now: a king move lets it in.
+  - id: kp-block-the-pawn
+    title: Get in front of the pawn
+    fen: 8/8/8/8/2k5/3PK3/8/8 b - - 0 1
+    goal: draw
+    hint: >-
+      As the defender, stand right in front of the pawn. Step to d5 now and keep
+      blocking its path; once the pawn gets past your king it will promote.

@@ -1,0 +1,10 @@
+{
+  "stage": "functional-design",
+  "unit": "u6-endgame-trainer",
+  "upstream_ids": ["FR6.7","FR8.1","FR8.2"],
+  "coverage": [
+    { "id": "FR6.7", "status": "OK", "target": "BR3.1, BR3.3, BR4.1" },
+    { "id": "FR8.1", "status": "OK", "target": "BR4.1, BR3.1" },
+    { "id": "FR8.2", "status": "OK", "target": "BR1.1, BR1.2, BR2.1, BR2.2, BR2.3, BR2.4, BR2.5, BR2.6, BR3.2, BR4.2" }
+  ]
+}

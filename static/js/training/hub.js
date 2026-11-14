@@ -12,6 +12,8 @@
  *                every access in try/catch; without storage the first tab is used)
  *   onOpenLesson(id)     a lesson row's Learn button (the app opens /learn/<id>)
  *   onOpenTheme(theme)   a theme row's Solve button (the app opens /learn/tactics/<theme>)
+ *   context      extra fields every tab loader receives (P2 U6: { endgamesApi, onOpenEndgame }
+ *                for the Endgames tab registered by the app)
  *
  * Tabs follow the ARIA tablist pattern: one tab in the tab order, Left/Right
  * move (wrapping), Home/End jump, and the selection follows focus. Each tab
@@ -140,6 +142,7 @@ export function mountHub(element, {
   initialTab = null,
   onOpenLesson = () => {},
   onOpenTheme = () => {},
+  context = {},
 } = {}) {
   if (!(element instanceof Element)) throw new TypeError("mountHub needs a container element");
   const tabs = registry.tabs();
@@ -227,7 +230,7 @@ export function mountHub(element, {
 
   async function load(tab) {
     try {
-      const result = await loaderFor(tab)({ api, progress, signal: controller.signal, onOpenLesson, onOpenTheme });
+      const result = await loaderFor(tab)({ ...context, api, progress, signal: controller.signal, onOpenLesson, onOpenTheme });
       if (destroyed || (result && result.aborted)) return;
       results.set(tab.id, result || { rows: [], solved: 0, total: 0 });
     } catch (error) {

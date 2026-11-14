@@ -1,0 +1,25 @@
+# Rook mate: king and rook against a lone king. Goal: checkmate.
+# Schema: see "Endgame trainer" in README.md. The player is the side to move.
+# Every position was checked with python-chess (legal, not over) and is a forced mate.
+positions:
+  - id: rook-cut-off
+    title: Cut the king off
+    fen: 8/8/8/4k3/8/8/8/R3K3 w - - 0 1
+    goal: mate
+    hint: >-
+      Put the rook on a file or rank to split the board. Bring your king up to
+      face theirs, then check from the side to push it back one row at a time.
+  - id: rook-waiting-move
+    title: The waiting move
+    fen: 4k3/8/3K4/8/8/8/8/7R w - - 0 1
+    goal: mate
+    hint: >-
+      Your king is nearly in place. A quiet rook move that keeps the king boxed
+      in makes it step in front of yours. Then check along the back rank.
+  - id: rook-mate-as-black
+    title: Rook mate as Black
+    fen: r3k3/8/8/8/8/8/8/4K3 b - - 0 1
+    goal: mate
+    hint: >-
+      Keep the white king on its first rank with the rook, bring your king down
+      to stand opposite it, then give check along the rank.

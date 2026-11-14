@@ -85,6 +85,26 @@ def test_a_bad_value_is_rejected_with_the_key_named(tmp_path, text, named) -> No
     assert str(bad) in str(refused.value), "the message names the file"
 
 
+def test_the_endgames_section_is_validated_and_typed(tmp_path) -> None:
+    """P2 U6: endgames.* keys, their fallbacks in justchess.endgames, and the queue_cap cross-check."""
+    from justchess import endgames
+
+    defaults = DEFAULT_GAMEPLAY.endgames
+    assert (defaults.defender_skill, defaults.defender_think, defaults.hold_moves, defaults.max_plies,
+            defaults.play_per_minute, defaults.refusal_queue, defaults.wait_limit) == (20, 1.0, 30, 300, 30, 16, 30.0)
+    assert (endgames.DEFAULT_HOLD_MOVES, endgames.DEFAULT_MAX_PLIES) == (defaults.hold_moves, defaults.max_plies)
+    tuned = gameplay.from_mapping({"endgames": {"hold_moves": 10, "wait_limit_seconds": 2.5}})
+    assert (tuned.endgames.hold_moves, tuned.endgames.wait_limit, tuned.endgames.max_plies) == (10, 2.5, 300)
+    for text, named in (("endgames:\n  defender_skill: 21\n", "endgames.defender_skill must be an integer from 0 to 20"),
+                        ("endgames:\n  wait_limit_seconds: 0.5\n", "endgames.wait_limit_seconds must be a number"),
+                        ("endgames:\n  refusal_queue: 40\n", "endgames.refusal_queue must not be above engine.queue_cap"),
+                        ("endgames:\n  depth: 3\n", "unknown key endgames.depth")):
+        bad = tmp_path / "bad.yaml"
+        bad.write_text(text, encoding="utf-8")
+        with pytest.raises(GameplayError, match=re.escape(named)):
+            load_gameplay(bad)
+
+
 def test_a_missing_file_falls_back_to_the_defaults_and_says_so(tmp_path, monkeypatch, caplog) -> None:
     monkeypatch.setattr(gameplay, "DEFAULT_FILE", tmp_path / "gameplay.yaml")
     with caplog.at_level(logging.WARNING, logger="justchess.gameplay"):

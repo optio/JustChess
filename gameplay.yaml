@@ -72,3 +72,13 @@ client:
   computer_retry_limit: 3            # how many times the page asks the computer again before "The computer didn't answer." (0 to 20)
   computer_retry_delay_seconds: 5    # the wait between those tries (1 to 300)
   join_poll_seconds: 3               # how often a visitor's page checks whether its join request was answered (1 to 60)
+
+endgames:
+  # The endgame trainer (/learn, Endgames tab): the computer defends every position at this strength.
+  defender_skill: 20           # Stockfish "Skill Level" of the defender, 0 to 20 (20 is full strength)
+  defender_think_seconds: 1.0  # think time for each defender move, 0.05 to 10 seconds (no depth limit, never random)
+  hold_moves: 30               # a "hold the draw" position is passed after this many of your moves without being mated (1 to 200)
+  max_plies: 300               # longest attempt in half-moves; longer is refused and reaching it ends the attempt (10 to 1000)
+  play_per_minute: 30          # most endgame moves per minute from one client address (1 to 1000)
+  refusal_queue: 16            # endgame moves are refused as busy once this many requests wait, so games keep their place (0 to engine.queue_cap)
+  wait_limit_seconds: 30       # a move still waiting for the engine after this long is cancelled and answered as busy (1 to 300)

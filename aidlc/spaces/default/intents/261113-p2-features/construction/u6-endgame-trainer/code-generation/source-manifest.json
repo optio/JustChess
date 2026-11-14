@@ -1,0 +1,31 @@
+{
+  "stage": "code-generation",
+  "unit": "u6-endgame-trainer",
+  "version": 1,
+  "writes": [
+    { "path": "justchess/endgames.py" },
+    { "path": "justchess/api.py" },
+    { "path": "justchess/gameplay.py" },
+    { "path": "gameplay.yaml" },
+    { "path": "endgames/queen-mate.yaml" },
+    { "path": "endgames/rook-mate.yaml" },
+    { "path": "endgames/king-pawn.yaml" },
+    { "path": "endgames/opposition.yaml" },
+    { "path": "static/js/training/endgame-state.js" },
+    { "path": "static/js/training/endgame.js" },
+    { "path": "static/js/training/hub.js" },
+    { "path": "static/js/app.js" },
+    { "path": "static/css/training.css" },
+    { "path": "static/ASSETS.md" },
+    { "path": "README.md" },
+    { "path": "tests/test_endgames_content.py" },
+    { "path": "tests/test_endgames.py" },
+    { "path": "tests/test_endgame_judge.py" },
+    { "path": "tests/core/test_endgames_api.py" },
+    { "path": "tests/test_gameplay.py" },
+    { "path": "tests/test_u6_endgame_browser.py" },
+    { "path": "tests/test_u5_trainer_browser.py" },
+    { "path": "tests/js/endgame.test.mjs" },
+    { "path": "tests/js/endgame-tab.test.mjs" }
+  ]
+}

@@ -70,7 +70,7 @@ def test_hub_tabs_work_by_keyboard_and_tactics_lists_its_themes(trainer_server: 
     page.wait("!!document.querySelector('[data-testid=hub-action-italian]')", what="the Openings rows")
     assert page.js(SELECTED) == "openings", "the hub opens on Openings"
     assert page.js("[...document.querySelectorAll('[role=tab]')].map((t) => t.dataset.tab)") == \
-        ["openings", "traps", "tactics", "defence"]
+        ["openings", "traps", "endgames", "tactics", "defence"]  # P2 U6 registers Endgames
     page.wait("document.querySelector('[data-testid=hub-count-openings]').textContent === '0/10'", what="the Openings count")
 
     page.js("document.querySelector('[data-testid=hub-tab-openings]').focus()")

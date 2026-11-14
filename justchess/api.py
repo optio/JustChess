@@ -132,6 +132,25 @@ Play the computer (P2 U4, BR1.5, BR3.1-BR3.6, BR4.1-BR4.3, BR5.1-BR5.6, BR6.1, B
   ``colour``; claim-draw and claim-win answer 409 in computer rooms.
 - Every snapshot of a computer room carries ``computer`` (``computer.computer_state``);
   ``computer.message`` is set only in the HTTP answer right after a busy refusal.
+
+Endgame trainer (P2 U6, BR2.5, BR3.1-BR3.3):
+
+- The catalog (``justchess.endgames``, folder ``endgames_dir``, else ``endgames/``)
+  is loaded once at start-up. ``GET /api/endgames`` -> ``{installed, available,
+  reason, categories}`` (availability from ``Engine.status``);
+  ``GET /api/endgames/{id}`` -> the position (404 "No such position"). Both
+  work without the engine.
+- ``POST /api/endgames/{id}/play`` ``{moves}`` (origin-checked, default 4 KB
+  body limit, 30 per minute per address): the moves are replayed from the
+  start FEN (400 when malformed, illegal, even length or too long) and judged.
+  While the attempt is playing, the defender's reply is asked from Engine at
+  skill 20 for 1 s (no depth, never random): 503 when unavailable, busy when
+  ``refusal_queue`` requests already wait or the queue is full, and busy when
+  the wait passes ``wait_limit_seconds`` (the request is cancelled, as it is
+  when the client goes away). The answer is ``{status, reason, reply,
+  playerMoves, movesLeft}`` plus the boards the page draws. Nothing is stored.
+- Hints and endgame replies wait through the same neutral helper
+  ``_await_engine``. ``GET /learn/endgames/{id}`` serves the page shell.
 """
 
 from __future__ import annotations
@@ -157,7 +176,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 import stockfish_install
-from justchess import DomainError, analysis, computer, games, housekeeping, lessons, notifications, puzzles, ratelimit, rooms, summaries
+from justchess import DomainError, analysis, computer, endgames, games, housekeeping, lessons, notifications, puzzles, ratelimit, rooms, summaries
 from justchess import engine as engine_module
 from justchess import gameplay as gameplay_module
 from justchess import vapid as vapid_keys
@@ -198,6 +217,11 @@ UNKNOWN_ROOM_KIND = "Unknown room kind"
 UNKNOWN_COLOUR = "Unknown colour"
 COLOUR_CHOICES = ("white", "black", "random")
 HINT_POLL_SECONDS = 0.25
+ENGINE_POLL_SECONDS = HINT_POLL_SECONDS  # how often a waiting request checks the client is still there
+
+# P2 U6: the endgame trainer.
+POSITION_NOT_FOUND = "No such position"
+ENDGAME_CANCELLED = "The move was cancelled"
 ColourChooser = Callable[[Sequence[str]], str]
 EngineFactory = Callable[[], engine_module.Engine]
 
@@ -295,6 +319,15 @@ class PuzzleHintRequest(BaseModel):
     level: object = None
 
 
+class EndgamePlayRequest(BaseModel):
+    """P2 U6 play body: the attempt's UCI moves from the start position.
+
+    Loosely typed so ``endgames.replay`` answers every bad value with 400.
+    """
+
+    moves: object = None
+
+
 class SubscribeRequest(SeatRequest):
     """U5 subscribe body: the seat token and the browser's PushSubscription.toJSON() fields.
 
@@ -336,6 +369,7 @@ class Services:
         self.create_limiter = ratelimit.RateLimiter(limit=settings.create_per_minute)
         self.hint_limiter = ratelimit.RateLimiter(limit=settings.hint_per_minute)
         self.computer_move_limiter = ratelimit.RateLimiter(limit=settings.computer_move_per_minute)
+        self.endgame_limiter = ratelimit.RateLimiter(limit=settings.endgames.play_per_minute)  # P2 U6
         self.colour_chooser = colour_chooser
         self.move_chooser = move_chooser if move_chooser is not None else random.SystemRandom()
         # P2 U3: in-memory join-request state (reset by a restart, by design).
@@ -693,20 +727,48 @@ def _valid_colour(colour: str | None, allow_none: bool) -> str | None:
     return colour
 
 
-async def _await_hint(request: Request, ticket: engine_module.Ticket) -> chess.Move:
-    """Wait for the hint; when the client goes away, cancel the request (or drop a running search's result)."""
+class ClientGone(Exception):
+    """The client went away while its engine request waited (the request was cancelled)."""
+
+
+class EngineWaitTimeout(Exception):
+    """The engine request was still unanswered at the caller's wait limit (the request was cancelled)."""
+
+
+async def _await_engine(request: Request, ticket: engine_module.Ticket, limit: float | None = None) -> chess.Move:
+    """Wait for an engine request, shared by hints and endgame replies (P2 U6, BR3.3).
+
+    Every ENGINE_POLL_SECONDS it checks the client is still connected. When the
+    client goes away (``ClientGone``) or ``limit`` seconds pass
+    (``EngineWaitTimeout``), the request is cancelled: a queued one leaves the
+    queue, a running search's result is dropped. ``EngineFailure`` passes
+    through. The callers choose their own wording.
+    """
+    loop = asyncio.get_running_loop()
+    deadline = None if limit is None else loop.time() + limit
     result = asyncio.ensure_future(ticket.result())
     try:
         while True:
-            done, _pending = await asyncio.wait({result}, timeout=HINT_POLL_SECONDS)
+            timeout = ENGINE_POLL_SECONDS if deadline is None else max(0.0, min(ENGINE_POLL_SECONDS, deadline - loop.time()))
+            done, _pending = await asyncio.wait({result}, timeout=timeout)
             if done:
                 return result.result()
+            if deadline is not None and loop.time() >= deadline:
+                raise EngineWaitTimeout()
             if await request.is_disconnected():
-                raise DomainError(409, HINT_CANCELLED)
+                raise ClientGone()
     finally:
         if not result.done():
             result.cancel()  # Ticket.result cancels the engine request
             await asyncio.gather(result, return_exceptions=True)
+
+
+async def _await_hint(request: Request, ticket: engine_module.Ticket) -> chess.Move:
+    """Wait for the hint; when the client goes away, cancel the request (or drop a running search's result)."""
+    try:
+        return await _await_engine(request, ticket)
+    except ClientGone:
+        raise DomainError(409, HINT_CANCELLED) from None
 
 
 def _engine_for(settings: gameplay_module.Gameplay) -> engine_module.Engine:
@@ -768,6 +830,14 @@ async def _load_puzzles(store: puzzles.PuzzleStore) -> None:
         logger.exception("Loading the puzzles failed at startup; they will be retried on the next request")
 
 
+async def _load_endgames(store: endgames.EndgameStore) -> None:
+    """P2 U6 BR1.1: load the endgame positions once at startup (skipped positions are logged by the loader)."""
+    try:
+        await asyncio.to_thread(store.catalog)
+    except Exception:
+        logger.exception("Loading the endgame positions failed at startup; they will be retried on the next request")
+
+
 def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time.time,
                engine_dir: PathSetting = None, receive_timeout: float = RECEIVE_TIMEOUT,
                origin: str | None = None, cleanup_hooks: Sequence[housekeeping.CleanupHook] = (),
@@ -776,7 +846,8 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
                puzzles_dir: PathSetting = None, engine_factory: EngineFactory | None = None,
                colour_chooser: ColourChooser = secrets.choice,
                gameplay: gameplay_module.Gameplay | None = None,
-               move_chooser: computer.MoveChooser | None = None) -> FastAPI:
+               move_chooser: computer.MoveChooser | None = None,
+               endgames_dir: PathSetting = None) -> FastAPI:
     """Build the JustChess app. Nothing touches the database until the app starts.
 
     ``lessons_dir`` is resolved here, once: the argument, else ``JUSTCHESS_LESSONS_DIR``,
@@ -790,10 +861,12 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
     ``GameplayError`` naming the key, so the app does not start with it.
     ``move_chooser`` is the random source of the levels' random moves
     (default ``random.SystemRandom()``). The page's keys are put in the app shell.
+    P2 U6: ``endgames_dir`` is the endgame folder (default ``endgames/`` at the project root).
     """
     settings = gameplay if gameplay is not None else gameplay_module.load_gameplay()
     lesson_store = lessons.LessonStore(_resolve_path(lessons_dir, lambda: lessons.default_lessons_dir(ROOT)), clock)
     puzzle_store = puzzles.PuzzleStore(_resolve_path(puzzles_dir, lambda: puzzles.default_puzzles_dir(ROOT)))
+    endgame_store = endgames.EndgameStore(_resolve_path(endgames_dir, lambda: endgames.default_endgames_dir(ROOT)))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -809,6 +882,7 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
         app.state.stockfish = None
         await _load_lessons(lesson_store)
         await _load_puzzles(puzzle_store)
+        await _load_endgames(endgame_store)
         engine_folder = _resolve_path(engine_dir, lambda: DEFAULT_ENGINE_DIR)
         tasks = [asyncio.create_task(_prepare_engine(app, engine_folder, chess_engine)),
                  asyncio.create_task(housekeeping.run_forever(
@@ -827,6 +901,7 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
     app.state.gameplay = settings
     app.state.lessons = lesson_store
     app.state.puzzles = puzzle_store
+    app.state.endgames = endgame_store
     app.add_middleware(BodyLimitMiddleware, max_bytes=MAX_BODY_BYTES,
                        overrides={summaries.PATH: summaries.MAX_BODY_BYTES})
     app.add_middleware(OriginGuardMiddleware, configured_origin=origin or os.environ.get("JUSTCHESS_ORIGIN"))
@@ -842,6 +917,7 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
     _add_page_routes(app, templates, settings)
     _add_lesson_routes(app, lesson_store)
     _add_puzzle_routes(app, puzzle_store)
+    _add_endgame_routes(app, endgame_store, settings)
     _add_room_routes(app)
     _add_join_request_routes(app)
     _add_game_routes(app)
@@ -880,6 +956,11 @@ def _add_page_routes(app: FastAPI, templates: Jinja2Templates, settings: gamepla
     @app.get("/learn/tactics/{theme}", response_class=HTMLResponse)
     def learn_tactics(request: Request, theme: str):
         """P2 U5 W3: serve the page for the puzzle screen; the page checks the theme."""
+        return page(request)
+
+    @app.get("/learn/endgames/{position_id}", response_class=HTMLResponse)
+    def learn_endgame(request: Request, position_id: str):
+        """P2 U6 W2: serve the page for the endgame screen; the page checks the position id."""
         return page(request)
 
     @app.get("/api/engine")
@@ -985,6 +1066,123 @@ def _add_puzzle_routes(app: FastAPI, store: puzzles.PuzzleStore) -> None:
             return puzzles.hint(puzzle_of(theme, puzzle_id), body.ply, body.level)
         except puzzles.PuzzleError as error:
             raise HTTPException(400, str(error)) from None
+
+
+def _engine_status(request: Request) -> dict[str, object]:
+    """The engine's ``{available, reason}``, also before the lifespan has built the services."""
+    svc = getattr(request.app.state, "services", None)
+    return svc.engine.status() if svc is not None else {"available": False, "reason": engine_module.STARTING}
+
+
+def _side(colour: chess.Color) -> str:
+    return "white" if colour == chess.WHITE else "black"
+
+
+def _endgame_detail(catalog: endgames.EndgameCatalog, position: endgames.EndgamePosition, hold_moves: int) -> dict:
+    """BR3.1: one position, plus what the page needs to draw it (side, legal moves, check, next position)."""
+    board = chess.Board(position.fen)
+    index, count = catalog.place_of(position)
+    detail = {"id": position.id, "category": position.category,
+              "categoryLabel": endgames.CATEGORY_LABELS[position.category], "title": position.title,
+              "fen": position.fen, "goal": position.goal, "hint": position.hint, "index": index, "count": count,
+              "side": _side(board.turn), "legalMoves": sorted(move.uci() for move in board.legal_moves),
+              "check": board.is_check(), "next": catalog.next_of(position)}
+    if position.goal == "draw":
+        detail["holdMoves"] = hold_moves
+    return detail
+
+
+async def _defender_reply(request: Request, svc: Services, board: chess.Board) -> chess.Move:
+    """BR2.5/BR3.3: the defender's move from the shared Engine queue, or a 503 (409 when the client left).
+
+    Refused as busy once ``refusal_queue`` requests wait (so live games keep
+    their place) or the queue is full; a wait longer than ``wait_limit`` is
+    cancelled and answered busy. The board is the one replayed from the start
+    FEN; the returned move is checked to be legal on it.
+    """
+    settings = svc.gameplay.endgames
+    if not svc.engine.available:
+        raise DomainError(503, svc.engine.reason or ENGINE_DOWN)
+    if svc.engine.queued_count() >= settings.refusal_queue:
+        raise DomainError(503, engine_module.BUSY)
+    try:
+        ticket = svc.engine.submit(board, settings.defender_skill, settings.defender_think)
+    except (engine_module.EngineBusy, engine_module.EngineUnavailable) as refused:
+        raise DomainError(503, refused.reason) from None
+    try:
+        move = await _await_engine(request, ticket, limit=settings.wait_limit)
+    except engine_module.EngineFailure as failure:
+        logger.warning("An endgame defender reply failed: %s", failure.reason)
+        raise DomainError(503, failure.reason) from None
+    except EngineWaitTimeout:
+        logger.info("An endgame defender reply waited more than %g s and was cancelled", settings.wait_limit)
+        raise DomainError(503, engine_module.BUSY) from None
+    except ClientGone:
+        raise DomainError(409, ENDGAME_CANCELLED) from None
+    if move not in board.legal_moves:
+        logger.error("The engine's endgame reply was not legal; refusing it")
+        raise DomainError(503, engine_module.NO_MOVE)
+    return move
+
+
+def _add_endgame_routes(app: FastAPI, store: endgames.EndgameStore, settings: gameplay_module.Gameplay) -> None:
+    """P2 U6: list, get and play endgame positions (BR3.1-BR3.3)."""
+
+    def current_catalog() -> endgames.EndgameCatalog:
+        try:
+            return store.catalog()
+        except Exception:
+            logger.exception("Could not load the endgame positions from %s", store.directory)
+            raise HTTPException(500, SERVER_ERROR) from None
+
+    def position_of(catalog: endgames.EndgameCatalog, position_id: str) -> endgames.EndgamePosition:
+        position = catalog.get(position_id)
+        if position is None:
+            raise DomainError(404, POSITION_NOT_FOUND)
+        return position
+
+    @app.get("/api/endgames")
+    def list_endgames(request: Request):
+        """BR3.1: ``{installed, available, reason, categories}``; works without the engine."""
+        catalog = current_catalog()
+        status = _engine_status(request)
+        return {"installed": catalog.installed, "available": bool(status["available"]), "reason": status["reason"],
+                "categories": catalog.categories()}
+
+    @app.get("/api/endgames/{position_id}")
+    def endgame_detail(position_id: str):
+        """BR3.1: one position; an unknown id is 404 "No such position"."""
+        catalog = current_catalog()
+        return _endgame_detail(catalog, position_of(catalog, position_id), settings.endgames.hold_moves)
+
+    @app.post("/api/endgames/{position_id}/play")
+    async def endgame_play(request: Request, position_id: str,
+                           body: Annotated[EndgamePlayRequest | None, Body()] = None):
+        """BR3.2: validate the attempt, add the defender's reply while it is playing, and answer the verdict."""
+        svc = services(request)
+        _limit(svc, svc.endgame_limiter, request)
+        catalog = current_catalog()
+        position = position_of(catalog, position_id)
+        limits = svc.gameplay.endgames
+        moves = body.moves if body is not None else None
+        try:
+            board = endgames.replay(position, moves, limits.max_plies)
+        except endgames.EndgameError as error:
+            raise DomainError(400, str(error)) from None
+        player = chess.Board(position.fen).turn
+        count = endgames.player_moves_in(moves)
+        verdict = endgames.judge(board, position.goal, player, count, limits)
+        after_player = {"playerFen": board.fen(), "playerCheck": board.is_check()}
+        reply = None
+        if endgames.needs_defender(board, verdict, player):
+            move = await _defender_reply(request, svc, board)
+            reply = {"uci": move.uci(), "san": board.san(move)}
+            board.push(move)
+            verdict = endgames.judge(board, position.goal, player, count, limits)
+        playing = verdict.status == endgames.PLAYING
+        return {"status": verdict.status, "reason": verdict.reason, "reply": reply, "playerMoves": count,
+                "movesLeft": verdict.moves_left, **after_player, "fen": board.fen(), "check": board.is_check(),
+                "legalMoves": sorted(m.uci() for m in board.legal_moves) if playing else []}
 
 
 def _add_room_routes(app: FastAPI) -> None:

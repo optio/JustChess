@@ -68,6 +68,11 @@
  * progress store (trainer-progress.js) is shared by the hub, the trainers and
  * the puzzles. The game's lessons drawer lists openings only (listKind).
  *
+ * Endgame trainer (P2 U6, W1-W3, BR4.1, BR4.2): the hub gets the Endgames tab
+ * (endgame-state.js ENDGAMES_TAB, registered once in the shared registry), whose
+ * Play opens "/learn/endgames/{id}", the endgame screen (endgame.js).
+ * "/learn/endgames" opens the hub on the Endgames tab.
+ *
  * Pass-along and join requests (P2 U3, W1-W4, BR4.1): the game screen's
  * "Play here while waiting" / "Wait for a friend instead" post /mode, and the
  * request banner's Accept / Decline post /join-request/answer, all as seat
@@ -113,6 +118,9 @@ import { createLessonsApi } from "./training/lessons-api.js";
 import { mountTrainer } from "./training/trainer.js";
 import { mountHub } from "./training/hub.js";
 import { mountPuzzle } from "./training/puzzle.js";
+import { mountEndgame } from "./training/endgame.js";
+import { ENDGAMES_TAB, createEndgamesApi } from "./training/endgame-state.js";
+import { registerTab, sharedRegistry } from "./training/hub-tabs.js";
 import { createTrainerProgress } from "./training/trainer-progress.js";
 import { applyToDocument, createSettings } from "./settings.js";
 import { chooseShareMethod, continueUrl, copyText, inviteUrl, shareLink } from "./share.js";
@@ -129,8 +137,10 @@ const LOBBY_TITLE = "JustChess — Play a friend. Play the computer. Get better.
 const LEARN_TITLE = "Learn an opening — JustChess";
 const HUB_TITLE = "Train — JustChess";
 const TACTICS_TITLE = "Tactics — JustChess";
+const ENDGAMES_TITLE = "Endgames — JustChess";
 const LEARN_PATH = /^\/learn(?:\/([^/]*))?\/?$/;
 const TACTICS_PATH = /^\/learn\/tactics\/([^/]+)\/?$/;
+const ENDGAME_PATH = /^\/learn\/endgames\/([^/]+)\/?$/;
 const ENGINE_STARTING = "The computer is starting";
 const ENGINE_POLL_MS = 2000;
 const ENGINE_POLL_LIMIT = 30;
@@ -159,6 +169,8 @@ export function startApp({
   const api = createApi(fetchImpl);
   const lessonsApi = createLessonsApi(fetchImpl);
   const progress = createTrainerProgress(); // P2 U5: per-device trainer progress
+  const endgamesApi = createEndgamesApi(fetchImpl); // P2 U6
+  if (!sharedRegistry.has(ENDGAMES_TAB.id)) registerTab(ENDGAMES_TAB);
   const origin = win.location.origin;
   // P2 U1: Share opens the share dialog (BR3.1-BR3.6); it replaced the inline link field.
   const shareDialog = createShareDialog(shareDialogElement, { trigger: shareButton, navigator: win.navigator });
@@ -244,6 +256,27 @@ export function startApp({
         navigate(`/learn/tactics/${theme}`);
         showPuzzle(theme);
       },
+      context: { endgamesApi, onOpenEndgame: openEndgame },
+    });
+  }
+
+  function openEndgame(id) {
+    navigate(`/learn/endgames/${id}`);
+    showEndgame(id);
+  }
+
+  function buildEndgame(id) {
+    return mountEndgame(appRoot, {
+      api: endgamesApi,
+      positionId: id,
+      progress,
+      settings,
+      win,
+      onBack: () => {
+        navigate("/learn/endgames");
+        showHub("endgames");
+      },
+      onOpen: openEndgame,
     });
   }
 
@@ -269,6 +302,7 @@ export function startApp({
     if (kind === "learn") ui = buildLearn(arg);
     else if (kind === "hub") ui = buildHub(arg);
     else if (kind === "puzzle") ui = buildPuzzle(arg);
+    else if (kind === "endgame") ui = buildEndgame(arg);
     else if (kind === "lobby") {
       ui = renderLobby(appRoot, {
         onStart: startGame,
@@ -604,9 +638,16 @@ export function startApp({
     showScreen("puzzle", theme, { force: true });
   }
 
+  /** /learn/endgames/{id}: the endgame screen (the id is checked by the screen). */
+  function showEndgame(id) {
+    enterTrainer(ENDGAMES_TITLE);
+    showScreen("endgame", id, { force: true });
+  }
+
   function showLearn(lessonId) {
     if (lessonId === null) return showHub();
     if (lessonId === "tactics") return showHub("tactics");
+    if (lessonId === "endgames") return showHub("endgames");
     return showLesson(lessonId);
   }
 
@@ -628,6 +669,8 @@ export function startApp({
     const path = win.location.pathname;
     const tactics = TACTICS_PATH.exec(path);
     if (tactics) return showPuzzle(learnId(tactics[1]));
+    const endgame = ENDGAME_PATH.exec(path);
+    if (endgame) return showEndgame(learnId(endgame[1]));
     const learn = LEARN_PATH.exec(path);
     if (learn) return showLearn(learnId(learn[1]));
     const match = /^\/r\/([^/]+)\/?$/.exec(path);
