@@ -231,7 +231,7 @@ aidlc/.aidlc-subagent-inflight
 .engines/
 
 # Downloaded source data (the Lichess puzzle dump, used once by scripts/curate_puzzles.py)
-data/
+/data/
 
 # BEGIN AI-DLC:gitignore
 # AI-DLC: local working files
