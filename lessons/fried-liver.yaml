@@ -1,0 +1,62 @@
+# Fried Liver Attack: 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5 6.Nxf7 Kxf7 7.Qf3+ Ke6 8.Nc3 (ECO C57).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Fried Liver Attack
+kind: trap
+aliases:
+  - Two Knights Defence, Fried Liver Attack
+eco: C57
+side: white
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      Pawn to the centre.
+  - san: e5
+    note: >-
+      Black answers the same way.
+  - san: Nf3
+    note: >-
+      The knight attacks e5.
+  - san: Nc6
+    note: >-
+      Black defends the pawn.
+  - san: Bc4
+    note: >-
+      The bishop points at f7.
+  - san: Nf6
+    note: >-
+      The Two Knights Defence. Black counters by attacking e4.
+  - san: Ng5
+    note: >-
+      Knight and bishop both hit f7. Black must react at once.
+  - san: d5
+    note: >-
+      Black blocks the bishop's line with a pawn, the right idea.
+  - san: exd5
+    note: >-
+      White takes the pawn and opens the line again.
+  - san: Nxd5
+    note: >-
+      The natural but risky recapture. It leaves f7 short of defenders.
+  - san: Nxf7
+    note: >-
+      The Fried Liver sacrifice. The knight takes on f7 and forks queen and
+      rook.
+  - san: Kxf7
+    note: >-
+      The king takes the knight, and is dragged into the open.
+  - san: Qf3+
+    note: >-
+      Check, and the queen also attacks the knight on d5.
+  - san: Ke6
+    note: >-
+      The king defends the knight himself and walks into the middle. Now the
+      bishop on c4 pins that knight to the king.
+  - san: Nc3
+    note: >-
+      A third attacker on the pinned knight. White's pieces pour in while
+      Black's king has no shelter.
+objectives:
+  - Aim knight and bishop together at f7.
+  - Sacrifice on f7 when the king will be stuck in the centre.
+  - Pile up on the knight that the king must defend.

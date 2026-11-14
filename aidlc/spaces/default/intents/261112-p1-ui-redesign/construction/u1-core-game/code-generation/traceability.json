@@ -1,0 +1,26 @@
+{
+  "stage": "code-generation",
+  "unit": "u1-core-game",
+  "upstream_ids": ["FR1.1","FR1.2","FR1.3","FR1.4","FR1.5","FR1.6","FR1.7","FR3.2","FR3.4","FR3.5","FR3.6","FR3.10","FR4.2","FR4.3","FR4.4","FR4.5","FR9.1","FR11.1","FR11.2"],
+  "coverage": [
+    { "id": "FR1.1", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR1.2", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR1.3", "status": "OK", "target": "justchess/api.py" },
+    { "id": "FR1.4", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR1.5", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR1.6", "status": "OK", "target": "justchess/live.py" },
+    { "id": "FR1.7", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR3.2", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR3.4", "status": "OK", "target": "justchess/live.py" },
+    { "id": "FR3.5", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR3.6", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR3.10", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR4.2", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR4.3", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR4.4", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR4.5", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR9.1", "status": "OK", "target": "justchess/api.py" },
+    { "id": "FR11.1", "status": "OK", "target": "justchess/db.py" },
+    { "id": "FR11.2", "status": "OK", "target": "justchess/housekeeping.py" }
+  ]
+}

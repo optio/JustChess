@@ -1,0 +1,25 @@
+{
+  "stage": "code-generation",
+  "unit": "u4-blunder-warnings",
+  "version": 1,
+  "writes": [
+    {"path": "justchess/analysis.py"},
+    {"path": "justchess/api.py"},
+    {"path": "justchess/games.py"},
+    {"path": "justchess/__init__.py"},
+    {"path": "static/js/blunder.js"},
+    {"path": "static/js/screens/blunder-dialog.js"},
+    {"path": "static/js/api.js"},
+    {"path": "static/js/hooks.js"},
+    {"path": "static/js/room-flow.js"},
+    {"path": "static/js/app.js"},
+    {"path": "static/css/app.css"},
+    {"path": "tests/test_analysis.py"},
+    {"path": "tests/test_check_move_api.py"},
+    {"path": "tests/test_game_screen.py"},
+    {"path": "tests/js/blunder.test.mjs"},
+    {"path": "tests/js/room-flow.test.mjs"},
+    {"path": "tests/js/api.test.mjs"},
+    {"path": "README.md"}
+  ]
+}

@@ -1,0 +1,269 @@
+<title>JustChess Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Symbols+2&display=swap">
+<style>
+/* Layout: the board sits in a walnut frame as the one bold object; a scoresheet and quiet controls sit beside it (desktop) or below it (phone). */
+:root{
+  --page:#E2DACB;        /* linen table */
+  --surface:#EDE6D8;     /* quiet panels */
+  --paper:#F5F0E4;       /* scoresheet form */
+  --rule:#C9BBA3;        /* printed form lines */
+  --text:#2A2019;
+  --muted:#6A5B4C;
+  --walnut:#4B3323;      /* board frame */
+  --walnut-hi:#6A4A33;
+  --engrave:#D9C29A;     /* coordinates cut into the frame */
+  --brass:#A9822F;
+  --ink:#294A93;         /* scoresheet ballpoint */
+  --baize:#2E5C49;       /* chess-box lining: your move */
+  --oxblood:#8E2C27;     /* destructive */
+  --on-accent:#FBF7EE;
+  --scrim:rgba(30,20,12,.45);
+  --accent:var(--ink); --accent-2:var(--brass);
+  --sq-light:#E7D0A3; --sq-dark:#A3713F;
+  --f-display:"Libre Caslon Display","Libre Caslon Text",Georgia,"Times New Roman",serif;
+  --f-book:"Libre Caslon Text",Georgia,"Times New Roman",serif;
+  --f-ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-piece:"Noto Sans Symbols 2","Segoe UI Symbol","Apple Symbols",serif;
+  --t-slide:200ms; --ease-out:cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#1B1511; --surface:#251D17; --paper:#2D241C; --rule:#4A3D30; --text:#EEE5D6; --muted:#B4A390;
+  --walnut:#3A2719; --walnut-hi:#57402D; --engrave:#CDB386; --brass:#D3AE5C; --ink:#93AEEA; --baize:#5A9A7E;
+  --oxblood:#E07A6F; --on-accent:#17120E; --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#1B1511; --surface:#251D17; --paper:#2D241C; --rule:#4A3D30; --text:#EEE5D6; --muted:#B4A390;
+  --walnut:#3A2719; --walnut-hi:#57402D; --engrave:#CDB386; --brass:#D3AE5C; --ink:#93AEEA; --baize:#5A9A7E;
+  --oxblood:#E07A6F; --on-accent:#17120E; --scrim:rgba(0,0,0,.6); color-scheme:dark}
+:root[data-accent="brass"]{--accent:var(--brass); --accent-2:var(--ink)}
+:root[data-board="tournament"]{--sq-light:#EEEDD2; --sq-dark:#5A8160}
+:root[data-board="rosewood"]{--sq-light:#DDBB9C; --sq-dark:#6E3C2B}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--page);color:var(--text);font:16px/1.5 var(--f-ui);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Design controls (not part of the product) */
+.studio{max-width:1080px;margin:12px auto 0;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
+  font-size:13px;color:var(--muted);border-bottom:1px dashed var(--rule);padding-bottom:10px}
+.studio fieldset{border:0;margin:0;padding:0;display:flex;gap:4px;align-items:center}
+.studio legend{float:left;margin-right:6px}
+.studio button{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:3px 10px;cursor:pointer}
+.studio button[aria-pressed="true"]{background:var(--text);color:var(--page);border-color:var(--text)}
+
+/* Top bar */
+.bar{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 0}
+.mark{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.mark svg{width:28px;height:28px}
+.mark b{font:400 24px/1 var(--f-display);letter-spacing:.01em}
+.room{margin-left:auto;display:flex;align-items:center;gap:8px}
+.code{font:700 15px/1 var(--f-ui);letter-spacing:.12em;padding:8px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--rule)}
+
+/* Buttons by role */
+.btn{min-height:44px;padding:0 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-weight:700}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-secondary{background:transparent;border-color:var(--rule);color:var(--text)}
+.btn-quiet{background:transparent;color:var(--accent);padding:0 8px;text-decoration:underline;text-underline-offset:3px;font-weight:400}
+.btn-danger{background:transparent;border-color:var(--oxblood);color:var(--oxblood)}
+
+/* Screen layout */
+.screen{max-width:1080px;margin:0 auto}
+.play{display:grid;gap:16px}
+@media (min-width:1024px){.play{grid-template-columns:minmax(560px,640px) minmax(280px,1fr);align-items:start;gap:28px}}
+
+/* The board in its frame */
+.frame{background:linear-gradient(135deg,var(--walnut-hi),var(--walnut) 40%);border-radius:10px;padding:6px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 1px 0 rgba(0,0,0,.25);max-width:100%}
+.frame.out{padding:22px 6px 6px 22px}
+.inlay{position:relative;border:1px solid var(--brass);padding:2px;border-radius:3px}
+.board{position:relative;display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:100%}
+.sq{position:relative;display:grid;place-items:center;aspect-ratio:1;background:var(--sq-light);border:0;padding:0;cursor:pointer}
+.sq.dk{background:var(--sq-dark)}
+.sq .c{position:absolute;font:700 10px/1 var(--f-ui);opacity:.85;pointer-events:none}
+.sq .cf{right:3px;bottom:2px}.sq .cr{left:3px;top:3px}
+.sq.dk .c{color:var(--sq-light)}.sq:not(.dk) .c{color:var(--sq-dark)}
+.frame.out .sq .c{display:none}
+.fcoords{display:none;position:absolute;color:var(--engrave);font:700 11px/1 var(--f-ui);pointer-events:none}
+.frame.out .fcoords{display:flex}
+.fcoords.files{left:0;right:0;top:-17px;justify-content:space-around}
+.fcoords.ranks{top:0;bottom:0;left:-17px;flex-direction:column;justify-content:space-around}
+.sq.last::before{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--brass) 38%,transparent)}
+.sq.sel::before{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px var(--accent)}
+.sq.tgt::after{content:"";position:absolute;width:26%;height:26%;border-radius:50%;background:rgba(20,14,8,.32)}
+.sq.chk::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(190,40,30,.75) 0,rgba(190,40,30,.35) 45%,transparent 70%)}
+.pc{position:relative;z-index:1;font:calc(var(--cell,48px)*.78)/1 var(--f-piece);user-select:none;transition:transform var(--t-slide) var(--ease-out)}
+.pc.w{color:#FBF6EA;-webkit-text-stroke:1.2px #2A2019;paint-order:stroke}
+.pc.b{color:#1E1712;-webkit-text-stroke:.6px #000}
+.pc.tip{transform:rotate(80deg) translate(12%,8%);transition:transform 700ms cubic-bezier(.5,0,.6,1.4)}
+.pc.glow{text-shadow:0 0 14px color-mix(in srgb,var(--brass) 80%,transparent)}
+.board.dim .sq{filter:saturate(.7) brightness(.9);transition:filter 600ms}
+
+/* Status and sheet */
+.side{display:grid;gap:14px;min-width:0}
+.status{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:var(--surface)}
+.status.yours{background:var(--baize);color:#F4EFE3}
+.dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.status p{margin:0}.status strong{font-family:var(--f-book);font-size:18px}
+.players{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.players span strong{color:var(--text)}
+.sheet{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:10px 0 4px}
+.sheet h2{font:400 18px/1.2 var(--f-display);margin:0 14px 6px}
+.sheet table{width:100%;border-collapse:collapse;font:16px/1.2 var(--f-book);font-variant-numeric:oldstyle-nums}
+.sheet th{font:12px var(--f-ui);color:var(--muted);text-align:left;font-weight:400;padding:4px 10px;border-bottom:1px solid var(--rule)}
+.sheet td{padding:7px 10px;border-bottom:1px solid var(--rule)}
+.sheet td:first-child{width:3em;color:var(--muted);text-align:right;border-right:1px solid var(--rule)}
+.sheet td.ink{color:var(--ink)}
+.sheet .result{display:flex;justify-content:space-between;align-items:center;padding:8px 14px 6px;font-size:13px;color:var(--muted)}
+.sheet .result b{font:400 26px/1 var(--f-display);color:var(--ink);min-width:2.2em;text-align:right}
+.score{font-size:14px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.lessons{border-top:1px solid var(--rule);padding-top:10px}
+.lessons summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none;font-weight:700}
+.lessons summary::-webkit-details-marker{display:none}
+.lessons summary span{font-weight:400;color:var(--muted)}
+
+/* Lobby */
+.lobby{display:grid;gap:24px;align-items:center;padding-top:8px}
+@media (min-width:900px){.lobby{grid-template-columns:1fr 1fr;gap:48px}}
+.lobby h1{font:400 clamp(40px,7vw,68px)/1.02 var(--f-display);margin:0 0 12px;text-wrap:balance}
+.lobby p.lede{font:18px/1.55 var(--f-book);color:var(--muted);max-width:34ch;margin:0 0 22px}
+.join{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.join input{min-height:44px;width:11ch;padding:0 12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);letter-spacing:.14em;font-weight:700;text-transform:uppercase}
+.join label{width:100%;font-size:14px;color:var(--muted)}
+
+/* Dialogs */
+.scrim{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:16px;z-index:5}
+.dialog{background:var(--paper);color:var(--text);max-width:420px;width:100%;border-radius:10px;padding:20px;border:1px solid var(--rule);box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.dialog h2{font:400 26px/1.15 var(--f-display);margin:0 0 8px}
+.dialog p{margin:0 0 16px}
+.dialog .actions{justify-content:flex-end}
+.over{position:absolute;inset:0;display:grid;place-items:center;z-index:3;pointer-events:none}
+.over .card{pointer-events:auto;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:18px 20px;text-align:center;max-width:80%;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.over h2{font:400 30px/1.1 var(--f-display);margin:0}
+.over p{margin:6px 0 14px;color:var(--muted)}
+.over .actions{justify-content:center}
+.note{max-width:1080px;margin:18px auto 0;font-size:13px;color:var(--muted)}
+.tabs{max-width:1080px;margin:10px auto 0;display:flex;flex-wrap:wrap;gap:6px}
+.tabs a{font-size:14px;color:var(--text);padding:6px 10px;border-radius:6px;text-decoration:none;border:1px solid var(--rule)}
+.tabs a[aria-current="page"]{background:var(--surface);border-color:var(--text)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+
+<div class="studio" role="group" aria-label="Design options for review">
+  <fieldset><legend>Accent</legend><button id="a-ink" data-set="accent" data-val="ink" aria-pressed="false">Ink blue</button><button id="a-brass" data-set="accent" data-val="brass" aria-pressed="true">Brass (chosen)</button></fieldset>
+  <fieldset><legend>Theme</legend><button id="t-sys" data-set="theme" data-val="" aria-pressed="true">Device</button><button id="t-light" data-set="theme" data-val="light" aria-pressed="false">Light</button><button id="t-dark" data-set="theme" data-val="dark" aria-pressed="false">Dark</button></fieldset>
+  <fieldset><legend>Board</legend><button id="b-wm" data-set="board" data-val="" aria-pressed="true">Walnut and maple</button><button id="b-tg" data-set="board" data-val="tournament" aria-pressed="false">Tournament green</button><button id="b-rw" data-set="board" data-val="rosewood" aria-pressed="false">Rosewood</button></fieldset>
+  <fieldset><legend>Labels</legend><button id="l-in" data-set="labels" data-val="in" aria-pressed="true">On squares</button><button id="l-out" data-set="labels" data-val="out" aria-pressed="false">In the frame</button></fieldset>
+  <fieldset><legend>Seat</legend><button id="s-w" data-set="side" data-val="w" aria-pressed="true">White</button><button id="s-b" data-set="side" data-val="b" aria-pressed="false">Black</button></fieldset>
+</div>
+<nav class="tabs" aria-label="Screens">
+  <a href="#lobby" id="tab-lobby">Lobby</a><a href="#game" id="tab-game">Game</a><a href="#blunder" id="tab-blunder">Blunder warning</a><a href="#game-over" id="tab-over">Game over</a>
+</nav>
+
+<header class="bar">
+  <a class="mark" href="#lobby" aria-label="JustChess home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="5" fill="var(--walnut)"/><rect x="4" y="4" width="12" height="12" fill="var(--sq-light)"/><rect x="16" y="16" width="12" height="12" fill="var(--sq-light)"/><rect x="16" y="4" width="12" height="12" fill="var(--sq-dark)"/><rect x="4" y="16" width="12" height="12" fill="var(--sq-dark)"/><rect x="3.5" y="3.5" width="25" height="25" fill="none" stroke="var(--brass)"/></svg>
+    <b>JustChess</b>
+  </a>
+  <div class="room" id="room">
+    <span class="code" aria-label="Room code K7Q2PX">K7Q2PX</span>
+    <button class="btn btn-primary" id="share" type="button">Share</button>
+  </div>
+</header>
+
+<main class="screen" id="main"></main>
+<p class="note">Design mockup for review. Pieces here use a symbol font as a stand-in; the build uses the open-licence cburnett SVG set. Switches at the top are review controls, not product UI. Settings that are product UI live in the game menu.</p>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const root=document.documentElement;root.setAttribute('data-accent','brass');
+const G={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+const MID='r1bqk2r/pppp1ppp/2n2n2/2b1p3/2BPP3/2P2N2/PP3PPP/RNBQK2R';
+const MATE='r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR';
+const state={side:'w',labels:'in'};
+function parse(f){const b={};f.split('/').forEach((row,i)=>{let x=0;for(const ch of row){if(/\d/.test(ch))x+=+ch;else b['abcdefgh'[x++]+(8-i)]=ch}});return b}
+function boardHTML(fen,{last=[],sel=null,tgt=[],chk=null,label='Chessboard'}={}){
+  const b=parse(fen),ranks=state.side==='w'?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8],files=state.side==='w'?'abcdefgh':'hgfedcba';
+  let h='';
+  ranks.forEach((r,ri)=>{[...files].forEach((f,fi)=>{const sq=f+r,dk=(('abcdefgh'.indexOf(f)+r)%2===1)?'':' dk';
+    const p=b[sq],cls='sq'+dk+(last.includes(sq)?' last':'')+(sel===sq?' sel':'')+(tgt.includes(sq)?' tgt':'')+(chk===sq?' chk':'');
+    const name=p?((p===p.toUpperCase()?'white ':'black ')+{k:'king',q:'queen',r:'rook',b:'bishop',n:'knight',p:'pawn'}[p.toLowerCase()]):'empty';
+    h+=`<button type="button" class="${cls}" data-sq="${sq}" aria-label="${sq}, ${name}">`+
+      (ri===7?`<span class="c cf" aria-hidden="true">${f}</span>`:'')+(fi===0?`<span class="c cr" aria-hidden="true">${r}</span>`:'')+
+      (p?`<span class="pc ${p===p.toUpperCase()?'w':'b'}" data-pc="${sq}">${G[p]}</span>`:'')+`</button>`})});
+  const fl=[...files].map(f=>`<span>${f}</span>`).join(''),rl=ranks.map(r=>`<span>${r}</span>`).join('');
+  return `<div class="frame${state.labels==='out'?' out':''}"><div class="inlay"><div class="fcoords files" aria-hidden="true">${fl}</div><div class="fcoords ranks" aria-hidden="true">${rl}</div><div class="board" role="grid" aria-label="${label}">${h}</div></div></div>`}
+function sheet(rows,result){
+  return `<section class="sheet" aria-label="Scoresheet"><h2>Scoresheet</h2><table><thead><tr><th scope="col"><span class="sr">No.</span></th><th scope="col">White</th><th scope="col">Black</th></tr></thead><tbody>`+
+  rows.map((r,i)=>`<tr><td>${i+1}</td><td class="ink">${r[0]||''}</td><td class="ink">${r[1]||''}</td></tr>`).join('')+
+  `</tbody></table><div class="result"><span>Result</span><b id="res">${result||''}</b></div></section>`}
+const MOVES=[['e4','e5'],['Nf3','Nc6'],['Bc4','Bc5'],['c3','Nf6'],['d4','']];
+function players(){return `<div class="players"><span><strong>${state.side==='w'?'You':'Opponent'}</strong> play White</span><span><strong>${state.side==='b'?'You':'Opponent'}</strong> play Black</span></div>`}
+function sizeCells(){document.querySelectorAll('.board').forEach(b=>b.style.setProperty('--cell',(b.clientWidth/8)+'px'))}
+const lessons=`<details class="lessons"><summary>Learn openings <span>Your game keeps running</span></summary><p>Italian Game, French Exchange: Monte Carlo. Open one to practise while you wait.</p></details>`;
+function game(){
+  const yours=state.side==='b';
+  return `<div class="play"><div>${boardHTML(MID,{last:['d2','d4'],label:'Game board, Black to move'})}</div>
+  <div class="side">${players()}
+   <div class="status${yours?' yours':''}" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><p><strong>${yours?'Your move':'Waiting for Black'}</strong><br><span>White played d4</span></p></div>
+   <div class="actions"><button class="btn btn-secondary" id="replay" type="button">Replay last move</button><button class="btn btn-quiet" type="button">Game settings</button></div>
+   ${sheet(MOVES)}
+   <p class="score">Room score: you 2, opponent 1, draws 0</p>${lessons}</div></div>`}
+function lobby(){
+  return `<div class="lobby"><div><h1>Play a friend. Learn an opening.</h1><p class="lede">No accounts. No subscriptions. Just chess. Start a game and send the link, or join with a room code.</p>
+   <div class="actions"><button class="btn btn-primary" type="button">Start a game</button><button class="btn btn-secondary" type="button">Learn an opening</button></div>
+   <form class="join" id="joinf"><label for="code-in">Have a room code?</label><input id="code-in" maxlength="6" placeholder="K7Q2PX" autocomplete="off"><button class="btn btn-secondary" type="submit">Join</button></form></div>
+   <div>${boardHTML('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',{label:'Starting position'})}</div></div>`}
+function blunder(){return game()+`<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="bl-h"><div class="dialog"><h2 id="bl-h">Your bishop can be taken for free</h2><p>After Bishop to a3, White's pawn on b2 takes it and nothing takes back.</p><div class="actions"><button class="btn btn-secondary" id="bl-cancel" type="button">Choose another move</button><button class="btn btn-primary" type="button">Play Ba3 anyway</button></div></div></div>`}
+function over(){
+  return `<div class="play"><div style="position:relative">${boardHTML(MATE,{last:['h5','f7'],chk:'e8',label:'Final position, checkmate'})}
+   <div class="over" id="ov" hidden><div class="card"><h2>Checkmate</h2><p>White wins with Queen takes f7</p><div class="actions"><button class="btn btn-primary" type="button">Play again</button><button class="btn btn-secondary" type="button">Share result</button></div></div></div></div>
+   <div class="side">${players()}<div class="status" role="status"><span class="dot" aria-hidden="true"></span><p><strong>Game over</strong><br><span>Colours swap if you play again</span></p></div>
+   ${sheet([['e4','e5'],['Bc4','Nc6'],['Qh5','Nf6'],['Qxf7#','']],'')}<button class="btn btn-quiet" id="again" type="button">Replay the finish</button>
+   <p class="score">Room score: you 3, opponent 1, draws 0</p></div></div>`}
+function winSequence(){
+  const ov=$('#ov'),res=$('#res'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const king=document.querySelector('[data-pc="e8"]');
+  const show=()=>{ov.hidden=false;res.textContent='1–0';document.querySelectorAll('.pc.w').forEach(p=>p.classList.add('glow'))};
+  if(reduce){king&&king.classList.add('tip');document.querySelector('.board').classList.add('dim');show();return}
+  setTimeout(()=>king&&king.classList.add('tip'),250);
+  setTimeout(()=>document.querySelector('.board').classList.add('dim'),800);
+  setTimeout(()=>{res.textContent='1';},1100);
+  setTimeout(show,1350);
+}
+function replayMove(){
+  const p=document.querySelector('[data-pc="d4"]');if(!p)return;
+  const from=document.querySelector('[data-sq="d2"]'),to=document.querySelector('[data-sq="d4"]');
+  const dx=from.getBoundingClientRect().left-to.getBoundingClientRect().left,dy=from.getBoundingClientRect().top-to.getBoundingClientRect().top;
+  p.style.transition='none';p.style.transform=`translate(${dx}px,${dy}px)`;requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.transition='';p.style.transform=''}));
+}
+function render(){
+  const v=(location.hash||'#game').slice(1);
+  document.querySelectorAll('.tabs a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+v?'page':'false'));
+  $('#room').hidden=v==='lobby';
+  $('#main').innerHTML=v==='lobby'?lobby():v==='blunder'?blunder():v==='game-over'?over():game();
+  sizeCells();
+  $('#replay')&&($('#replay').onclick=replayMove);
+  $('#again')&&($('#again').onclick=render);
+  $('#bl-cancel')&&($('#bl-cancel').onclick=()=>{location.hash='#game'});
+  $('#joinf')&&($('#joinf').onsubmit=e=>e.preventDefault());
+  if(v==='game-over')winSequence();
+}
+document.querySelectorAll('.studio button').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.set,val=b.dataset.val;
+  document.querySelectorAll(`.studio button[data-set="${k}"]`).forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  if(k==='accent')val==='brass'?root.setAttribute('data-accent','brass'):root.removeAttribute('data-accent');
+  if(k==='theme')val?root.setAttribute('data-theme',val):root.removeAttribute('data-theme');
+  if(k==='board')val?root.setAttribute('data-board',val):root.removeAttribute('data-board');
+  if(k==='labels'||k==='side'){state[k]=val;render()}
+}));
+$('#share').addEventListener('click',()=>{const b=$('#share');b.textContent='Link copied';setTimeout(()=>b.textContent='Share',1600)});
+addEventListener('hashchange',render);addEventListener('resize',sizeCells);
+render();
+})();
+</script>

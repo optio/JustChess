@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JustChess design system demo</title>
+  <meta name="description" content="Standalone check page for the JustChess Club Set design system and board (U2).">
+  <!-- Sets data-theme and data-board before first paint. -->
+  <script src="../js/boot.js"></script>
+  <link rel="preload" href="../fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/libre-caslon-text-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/board.css">
+  <link rel="stylesheet" href="demo.css">
+  <link rel="icon" href="../logo.svg" type="image/svg+xml">
+  <script type="module" src="demo.js"></script>
+</head>
+<body>
+  <header class="demo-bar">
+    <a class="logo" href="./board.html" aria-label="JustChess home">
+      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect class="tile" x="1" y="1" width="30" height="30" rx="5"/>
+        <rect class="light" x="4" y="4" width="12" height="12"/>
+        <rect class="light" x="16" y="16" width="12" height="12"/>
+        <rect class="dark" x="16" y="4" width="12" height="12"/>
+        <rect class="dark" x="4" y="16" width="12" height="12"/>
+        <rect class="inlay" x="3.5" y="3.5" width="25" height="25"/>
+      </svg>
+      <span class="logo-word">JustChess</span>
+    </a>
+    <span class="t-muted t-small">Design system demo (U2). Not product UI.</span>
+  </header>
+
+  <main class="demo">
+    <section class="demo-play" aria-labelledby="play-title">
+      <h1 id="play-title" class="t-title">The board</h1>
+      <div id="main-board" class="demo-board"></div>
+      <p id="demo-status" class="demo-status" role="status" aria-live="polite" data-testid="demo-status">Your move as White. Try promoting the pawn on b7, or castling.</p>
+      <div class="demo-controls">
+        <fieldset class="demo-inline">
+          <legend>Orientation</legend>
+          <label class="settings-choice"><input type="radio" name="orientation" value="white" checked data-testid="demo-orientation-white"> White</label>
+          <label class="settings-choice"><input type="radio" name="orientation" value="black" data-testid="demo-orientation-black"> Black</label>
+        </fieldset>
+        <label class="settings-choice"><input type="checkbox" id="refuse" data-testid="demo-refuse"> Refuse my next move (tests reject)</label>
+        <div class="demo-buttons">
+          <button type="button" class="btn btn-primary" id="play-game" data-testid="demo-play-game">Play a scripted game</button>
+          <button type="button" class="btn btn-secondary" id="play-promo" data-testid="demo-play-promotion">Play the promotion script</button>
+          <button type="button" class="btn btn-quiet" id="reset" data-testid="demo-reset">Reset practice position</button>
+        </div>
+      </div>
+      <p id="motion-note" class="t-small t-muted" data-testid="demo-motion-note"></p>
+    </section>
+
+    <aside class="demo-side">
+      <section class="demo-card" aria-labelledby="settings-title">
+        <h2 id="settings-title" class="t-title">Game settings</h2>
+        <div id="settings"></div>
+      </section>
+    </aside>
+
+    <section class="demo-wide" aria-labelledby="themes-title">
+      <h2 id="themes-title" class="t-title">Board themes</h2>
+      <div class="demo-gallery">
+        <figure data-board="walnut-maple"><div class="gallery-board"></div><figcaption>Walnut and maple</figcaption></figure>
+        <figure data-board="tournament"><div class="gallery-board"></div><figcaption>Tournament green</figcaption></figure>
+        <figure data-board="rosewood"><div class="gallery-board"></div><figcaption>Rosewood</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="demo-wide" aria-labelledby="type-title">
+      <h2 id="type-title" class="t-title">Type and buttons</h2>
+      <p class="t-hero">Play a friend.</p>
+      <p class="t-lede">No accounts. No subscriptions. Just chess. 1. e4 e5 2. Nf3 Nc6 3. Bc4</p>
+      <p>Atkinson Hyperlegible for the interface. <a href="#type-title">A link in ink.</a></p>
+      <div class="demo-buttons">
+        <button type="button" class="btn btn-primary">Start a game</button>
+        <button type="button" class="btn btn-secondary">Learn an opening</button>
+        <button type="button" class="btn btn-quiet">Game settings</button>
+        <button type="button" class="btn btn-danger">Resign</button>
+      </div>
+    </section>
+
+    <section class="demo-wide" aria-labelledby="contrast-title">
+      <h2 id="contrast-title" class="t-title">Contrast self-check</h2>
+      <p class="t-small t-muted">Reads <code>tokens.css</code> and checks every required pair: pieces 3:1, text 4.5:1, focus ring 3:1.</p>
+      <div id="contrast" data-testid="demo-contrast" aria-live="polite">Checking…</div>
+    </section>
+  </main>
+</body>
+</html>

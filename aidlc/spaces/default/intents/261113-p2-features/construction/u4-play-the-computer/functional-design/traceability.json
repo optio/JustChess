@@ -1,0 +1,28 @@
+{
+  "stage": "functional-design",
+  "unit": "u4-play-the-computer",
+  "upstream_ids": ["FR1.5","FR6.1","FR6.2","FR6.3","FR6.4","FR6.5","FR6.6","FR6.7","FR6.8","FR6.9"],
+  "coverage": [
+    { "id": "FR1.5", "status": "OK", "target": "BR8.4" },
+    { "id": "FR6.1", "status": "OK", "target": "BR3.1, BR8.1" },
+    { "id": "FR6.2", "status": "OK", "target": "BR2.1, BR5.1, BR5.2, BR1.1" },
+    { "id": "FR6.3", "status": "OK", "target": "BR4.1, BR5.3" },
+    { "id": "FR6.4", "status": "OK", "target": "BR6.1, BR2.2" },
+    { "id": "FR6.5", "status": "OK", "target": "BR3.1, BR3.5, BR5.4" },
+    { "id": "FR6.6", "status": "OK", "target": "BR8.3" },
+    { "id": "FR6.7", "status": "OK", "target": "BR1.3, BR5.5, BR5.6, BR8.1" },
+    { "id": "FR6.8", "status": "OK", "target": "BR4.2, BR4.3, BR3.4, BR3.6" },
+    { "id": "FR6.9", "status": "OK", "target": "BR3.3" }
+  ],
+  "reverse": [
+    { "id": "BR1.2", "status": "N/A", "target": "NFR1 engine load: bounded queue protects the Pi" },
+    { "id": "BR1.4", "status": "N/A", "target": "NFR1 engine load: hung search must not block every room" },
+    { "id": "BR1.5", "status": "N/A", "target": "NFR1 and ADR-001 engine lifecycle" },
+    { "id": "BR6.2", "status": "N/A", "target": "NFR1 engine load: per-address bound on engine routes (review finding)" },
+    { "id": "BR1.6", "status": "N/A", "target": "NFR1 and ADR-001 security: only validated positions reach UCI" },
+    { "id": "BR3.2", "status": "N/A", "target": "ADR-002: the computer's seat cannot be taken" },
+    { "id": "BR7.1", "status": "N/A", "target": "NFR1 thinking state and review R-01" },
+    { "id": "BR7.2", "status": "N/A", "target": "NFR1 queued state and review R-01 socket events" },
+    { "id": "BR8.2", "status": "N/A", "target": "screen rules spanning FR6.2-FR6.4 and FR6.7-FR6.9" }
+  ]
+}

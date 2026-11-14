@@ -1,0 +1,54 @@
+# Stopping Scholar's Mate: 1.e4 e5 2.Bc4 Nc6 3.Qh5 g6 4.Qf3 Nf6 5.Qb3 Qe7 6.Nc3 Nd4.
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: "Stopping Scholar's Mate"
+kind: defence
+aliases:
+  - Defending against the four-move checkmate
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White opens with the king's pawn.
+  - san: e5
+    note: >-
+      Black takes the centre too.
+  - san: Bc4
+    note: >-
+      The bishop aims at f7. On its own this is fine, but watch the queen.
+  - san: Nc6
+    note: >-
+      Black develops and guards e5.
+  - san: Qh5
+    note: >-
+      The queen joins the bishop. Both now attack f7, and Qxf7 would be mate.
+  - san: g6
+    note: >-
+      The simplest defence: block the queen's line to f7 and attack her at
+      the same time.
+    alternatives:
+      - san: Qe7
+        note: Also defends f7, though the queen blocks the bishop on f8.
+  - san: Qf3
+    note: >-
+      The queen tries again from the other side: f3 and c4 both aim at f7.
+  - san: Nf6
+    note: >-
+      The knight blocks the queen's line and develops. f7 is safe again.
+  - san: Qb3
+    note: >-
+      A third try, with the queen and bishop together on the b3-f7 diagonal.
+  - san: Qe7
+    note: >-
+      Black guards f7 with the queen. The attack has run out of ideas.
+  - san: Nc3
+    note: >-
+      White finally develops.
+  - san: Nd4
+    note: >-
+      Now Black attacks the queen and the pawn on c2 with gain of time. The
+      early queen sortie has cost White moves.
+objectives:
+  - Spot the threat when queen and bishop both aim at f7.
+  - Block with g6 or Nf6 and develop while you defend.
+  - Punish the roaming queen by attacking it with your pieces.

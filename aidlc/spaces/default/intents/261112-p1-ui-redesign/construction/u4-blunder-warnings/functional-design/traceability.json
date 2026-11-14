@@ -1,0 +1,14 @@
+{
+  "stage": "functional-design",
+  "unit": "u4-blunder-warnings",
+  "upstream_ids": ["FR3.7","FR3.8","FR3.9","FR3.11"],
+  "coverage": [
+    { "id": "FR3.7", "status": "OK", "target": "BR1.1, BR1.5, BR2.1, BR3.2, BR3.3" },
+    { "id": "FR3.8", "status": "OK", "target": "BR1.2, BR1.5, BR2.1, BR3.2, BR3.3" },
+    { "id": "FR3.9", "status": "OK", "target": "BR3.1, BR3.4" },
+    { "id": "FR3.11", "status": "OK", "target": "BR1.3, BR1.4" }
+  ],
+  "reverse": [
+    { "id": "BR2.2", "status": "N/A", "target": "response-time budget derived from NFR5" }
+  ]
+}

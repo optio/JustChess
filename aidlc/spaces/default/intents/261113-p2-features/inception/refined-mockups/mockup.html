@@ -1,0 +1,350 @@
+<title>JustChess P2 Screens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Symbols+2&display=swap">
+<style>
+/* Layout: Club Set design system from the redesign. Walnut board is the one bold object; scoresheet, lists and dialogs are quiet paper. */
+:root{
+  --page:#E2DACB; --surface:#EDE6D8; --paper:#F5F0E4; --rule:#C9BBA3; --text:#2A2019; --muted:#6A5B4C;
+  --walnut:#4B3323; --walnut-hi:#6A4A33; --engrave:#D9C29A; --brass:#A9822F; --accent-fill:#8A6A22;
+  --ink:#294A93; --baize:#2E5C49; --oxblood:#8E2C27; --on-accent:#FBF7EE; --on-baize:#F4EFE3; --scrim:rgba(30,20,12,.45);
+  --sq-light:#E7D0A3; --sq-dark:#A3713F; --pc-w:#FBF6EA; --pc-w-edge:#2A2019; --pc-b:#1E1712; --pc-b-edge:#000;
+  --f-display:"Libre Caslon Display","Libre Caslon Text",Georgia,serif;
+  --f-book:"Libre Caslon Text",Georgia,serif;
+  --f-ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-piece:"Noto Sans Symbols 2","Segoe UI Symbol","Apple Symbols",serif;
+  --ease-out:cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#1B1511; --surface:#251D17; --paper:#2D241C; --rule:#4A3D30; --text:#EEE5D6; --muted:#B4A390;
+  --walnut:#3A2719; --walnut-hi:#57402D; --engrave:#CDB386; --brass:#D3AE5C; --accent-fill:#D3AE5C; --ink:#93AEEA; --baize:#5A9A7E;
+  --oxblood:#E07A6F; --on-accent:#17120E; --on-baize:#14110D; --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#1B1511; --surface:#251D17; --paper:#2D241C; --rule:#4A3D30; --text:#EEE5D6; --muted:#B4A390;
+  --walnut:#3A2719; --walnut-hi:#57402D; --engrave:#CDB386; --brass:#D3AE5C; --accent-fill:#D3AE5C; --ink:#93AEEA; --baize:#5A9A7E;
+  --oxblood:#E07A6F; --on-accent:#17120E; --on-baize:#14110D; --scrim:rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--text);font:16px/1.5 var(--f-ui);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.review{max-width:1080px;margin:12px auto 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted);border-bottom:1px dashed var(--rule);padding-bottom:10px}
+.review a,.review button{font-size:14px;color:var(--text);padding:6px 10px;border-radius:6px;text-decoration:none;border:1px solid var(--rule);background:transparent;cursor:pointer}
+.review a[aria-current="page"]{background:var(--surface);border-color:var(--text)}
+.review .sep{flex-basis:100%;height:0}
+.states{max-width:1080px;margin:8px auto 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.states button{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--rule);background:transparent;cursor:pointer;color:var(--text)}
+.states button[aria-pressed="true"]{background:var(--text);color:var(--page);border-color:var(--text)}
+.turn.ask{border-color:var(--brass);color:var(--text);background:var(--paper)}
+.over{position:absolute;inset:0;display:grid;place-items:center;z-index:4;pointer-events:none}
+.over .card{pointer-events:auto;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:18px 20px;text-align:center;max-width:85%;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.over h2{font:400 30px/1.1 var(--f-display);margin:0}
+.over p{margin:6px 0 14px;color:var(--muted)}
+.over .actions{justify-content:center}
+
+.bar{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 0}
+.mark{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);min-height:44px}
+.mark svg{width:28px;height:28px}
+.mark b{font:400 24px/1 var(--f-display)}
+.room{margin-left:auto;display:flex;align-items:center;gap:8px}
+.code{font:700 15px/1 var(--f-ui);letter-spacing:.12em;padding:8px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--rule)}
+
+.btn{min-height:44px;padding:0 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-weight:700}
+.btn-primary{background:var(--accent-fill);color:var(--on-accent)}
+.btn-secondary{background:transparent;border-color:var(--rule);color:var(--text)}
+.btn-quiet{background:transparent;color:var(--ink);padding:0 8px;text-decoration:underline;text-underline-offset:3px;font-weight:400}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+
+.screen{max-width:1080px;margin:0 auto}
+/* Game layout: board size = min(width, height left after bar + status) */
+.play{display:grid;gap:14px}
+.play .boardcol{width:min(100%, calc(100svh - 150px));justify-self:center}
+@media (min-width:1024px){.play{grid-template-columns:auto minmax(280px,1fr);align-items:start;gap:28px}.play .boardcol{width:min(640px, calc(100svh - 110px))}}
+@media (orientation:landscape) and (max-height:500px){.play{grid-template-columns:auto 1fr;align-items:start}.play .boardcol{width:calc(100svh - 24px)}.bar{padding:4px 0}}
+@media (max-width:399px) and (orientation:portrait){.play .boardcol{margin-inline:-16px;width:calc(100% + 32px)}.play .frame{border-radius:0}}
+
+.frame{background:linear-gradient(135deg,var(--walnut-hi),var(--walnut) 40%);border-radius:10px;padding:6px;max-width:100%}
+.inlay{position:relative;border:1px solid var(--brass);padding:2px;border-radius:3px}
+.board{position:relative;display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:100%}
+.sq{position:relative;display:grid;place-items:center;aspect-ratio:1;background:var(--sq-light);border:0;padding:0;cursor:pointer}
+.sq.dk{background:var(--sq-dark)}
+.sq .c{position:absolute;font:700 10px/1 var(--f-ui);opacity:.85;pointer-events:none}
+.sq .cf{right:3px;bottom:2px}.sq .cr{left:3px;top:3px}
+.sq.dk .c{color:var(--sq-light)}.sq:not(.dk) .c{color:var(--sq-dark)}
+.sq.last::before{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--brass) 38%,transparent)}
+.sq.sel::before{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px var(--brass)}
+.pc{position:relative;z-index:1;font:calc(var(--cell,48px)*.78)/1 var(--f-piece);user-select:none}
+.pc.w{color:var(--pc-w);-webkit-text-stroke:1.2px var(--pc-w-edge);paint-order:stroke}
+.pc.b{color:var(--pc-b);-webkit-text-stroke:.6px var(--pc-b-edge)}
+/* FR2.1 capture: shrink + fade on its square, 260 ms */
+.pc.taken{position:absolute;animation:taken 260ms var(--ease-out) forwards;z-index:2}
+@keyframes taken{to{transform:scale(.35);opacity:0}}
+.arrow{position:absolute;inset:0;pointer-events:none;z-index:3}
+.arrow line{stroke:var(--baize);stroke-width:2.2;stroke-linecap:round;opacity:.85}
+.arrow polygon{fill:var(--baize);opacity:.85}
+
+.side{display:grid;gap:12px;min-width:0;align-content:start}
+.status{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:var(--surface)}
+.status.yours{background:var(--baize);color:var(--on-baize)}
+.dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.status p{margin:0}.status strong{font-family:var(--f-book);font-size:18px}
+.players{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.players strong{color:var(--text)}
+.captured{display:flex;gap:2px;min-height:24px;font:20px/1 var(--f-piece);color:var(--muted);flex-wrap:wrap}
+.captured .new{animation:arrive 200ms 240ms var(--ease-out) both}
+@keyframes arrive{from{opacity:0;transform:translateY(-4px)}}
+.sheet{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:10px 0 4px}
+.sheet h2{font:400 18px/1.2 var(--f-display);margin:0 14px 6px}
+.sheet table{width:100%;border-collapse:collapse;font:16px/1.2 var(--f-book);font-variant-numeric:oldstyle-nums}
+.sheet td{padding:7px 10px;border-bottom:1px solid var(--rule)}
+.sheet td:first-child{width:3em;color:var(--muted);text-align:right;border-right:1px solid var(--rule)}
+.sheet td.ink{color:var(--ink)}
+.note-line{font-size:14px;color:var(--muted);margin:0}
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--brass);border-radius:8px;background:var(--paper)}
+.banner p{margin:0}
+
+/* Lobby: hero + actions left, Your games right (stacks on phones) */
+.lobby{display:grid;gap:28px;padding-top:8px}
+@media (min-width:900px){.lobby{grid-template-columns:1fr minmax(340px,420px);gap:48px;align-items:start}}
+.lobby h1{font:400 clamp(38px,6.5vw,62px)/1.02 var(--f-display);margin:0 0 12px;text-wrap:balance}
+.lede{font:18px/1.55 var(--f-book);color:var(--muted);max-width:36ch;margin:0 0 20px}
+.cpu{margin-top:12px;padding:14px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);display:grid;gap:12px;max-width:440px}
+.cpu fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.cpu legend{font-size:14px;color:var(--muted);margin-bottom:6px;width:100%}
+.seg{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--rule);background:transparent;cursor:pointer}
+.seg[aria-pressed="true"]{background:var(--text);color:var(--page);border-color:var(--text)}
+.join{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.join label{width:100%;font-size:14px;color:var(--muted)}
+.join input{min-height:44px;width:11ch;padding:0 12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);letter-spacing:.14em;font-weight:700;text-transform:uppercase}
+.games{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:10px 0 0}
+.games h2{font:400 22px/1.2 var(--f-display);margin:0 14px 8px}
+.games ul{list-style:none;margin:0;padding:0}
+.games li a{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid var(--rule);color:var(--text);text-decoration:none;min-height:72px}
+.games li a:hover{background:var(--surface)}
+.games li.done a{color:var(--muted)}
+.games li.done .thumb{filter:saturate(.4)}
+.thumb{width:56px;height:56px;display:grid;grid-template-columns:repeat(8,1fr);border:2px solid var(--walnut);border-radius:2px}
+.thumb i{background:var(--sq-light);display:grid;place-items:center;font:normal 6px/1 var(--f-piece)}
+.thumb i.dk{background:var(--sq-dark)}
+.g-name{font-weight:700}.g-meta{font-size:14px;color:var(--muted)}
+.turn{font-size:13px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid var(--rule);white-space:nowrap}
+.turn.yours{background:var(--baize);border-color:var(--baize);color:var(--on-baize)}
+.games .empty{padding:14px;border-top:1px solid var(--rule);color:var(--muted);margin:0}
+
+/* Dialogs */
+.scrim{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:16px;z-index:5}
+.dialog{background:var(--paper);color:var(--text);max-width:440px;width:100%;border-radius:10px;padding:20px;border:1px solid var(--rule);box-shadow:0 18px 40px rgba(0,0,0,.25);max-height:calc(100svh - 32px);overflow:auto}
+.dialog h2{font:400 26px/1.15 var(--f-display);margin:0 0 8px}
+.dialog p{margin:0 0 14px}
+.linkrow{display:flex;gap:8px;margin-bottom:14px}
+.linkrow input{flex:1;min-width:0;min-height:44px;padding:0 10px;border:1px solid var(--rule);border-radius:8px;background:var(--page);font-size:14px}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:14px}
+.apps a,.apps button{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--rule);border-radius:8px;color:var(--text);text-decoration:none;background:transparent;font-weight:700;cursor:pointer}
+.qr{display:flex;gap:14px;align-items:center;border-top:1px solid var(--rule);padding-top:14px;margin-bottom:14px}
+.qr canvas{width:112px;height:112px;background:#fff;border-radius:4px;flex:none}
+.qr p{font-size:14px;color:var(--muted);margin:0}
+.dialog .foot{display:flex;justify-content:flex-end}
+
+/* Trainer hub */
+.hub h1{font:400 clamp(32px,5vw,48px)/1.05 var(--f-display);margin:8px 0 14px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);overflow-x:auto;margin-bottom:14px}
+.tabs button{min-height:44px;padding:0 14px;border:0;background:transparent;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--brass);font-weight:700}
+.tabs small{color:var(--muted);font-weight:400;margin-left:4px;font-variant-numeric:tabular-nums}
+.items{list-style:none;margin:0;padding:0;background:var(--paper);border:1px solid var(--rule);border-radius:4px}
+.items li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border-top:1px solid var(--rule);flex-wrap:wrap}
+.items li:first-child{border-top:0}
+.items b{font-family:var(--f-book);font-weight:400;font-size:18px}
+.items span{font-size:14px;color:var(--muted)}
+.tick{color:var(--baize);font-weight:700}
+.progress{font-size:14px;color:var(--muted);margin:0 0 10px;font-variant-numeric:tabular-nums}
+.credit{font-size:13px;color:var(--muted);margin-top:10px}
+.foot-note{max-width:1080px;margin:18px auto 0;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.pc.taken{display:none}}
+</style>
+
+<nav class="review" aria-label="Mockup screens">
+  <a href="#lobby" id="tab-lobby">Main screen</a>
+  <a href="#cpu" id="tab-cpu">Play the computer</a>
+  <a href="#game-cpu" id="tab-gcpu">Computer game</a>
+  <a href="#game" id="tab-game">Game + capture</a>
+  <a href="#share" id="tab-share">Share dialog</a>
+  <a href="#waiting" id="tab-waiting">Waiting / pass-along</a>
+  <a href="#request" id="tab-request">Join request</a>
+  <a href="#learn" id="tab-learn">Trainer hub</a>
+  <a href="#puzzle" id="tab-puzzle">Tactics puzzle</a>
+  <a href="#endgame" id="tab-endgame">Endgame</a>
+  <span class="sep"></span>
+  <button type="button" id="theme-btn">Switch light / dark</button>
+</nav>
+<div class="states" id="states" role="group" aria-label="States of this screen"></div>
+
+<header class="bar">
+  <a class="mark" href="#lobby" aria-label="JustChess home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="5" fill="var(--walnut)"/><rect x="4" y="4" width="12" height="12" fill="var(--sq-light)"/><rect x="16" y="16" width="12" height="12" fill="var(--sq-light)"/><rect x="16" y="4" width="12" height="12" fill="var(--sq-dark)"/><rect x="4" y="16" width="12" height="12" fill="var(--sq-dark)"/><rect x="3.5" y="3.5" width="25" height="25" fill="none" stroke="var(--brass)"/></svg>
+    <b>JustChess</b>
+  </a>
+  <div class="room" id="room" hidden>
+    <span class="code" aria-label="Room code K7Q2PX">K7Q2PX</span>
+    <button class="btn btn-primary" id="share-btn" type="button">Share</button>
+  </div>
+</header>
+
+<main class="screen" id="main"></main>
+<p class="foot-note">Design mockup for review. Pieces use a symbol font as a stand-in for the real SVG set. The tabs at the top are review controls, not product UI. Example games and names are made up. The share dialog here is a plain overlay for illustration; the app uses the browser's native dialog element.</p>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), main=$('#main'), root=document.documentElement;
+const G={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+const START='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+const MID='r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R';
+function parse(f){const b={};f.split('/').forEach((row,i)=>{let x=0;for(const ch of row){if(/\d/.test(ch))x+=+ch;else b['abcdefgh'[x++]+(8-i)]=ch}});return b}
+function boardHTML(fen,{last=[],sel=null,label='Chessboard',id='bd'}={}){
+  const b=parse(fen);let h='';
+  [8,7,6,5,4,3,2,1].forEach((r,ri)=>{[...'abcdefgh'].forEach((f,fi)=>{const sq=f+r,dk=(('abcdefgh'.indexOf(f)+r)%2===1)?'':' dk',p=b[sq];
+    const name=p?((p===p.toUpperCase()?'white ':'black ')+{k:'king',q:'queen',r:'rook',b:'bishop',n:'knight',p:'pawn'}[p.toLowerCase()]):'empty';
+    h+=`<button type="button" class="sq${dk}${last.includes(sq)?' last':''}${sel===sq?' sel':''}" data-sq="${sq}" aria-label="${sq}, ${name}">`+
+      (ri===7?`<span class="c cf" aria-hidden="true">${f}</span>`:'')+(fi===0?`<span class="c cr" aria-hidden="true">${r}</span>`:'')+
+      (p?`<span class="pc ${p===p.toUpperCase()?'w':'b'}" data-pc="${sq}">${G[p]}</span>`:'')+`</button>`})});
+  return `<div class="frame"><div class="inlay"><div class="board" id="${id}" role="grid" aria-label="${label}">${h}</div></div></div>`}
+function thumb(fen){const b=parse(fen);let h='';[8,7,6,5,4,3,2,1].forEach(r=>[...'abcdefgh'].forEach(f=>{const dk=(('abcdefgh'.indexOf(f)+r)%2===1)?'':' dk';h+=`<i class="${dk.trim()}"></i>`}));return `<span class="thumb" aria-hidden="true">${h}</span>`}
+function sizeCells(){document.querySelectorAll('.board').forEach(b=>b.style.setProperty('--cell',(b.clientWidth/8)+'px'))}
+const GAMES=[
+  {n:'Sam',m:'You play White · last move 4 min ago',t:'Your move',y:1,f:MID},
+  {n:'Computer, Club level',m:'You play Black · last move yesterday',t:'Your move',y:1,f:'rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R'},
+  {n:'Alex',m:'You play Black · last move 2 h ago',t:'Alex to move',y:0,f:'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR'},
+  {n:'Robin',m:'Ended 2 days ago · checkmate',t:'You won',d:1,f:'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR'}];
+function gamesList(){
+  if(st==='Empty')return `<section class="games" aria-labelledby="yg"><h2 id="yg">Your games</h2><p class="empty">No games yet. Start one above or play the computer.</p></section>`;
+  if(st==='Loading')return `<section class="games" aria-labelledby="yg" aria-busy="true"><h2 id="yg">Your games</h2><p class="empty">Loading your games…</p></section>`;
+  const rows=st==='Join request'?[{n:'Waiting for a friend (pass-along)',m:'You play White · last move 1 min ago',t:'Join request',ask:1,f:MID,h:'#request'},...GAMES]:GAMES;
+  return `<section class="games" aria-labelledby="yg"><h2 id="yg">Your games</h2><ul>`+rows.map(g=>
+  `<li class="${g.d?'done':''}"><a href="${g.h||'#game'}">${thumb(g.f)}<span><span class="g-name">${g.n}</span><br><span class="g-meta">${g.m}</span></span><span class="turn${g.y?' yours':''}${g.ask?' ask':''}">${g.t}</span></a></li>`).join('')+`</ul>`+
+  (st==='Network error'?`<p class="empty" role="status">Couldn't refresh your games. <button class="btn btn-quiet" type="button">Retry</button></p>`:'')+`</section>`}
+function cpuPanel(open){return open?`<div class="cpu" id="cpu-panel" role="group" aria-label="Play the computer">
+  <fieldset><legend>Your colour</legend><button class="seg" aria-pressed="true" type="button">White</button><button class="seg" aria-pressed="false" type="button">Black</button><button class="seg" aria-pressed="false" type="button">Random</button></fieldset>
+  <fieldset><legend>Computer level</legend>${['Beginner','Casual','Club','Strong','Maximum'].map((l,i)=>`<button class="seg" type="button" aria-pressed="${i===1}">${l}</button>`).join('')}</fieldset>
+  <div class="actions"><a class="btn btn-primary" href="#game-cpu" style="display:inline-flex;align-items:center;text-decoration:none">Start</a><button class="btn btn-quiet" type="button" id="cpu-close">Cancel</button></div></div>`:''}
+function lobby(open){return `<div class="lobby"><div>
+  <h1>Play a friend. Play the computer. Get better.</h1>
+  <p class="lede">No accounts. Start a game and send the link, play the computer, or train openings, endgames and tactics.</p>
+  <div class="actions"><button class="btn btn-primary" type="button">Start a game</button><button class="btn btn-secondary" type="button" id="cpu-open" aria-expanded="${!!open}" aria-controls="cpu-panel"${st==='No Stockfish'?' disabled':''}>Play the computer</button><a class="btn btn-secondary" href="#learn" style="display:inline-flex;align-items:center;text-decoration:none">Train</a></div>
+  ${st==='No Stockfish'?'<p class="note-line" style="margin-top:8px">Playing the computer needs Stockfish, which isn\'t installed on this server.</p>':cpuPanel(open)}
+  <form class="join" id="joinf"><label for="code-in">Have a room code?</label><input id="code-in" maxlength="6" placeholder="K7Q2PX" autocomplete="off"><button class="btn btn-secondary" type="submit">Join</button></form>
+  </div>${gamesList()}</div>`}
+function sheet(rows){return `<section class="sheet" aria-label="Scoresheet"><h2>Scoresheet</h2><table><tbody>`+rows.map((r,i)=>`<tr><td>${i+1}</td><td class="ink">${r[0]||''}</td><td class="ink">${r[1]||''}</td></tr>`).join('')+`</tbody></table></section>`}
+const OVER={'You win':['Checkmate','You win with Qxf7#'],'You lose':['Checkmate','The computer wins'],'Resigned':['You resigned','The computer wins'],'Stalemate':['Draw','Stalemate'],'Repetition':['Draw','Threefold repetition'],'50-move rule':['Draw','Fifty moves without a capture or pawn move'],'Insufficient material':['Draw','Neither side can mate']};
+function cpuStatus(){return st==='Queued'?['Waiting for the computer…','Another game is using the engine']:st==='No Stockfish'?['The computer can\'t move right now','Stockfish isn\'t available. Your game is saved.']:OVER[st]?['Game over',OVER[st][1]]:['Computer is thinking…','You played d3']}
+function game(cpu){const [s1,s2]=cpu?cpuStatus():['Waiting for Sam','You played d3'],ov=cpu&&OVER[st];
+  return `<div class="play"><div class="boardcol" style="position:relative">${boardHTML(MID,{last:['d2','d3'],label:'Game board, Black to move'})}
+  ${ov?`<div class="over"><div class="card"><h2>${OVER[st][0]}</h2><p>${OVER[st][1]}</p><div class="actions"><button class="btn btn-primary" type="button">Rematch</button><a class="btn btn-secondary" href="#lobby" style="display:inline-flex;align-items:center;text-decoration:none">Back to your games</a></div><p style="margin:10px 0 0;font-size:13px">Rematch swaps colours. Level stays Casual.</p></div></div>`:''}
+  ${cpu&&st==='Resign?'?`<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="rs-h"><div class="dialog"><h2 id="rs-h">Resign this game?</h2><p>The computer gets the win. You can start a rematch afterwards.</p><div class="actions" style="justify-content:flex-end"><button class="btn btn-secondary" type="button">Keep playing</button><button class="btn btn-primary" type="button">Resign</button></div></div></div>`:''}</div>
+  <div class="side"><div class="players"><span><strong>You</strong> play White</span><span><strong>${cpu?'Computer (Casual)':'Sam'}</strong> plays Black</span></div>
+  <div class="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><p><strong>${s1}</strong><br><span>${s2}</span></p></div>
+  <div><span class="note-line">Captured</span><div class="captured" id="caps" aria-label="Pieces you captured: none yet"></div></div>
+  <div class="actions">${cpu?`<button class="btn btn-secondary" type="button" disabled>Take back</button><button class="btn btn-secondary" type="button" id="hint"${st==='No Stockfish'?' disabled':''}>Hint</button><button class="btn btn-quiet" type="button" id="resign">Resign</button>`:''}<button class="btn btn-secondary" type="button" id="cap-demo">Show a capture</button></div>
+  ${cpu?'<p class="note-line">Take back is off while the computer thinks and until you have moved.</p>':''}
+  ${sheet([['e4','e5'],['Nf3','Nc6'],['Bc4','Bc5'],['d3','']])}
+  ${cpu?'<p class="note-line">Score against the computer (this level): you 1, computer 3, draws 0</p>':'<p class="note-line">Room score: you 2, Sam 1, draws 0</p>'}</div></div>`}
+function capture(){ // FR2.1 demo: Bc4xf7 takes the f7 pawn
+  const from=document.querySelector('[data-pc="c4"]'),victim=document.querySelector('[data-pc="f7"]'),to=document.querySelector('[data-sq="f7"]');if(!from||!victim)return;
+  victim.classList.add('taken');
+  const fr=from.parentElement.getBoundingClientRect(),tr=to.getBoundingClientRect();
+  from.style.transition='transform 200ms cubic-bezier(.2,.7,.2,1)';from.style.transform=`translate(${tr.left-fr.left}px,${tr.top-fr.top}px)`;
+  setTimeout(()=>{victim.remove();from.style.transition='none';from.style.transform='';to.appendChild(from);from.dataset.pc='f7';
+    document.querySelectorAll('.last').forEach(s=>s.classList.remove('last'));to.classList.add('last');document.querySelector('[data-sq="c4"]').classList.add('last');
+    const c=$('#caps');c.innerHTML='<span class="new">♟</span>';c.setAttribute('aria-label','Pieces you captured: black pawn')},260)}
+function hint(){const bd=$('#bd');if(!bd||bd.querySelector('.arrow'))return; // e1 -> g1 (castle) arrow
+  const s=v=>{const f='abcdefgh'.indexOf(v[0]),r=8-+v[1];return [f*12.5+6.25,r*12.5+6.25]},[x1,y1]=s('e1'),[x2,y2]=s('g1');
+  bd.insertAdjacentHTML('beforeend',`<svg class="arrow" viewBox="0 0 100 100" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${x2-3}" y2="${y2}"/><polygon points="${x2},${y2} ${x2-4},${y2-2.5} ${x2-4},${y2+2.5}"/></svg>`);
+  $('#hint').textContent='Hint: castle short'}
+function shareDialog(){return `<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="sh-h" id="share-dlg"><div class="dialog">
+  <h2 id="sh-h">Invite a friend</h2><p>Send this link. Whoever opens it first plays Black.</p>
+  <div class="linkrow"><label class="sr" for="share-link">Invite link</label><input id="share-link" readonly value="https://chess.example.net/r/K7Q2PX"><button class="btn btn-primary" type="button" id="copy">Copy link</button></div>
+  <div class="apps"><a href="#share">Email</a><a href="#share">WhatsApp</a><a href="#share">Telegram</a><a href="#share">SMS</a><button type="button">More…</button></div>
+  <div class="qr"><canvas id="qr" width="29" height="29" aria-label="QR code of the invite link" role="img"></canvas><p>Sitting together? Your friend can scan this with their phone camera.</p></div>
+  <div class="foot"><button class="btn btn-secondary" type="button" id="sh-close">Close</button></div></div></div>`}
+function drawQR(){const c=$('#qr');if(!c)return;const x=c.getContext('2d'),n=29;x.fillStyle='#fff';x.fillRect(0,0,n,n);x.fillStyle='#000';
+  let s=7;for(let i=0;i<n;i++)for(let j=0;j<n;j++){s=(s*1103515245+12345)&0x7fffffff;if((s>>16)%2)x.fillRect(i,j,1,1)}
+  [[0,0],[n-7,0],[0,n-7]].forEach(([a,b])=>{x.fillStyle='#000';x.fillRect(a,b,7,7);x.fillStyle='#fff';x.fillRect(a+1,b+1,5,5);x.fillStyle='#000';x.fillRect(a+2,b+2,3,3)});
+  c.style.imageRendering='pixelated'}
+function waiting(pass){return `<div class="play"><div class="boardcol">${boardHTML(pass?MID:START,{label:pass?'Pass-along board, White to move':'Board, waiting for an opponent'})}</div>
+  <div class="side"><div class="status${pass?' yours':''}" role="status"><span class="dot" aria-hidden="true"></span><p><strong>${pass?'Pass-along: White to move':'Waiting for your friend'}</strong><br><span>${pass?'Hand the device over after each move. The invite link still works.':'Send the link. You can play here while you wait.'}</span></p></div>
+  <div class="actions">${pass?'<button class="btn btn-secondary" type="button">Wait for a friend instead</button>':'<a class="btn btn-primary" href="#passalong" style="display:inline-flex;align-items:center;text-decoration:none">Play here while waiting</a><button class="btn btn-secondary" type="button" id="share2">Share</button>'}</div>
+  ${pass?sheet([['e4','e5'],['Nf3','Nc6'],['Bc4','Bc5'],['d3','Nf6']]):'<p class="note-line">The game starts when your friend opens the link, or now if you play both sides here.</p>'}
+  ${pass?'<p class="note-line">Practice game: the room score changes only once a friend joins.</p>':''}</div></div>`}
+const JOINER={'Joiner: waiting':'Waiting for the creator to accept. You\'ll play Black from the current position.','Joiner: declined':'The creator declined. You can ask again later.','Joiner: lapsed':'Nobody answered. Try again later.','Joiner: busy':'Someone else is already asking to join. Try again in a few minutes.','Joiner: too many':'Too many requests. Try again shortly.'};
+function request(){if(JOINER[st])return `<div class="play"><div class="boardcol">${boardHTML(MID,{label:'Board, view only'})}</div>
+  <div class="side"><div class="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><p><strong>Joining K7Q2PX</strong><br><span>${JOINER[st]}</span></p></div>
+  ${st==='Joiner: waiting'?'':'<div class="actions"><a class="btn btn-secondary" href="#lobby" style="display:inline-flex;align-items:center;text-decoration:none">Back to your games</a></div>'}</div></div>`;
+  return `<div class="play"><div class="boardcol">${boardHTML(MID,{label:'Pass-along board'})}</div>
+  <div class="side"><div class="banner" role="alert"><p><strong>Someone wants to join as Black.</strong><br><span class="note-line">They will take over Black from this position. Expires in 9:41.</span></p><div class="actions"><button class="btn btn-primary" type="button">Accept</button><button class="btn btn-secondary" type="button">Decline</button></div></div>
+  <div class="status" role="status"><span class="dot" aria-hidden="true"></span><p><strong>Pass-along: White to move</strong></p></div>
+  <p class="note-line">Use the "Joiner" states above to see the other person's screen.</p></div></div>`}
+const TABS={Openings:['Italian Game','Ruy Lopez','Sicilian Defence','French Defence','Caro-Kann','Queen\'s Gambit','London System','King\'s Indian Defence','Scandinavian Defence','French Exchange: Monte Carlo'],
+  Traps:['Legal\'s mate','Fried Liver Attack','Fishing Pole trap','Englund Gambit trap'],
+  Endgames:['Mate with queen · 3 positions','Mate with rook · 3 positions','King and pawn · 3 positions','Opposition · 3 positions (hold the draw)'],
+  Tactics:['Forks · 300 puzzles','Pins · 300 puzzles','Skewers · 300 puzzles','Discovered attacks · 300 puzzles','Mate in 1 · 300 puzzles','Mate in 2 · 300 puzzles'],
+  Defence:['Meeting the Scholar\'s mate attack','Defending against the Fried Liver','Early queen raids','The Wayward Queen attack']};
+const DONE={Openings:[0,9],Traps:[0],Endgames:[0],Tactics:[],Defence:[]};
+let tab='Openings';
+function learn(){const names=Object.keys(TABS);return `<div class="hub"><h1>Train</h1>
+  <div class="tabs" role="tablist" aria-label="Trainer groups">${names.map(n=>`<button role="tab" type="button" id="tab-${n}" aria-selected="${n===tab}" aria-controls="panel" data-tab="${n}">${n}<small>${DONE[n].length}/${TABS[n].length}</small></button>`).join('')}</div>
+  <div id="panel" role="tabpanel" aria-labelledby="tab-${tab}"><p class="progress">${DONE[tab].length} of ${TABS[tab].length} done on this device</p>
+  <ul class="items">${TABS[tab].map((t,i)=>{const [a,b]=t.split(' · ');if(tab==='Endgames'&&st==='No Stockfish')return `<li><span><b>${a}</b><br><span>Needs Stockfish, which isn't installed on this server</span></span><button class="btn btn-secondary" type="button" disabled>Play</button></li>`;return `<li><span><b>${a}</b>${b?`<br><span>${b}</span>`:''}</span><span>${DONE[tab].includes(i)?'<span class="tick">Done</span> · ':''}<a class="btn btn-secondary" style="display:inline-flex;align-items:center;text-decoration:none" href="${tab==='Tactics'?'#puzzle':tab==='Endgames'?'#endgame':'#learn'}">${tab==='Tactics'?'Solve':tab==='Endgames'?'Play':'Learn'}</a></span></li>`}).join('')}</ul>
+  ${tab==='Tactics'?'<p class="credit">Puzzles from the Lichess puzzle database, released under CC0.</p>':''}${tab==='Endgames'?'<p class="credit">The computer defends at full strength. Needs Stockfish.</p>':''}</div></div>`}
+function puzzle(){return `<div class="play"><div class="boardcol">${boardHTML('r1b1k2r/ppppqppp/2n5/4N3/2B1n3/8/PPPP1PPP/RNBQ1RK1',{label:'Puzzle, White to move'})}</div>
+  <div class="side"><div class="status yours" role="status"><span class="dot" aria-hidden="true"></span><p><strong>White to move: find the fork</strong><br><span>Forks · puzzle 12 of 300</span></p></div>
+  ${st==='Wrong move'?'<div class="banner" role="status"><p><strong>Not this one.</strong> Nxc6 takes a knight, but Black takes back. Try again.</p></div>':st==='Solved'?'<div class="status yours" role="status"><span class="dot" aria-hidden="true"></span><p><strong>Solved</strong><br><span>Nxd7 forks king and queen.</span></p></div>':''}
+  <div class="actions"><button class="btn btn-secondary" type="button">Hint</button><button class="btn btn-secondary" type="button">Show solution</button><button class="btn btn-quiet" type="button">Next puzzle</button></div>
+  <p class="credit">Puzzle from the Lichess puzzle database (CC0).</p></div></div>`}
+function endgame(){const draw=st==='Hold the draw'||st==='Draw held';
+  return `<div class="play"><div class="boardcol">${boardHTML(draw?'8/8/8/3k4/3p4/8/8/3K4':'8/8/8/4k3/8/8/8/4K2R',{label:'Endgame, White to move'})}</div>
+  <div class="side"><div class="status yours" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><p><strong>${st==='Draw held'?'Done! You held the draw.':st==='Escaped'?'The computer escaped':draw?'Opposition':st==='Done'?'Done! Mate in 14 moves.':'Mate with the rook'}</strong><br><span>${draw?'Goal: hold the draw for 30 moves, or by repetition or the 50-move rule. Move 12 of 30.':st==='Escaped'?'The 50-move rule ended it. Start again.':'Goal: checkmate. Position 1 of 3.'}</span></p></div>
+  <p class="note-line">${draw?'Keep your king in front of the pawn and take the opposition.':'Push the king to the edge with your rook and king together.'} The computer defends as well as it can.</p>
+  <div class="actions"><button class="btn btn-secondary" type="button">Hint</button><button class="btn btn-secondary" type="button">Start again</button></div>
+  ${sheet([['Kd2','Kd4'],['Rh4+','']])}</div></div>`}
+const STATES={lobby:['Normal','Loading','Empty','Network error','No Stockfish','Join request'],cpu:['Normal','No Stockfish'],
+  'game-cpu':['Thinking','Queued','Resign?','You win','You lose','Resigned','Stalemate','Repetition','50-move rule','Insufficient material','No Stockfish'],
+  request:['Creator','Joiner: waiting','Joiner: declined','Joiner: lapsed','Joiner: busy','Joiner: too many'],
+  learn:['Normal','No Stockfish'],puzzle:['Your move','Wrong move','Solved'],endgame:['Mate goal','Done','Escaped','Hold the draw','Draw held']};
+let st='',lastView='';
+function statesBar(v){const list=STATES[v]||[];if(v!==lastView){st=list[0]||'';lastView=v}
+  $('#states').innerHTML=list.length?'<span>States:</span>'+list.map(s=>`<button type="button" aria-pressed="${s===st}" data-st="${s}">${s}</button>`).join(''):'';
+  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{st=b.dataset.st;render()})}
+function render(){
+  const v=(location.hash||'#lobby').slice(1);statesBar(v);
+  document.querySelectorAll('.review a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+v||(v==='game-cpu'&&a.id==='tab-cpu')||(v==='passalong'&&a.id==='tab-waiting')?'page':'false'));
+  const inGame=['game','game-cpu','share','waiting','passalong','request'].includes(v);$('#room').hidden=!inGame;
+  main.innerHTML=v==='cpu'?lobby(true):v==='game'||v==='share'?game(false):v==='game-cpu'?game(true):v==='waiting'?waiting(false):v==='passalong'?waiting(true):v==='request'?request():v==='learn'?learn():v==='puzzle'?puzzle():v==='endgame'?endgame():lobby(false);
+  if(v==='share')openShare();
+  sizeCells();
+  $('#cap-demo')&&($('#cap-demo').onclick=capture);
+  $('#hint')&&($('#hint').onclick=hint);
+  $('#resign')&&($('#resign').onclick=()=>{st='Resign?';render()});
+  $('#cpu-open')&&($('#cpu-open').onclick=()=>{location.hash=v==='cpu'?'#lobby':'#cpu'});
+  $('#cpu-close')&&($('#cpu-close').onclick=()=>{location.hash='#lobby'});
+  $('#share2')&&($('#share2').onclick=openShare);
+  $('#joinf')&&($('#joinf').onsubmit=e=>e.preventDefault());
+  document.querySelectorAll('.seg').forEach(b=>b.onclick=()=>b.parentElement.querySelectorAll('.seg').forEach(x=>x.setAttribute('aria-pressed',x===b)));
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();$('#tab-'+tab).focus()});
+}
+let opener=null;
+function openShare(){opener=document.activeElement;if($('#share-dlg'))return;document.body.insertAdjacentHTML('beforeend',shareDialog());drawQR();
+  const d=$('#share-dlg'),close=()=>{d.remove();if(location.hash==='#share')history.replaceState(null,'','#game');opener&&opener.focus&&opener.focus()};
+  $('#sh-close').onclick=close;d.onclick=e=>{if(e.target===d)close()};
+  d.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Tab'){const f=[...d.querySelectorAll('button,a,input')],first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+  $('#copy').onclick=()=>{const b=$('#copy'),done=()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy link',1600)};
+    try{navigator.clipboard.writeText($('#share-link').value).then(done,()=>{$('#share-link').select();done()})}catch(e){$('#share-link').select();done()}};
+  $('#copy').focus()}
+$('#share-btn').onclick=openShare;
+$('#theme-btn').onclick=()=>{const dark=root.getAttribute('data-theme')==='dark'||(!root.hasAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);root.setAttribute('data-theme',dark?'light':'dark')};
+addEventListener('hashchange',()=>{const d=$('#share-dlg');if(d)d.remove();render()});addEventListener('resize',sizeCells);
+render();
+})();
+</script>

@@ -1,0 +1,26 @@
+[
+  {
+    "uuid": "01a1cb03-2ff4-7a1d-b349-fc5e8a2edd35",
+    "slug": "requirements-review",
+    "dirName": "261111-requirements-review",
+    "scope": "poc",
+    "status": "complete",
+    "request": "a50f74a6"
+  },
+  {
+    "uuid": "01a1ce8b-963e-74d8-b6aa-801ce37857dd",
+    "slug": "p1-ui-redesign",
+    "dirName": "261112-p1-ui-redesign",
+    "scope": "refactor",
+    "status": "complete",
+    "request": "640d0044"
+  },
+  {
+    "uuid": "01a1d529-5fdc-7c87-9f19-c0f64362ff71",
+    "slug": "p2-features",
+    "dirName": "261113-p2-features",
+    "scope": "refactor",
+    "status": "in-flight",
+    "request": "1179fe5c"
+  }
+]

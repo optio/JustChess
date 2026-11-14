@@ -1,0 +1,69 @@
+# Fishing Pole trap: 1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Ng4 5.h3 h5 6.hxg4 hxg4 7.Nxe5 Qh4 8.Nf3 gxf3 9.Qxf3 Qh2# (ECO C65).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Fishing Pole Trap
+kind: trap
+eco: C65
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White opens with the king's pawn.
+  - san: e5
+    note: >-
+      Black takes an equal share of the centre.
+  - san: Nf3
+    note: >-
+      The knight attacks e5.
+  - san: Nc6
+    note: >-
+      Black defends it.
+  - san: Bb5
+    note: >-
+      The Ruy Lopez.
+  - san: Nf6
+    note: >-
+      The Berlin Defence, attacking e4.
+  - san: O-O
+    note: >-
+      White castles, ignoring the pawn for now.
+  - san: Ng4
+    note: >-
+      The bait. The knight jumps towards White's king and dangles on g4 like
+      a lure on a line.
+  - san: h3
+    note: >-
+      White attacks the knight. It seems to have nowhere good to go.
+  - san: h5
+    note: >-
+      Black leaves the knight where it is. If White takes it, the h-file opens
+      for Black's rook and queen.
+  - san: hxg4
+    note: >-
+      White bites and wins a piece.
+  - san: hxg4
+    note: >-
+      The pawn takes back, opening the h-file and attacking the knight on f3.
+  - san: Nxe5
+    note: >-
+      White moves the knight and grabs a pawn too. This is a mistake.
+  - san: Qh4
+    note: >-
+      The queen joins the rook on the open h-file. Mate on h1 or h2 is coming.
+  - san: Nf3
+    note: >-
+      White brings the knight back to guard h2.
+  - san: gxf3
+    note: >-
+      The pawn simply removes the defender.
+  - san: Qxf3
+    note: >-
+      White takes the pawn, but h2 is now unguarded.
+  - san: "Qh2#"
+    note: >-
+      Checkmate. The rook on h8 backs up the queen, and the king cannot
+      escape.
+objectives:
+  - See how a pawn recapture can open the h-file against a castled king.
+  - Count attackers on h2 before grabbing material near your own king.
+  - As White, treat a knight offered on g4 as bait and check the open file first.

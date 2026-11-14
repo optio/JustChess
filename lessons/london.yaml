@@ -1,0 +1,61 @@
+# London System: 1.d4 d5 2.Bf4 Nf6 3.e3 e6 4.Nf3 c5 5.c3 Nc6 6.Nbd2 Bd6 7.Bg3 O-O 8.Bd3 (ECO D00).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: London System
+kind: opening
+eco: D00
+side: white
+start: startpos
+moves:
+  - san: d4
+    note: >-
+      White starts with the queen's pawn.
+  - san: d5
+    note: >-
+      Black meets it in the middle.
+  - san: Bf4
+    note: >-
+      The London idea: bring this bishop out before e3 locks it in.
+  - san: Nf6
+    note: >-
+      Black develops a knight.
+  - san: e3
+    note: >-
+      White builds a solid chain and frees the other bishop.
+  - san: e6
+    note: >-
+      Black opens a path for the bishop on f8.
+  - san: Nf3
+    note: >-
+      The knight comes out and keeps an eye on e5.
+  - san: c5
+    note: >-
+      Black challenges d4, the usual plan against the London.
+  - san: c3
+    note: >-
+      White props up d4 with a pawn. The pawns on c3, d4 and e3 form a sturdy
+      triangle.
+  - san: Nc6
+    note: >-
+      Black adds pressure on d4.
+  - san: Nbd2
+    note: >-
+      This knight goes to d2, where it supports e4 later and does not block
+      the c-pawn.
+  - san: Bd6
+    note: >-
+      Black offers to trade off White's strong bishop.
+  - san: Bg3
+    note: >-
+      White keeps the bishop. If Black takes on g3, the h-pawn takes back and
+      the h-file opens.
+  - san: O-O
+    note: >-
+      Black castles.
+  - san: Bd3
+    note: >-
+      White completes the set-up: both bishops aim at Black's king side, and
+      castling comes next.
+objectives:
+  - Develop the dark-squared bishop to f4 before playing e3.
+  - Build the c3-d4-e3 pawn triangle.
+  - Use the same set-up against most Black replies.

@@ -1,0 +1,27 @@
+{
+  "stage": "code-generation",
+  "unit": "u5-lessons-and-puzzles",
+  "upstream_ids": ["FR7.1","FR7.2","FR7.3","FR8.1","FR8.3","FR8.4","FR8.5","FR8.6","BR1.1","BR1.2","BR1.3","BR2.1","BR2.2","BR2.3","BR2.4","BR2.5","BR3.1","BR3.2","BR3.3","BR3.4"],
+  "coverage": [
+    { "id": "FR7.1", "status": "OK", "target": "lessons/ruy-lopez.yaml" },
+    { "id": "FR7.2", "status": "OK", "target": "lessons/legals-mate.yaml" },
+    { "id": "FR7.3", "status": "OK", "target": "tests/test_lessons.py" },
+    { "id": "FR8.1", "status": "OK", "target": "static/js/training/hub.js" },
+    { "id": "FR8.3", "status": "OK", "target": "justchess/puzzles.py" },
+    { "id": "FR8.4", "status": "OK", "target": "lessons/scholars-mate-defence.yaml" },
+    { "id": "FR8.5", "status": "OK", "target": "static/js/training/trainer-progress.js" },
+    { "id": "FR8.6", "status": "OK", "target": "puzzles/LICENSE.md" },
+    { "id": "BR1.1", "status": "OK", "target": "justchess/lessons.py" },
+    { "id": "BR1.2", "status": "OK", "target": "justchess/api.py" },
+    { "id": "BR1.3", "status": "OK", "target": "tests/test_lessons.py" },
+    { "id": "BR2.1", "status": "OK", "target": "justchess/puzzles.py" },
+    { "id": "BR2.2", "status": "OK", "target": "scripts/curate_puzzles.py" },
+    { "id": "BR2.3", "status": "OK", "target": "static/js/training/puzzle.js" },
+    { "id": "BR2.4", "status": "OK", "target": "justchess/puzzles.py" },
+    { "id": "BR2.5", "status": "OK", "target": "static/js/training/puzzle-state.js" },
+    { "id": "BR3.1", "status": "OK", "target": "static/js/training/hub-tabs.js" },
+    { "id": "BR3.2", "status": "OK", "target": "static/js/training/trainer-progress.js" },
+    { "id": "BR3.3", "status": "OK", "target": "static/js/training/puzzle.js" },
+    { "id": "BR3.4", "status": "OK", "target": "static/js/app.js" }
+  ]
+}

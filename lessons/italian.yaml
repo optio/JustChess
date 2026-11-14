@@ -1,0 +1,61 @@
+# Italian Game, Giuoco Piano main line: 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 (ECO C53).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Italian Game
+aliases:
+  - Giuoco Piano
+  - Italian Game, Classical Variation
+eco: C53
+side: white
+start: startpos
+moves:
+  - san: e4
+    uci: e2e4
+    note: >-
+      White puts a pawn in the centre. It also opens lines for the queen
+      and for the bishop on f1.
+    alternatives:
+      - san: d4
+        note: The Queen's Pawn opening, also a strong way to take the centre.
+  - san: e5
+    uci: e7e5
+    note: >-
+      Black answers the same way and claims an equal share of the centre.
+  - san: Nf3
+    uci: g1f3
+    note: >-
+      The knight comes out towards the centre and attacks Black's pawn on e5.
+  - san: Nc6
+    uci: b8c6
+    note: >-
+      Black develops a knight and defends the pawn on e5 at the same time.
+  - san: Bc4
+    uci: f1c4
+    note: >-
+      The bishop takes an active diagonal and aims at f7. Early in the game
+      f7 is Black's weakest square, because only the king guards it. With f1
+      and g1 empty, White is now ready to castle.
+    alternatives:
+      - san: Bb5
+        note: The Ruy Lopez, which puts pressure on the knight that defends e5.
+  - san: Bc5
+    uci: f8c5
+    note: >-
+      Black copies the idea: this bishop aims at f2, the square only White's
+      king guards. Once the knight on g8 comes out, Black can castle too.
+    alternatives:
+      - san: Nf6
+        note: The Two Knights Defence, a sharper choice that attacks the pawn on e4.
+  - san: c3
+    uci: c2c3
+    note: >-
+      White prepares d4 to build a big pawn centre. Moving the c-pawn also
+      lets the queen reach b3 later, to add pressure on f7.
+    alternatives:
+      - san: d3
+        note: A quieter plan that supports e4 and keeps the position calm.
+      - san: b4
+        note: The Evans Gambit, which offers a pawn to play c3 and d4 with gain of time.
+objectives:
+  - Fight for the centre with pawns on e4 and, soon, d4.
+  - Develop knights and bishops before the queen, then castle to keep your king safe.
+  - Watch f7 (and f2 for Black). Early on only the king guards it, so it is a target.

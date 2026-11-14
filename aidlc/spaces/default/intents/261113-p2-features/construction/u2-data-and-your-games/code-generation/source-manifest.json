@@ -1,0 +1,28 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-data-and-your-games",
+  "version": 1,
+  "writes": [
+    { "path": "justchess/summaries.py" },
+    { "path": "justchess/db.py" },
+    { "path": "justchess/rooms.py" },
+    { "path": "justchess/games.py" },
+    { "path": "justchess/security.py" },
+    { "path": "justchess/api.py" },
+    { "path": "justchess/__init__.py" },
+    { "path": "static/js/your-games.js" },
+    { "path": "static/js/seat-store.js" },
+    { "path": "static/js/api.js" },
+    { "path": "static/js/screens/lobby.js" },
+    { "path": "static/js/app.js" },
+    { "path": "static/css/app.css" },
+    { "path": "README.md" },
+    { "path": "tests/core/test_db.py" },
+    { "path": "tests/core/test_rooms.py" },
+    { "path": "tests/core/test_games.py" },
+    { "path": "tests/core/test_summaries.py" },
+    { "path": "tests/js/your-games.test.mjs" },
+    { "path": "tests/js/seat-store.test.mjs" },
+    { "path": "tests/test_u2_your_games_browser.py" }
+  ]
+}

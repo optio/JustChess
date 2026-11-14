@@ -1,0 +1,277 @@
+{
+  "stage": "units-generation",
+  "upstream_ids": [
+    "FR1.1",
+    "FR1.2",
+    "FR1.3",
+    "FR1.4",
+    "FR1.5",
+    "FR2.1",
+    "FR2.2",
+    "FR2.3",
+    "FR3.1",
+    "FR3.2",
+    "FR3.3",
+    "FR3.4",
+    "FR3.5",
+    "FR3.6",
+    "FR3.7",
+    "FR3.8",
+    "FR3.9",
+    "FR4.1",
+    "FR4.2",
+    "FR4.3",
+    "FR5.1",
+    "FR5.2",
+    "FR5.3",
+    "FR5.4",
+    "FR5.5",
+    "FR6.1",
+    "FR6.2",
+    "FR6.3",
+    "FR6.4",
+    "FR6.5",
+    "FR6.6",
+    "FR6.7",
+    "FR6.8",
+    "FR6.9",
+    "FR7.1",
+    "FR7.2",
+    "FR7.3",
+    "FR8.1",
+    "FR8.2",
+    "FR8.3",
+    "FR8.4",
+    "FR8.5",
+    "FR8.6",
+    "FR9.1",
+    "FR9.2"
+  ],
+  "coverage": [
+    {
+      "id": "FR1.1",
+      "status": "OK",
+      "target": "U2"
+    },
+    {
+      "id": "FR1.2",
+      "status": "OK",
+      "target": "U2"
+    },
+    {
+      "id": "FR1.3",
+      "status": "OK",
+      "target": "U2"
+    },
+    {
+      "id": "FR1.4",
+      "status": "OK",
+      "target": "U2"
+    },
+    {
+      "id": "FR1.5",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR2.1",
+      "status": "OK",
+      "target": "U1; U2"
+    },
+    {
+      "id": "FR2.2",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR2.3",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR3.1",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.2",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.3",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.4",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.5",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.6",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.7",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.8",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR3.9",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR4.1",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR4.2",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR4.3",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR5.1",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR5.2",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR5.3",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR5.4",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR5.5",
+      "status": "OK",
+      "target": "U1"
+    },
+    {
+      "id": "FR6.1",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.2",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.3",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.4",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.5",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.6",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.7",
+      "status": "OK",
+      "target": "U4; U6"
+    },
+    {
+      "id": "FR6.8",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR6.9",
+      "status": "OK",
+      "target": "U4"
+    },
+    {
+      "id": "FR7.1",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR7.2",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR7.3",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR8.1",
+      "status": "OK",
+      "target": "U5; U6"
+    },
+    {
+      "id": "FR8.2",
+      "status": "OK",
+      "target": "U6"
+    },
+    {
+      "id": "FR8.3",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR8.4",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR8.5",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR8.6",
+      "status": "OK",
+      "target": "U5"
+    },
+    {
+      "id": "FR9.1",
+      "status": "OK",
+      "target": "U3"
+    },
+    {
+      "id": "FR9.2",
+      "status": "OK",
+      "target": "U3"
+    }
+  ]
+}

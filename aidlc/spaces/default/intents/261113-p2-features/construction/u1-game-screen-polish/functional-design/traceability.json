@@ -1,0 +1,18 @@
+{
+  "stage": "functional-design",
+  "unit": "u1-game-screen-polish",
+  "upstream_ids": ["FR2.1","FR2.2","FR2.3","FR4.1","FR4.2","FR4.3","FR5.1","FR5.2","FR5.3","FR5.4","FR5.5"],
+  "coverage": [
+    { "id": "FR2.1", "status": "OK", "target": "BR1.1, BR1.2, BR1.3, BR1.6" },
+    { "id": "FR2.2", "status": "OK", "target": "BR1.4" },
+    { "id": "FR2.3", "status": "OK", "target": "BR1.5" },
+    { "id": "FR4.1", "status": "OK", "target": "BR2.1, BR2.2" },
+    { "id": "FR4.2", "status": "OK", "target": "BR2.1, BR2.3, BR2.4" },
+    { "id": "FR4.3", "status": "OK", "target": "BR2.5" },
+    { "id": "FR5.1", "status": "OK", "target": "BR3.1, BR3.6" },
+    { "id": "FR5.2", "status": "OK", "target": "BR3.2" },
+    { "id": "FR5.3", "status": "OK", "target": "BR3.3" },
+    { "id": "FR5.4", "status": "OK", "target": "BR3.4" },
+    { "id": "FR5.5", "status": "OK", "target": "BR3.5" }
+  ]
+}

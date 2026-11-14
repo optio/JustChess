@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="JustChess">
+  <!-- JustChess mark: a 2x2 checker in a walnut tile with a brass inlay line.
+       Light-theme Walnut-and-maple colours; pages that inline the mark use the
+       design tokens instead (see .logo-mark in static/css/base.css). -->
+  <defs>
+    <linearGradient id="walnut" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6A4A33"/>
+      <stop offset="0.4" stop-color="#4B3323"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="30" height="30" rx="5" fill="url(#walnut)"/>
+  <rect x="4" y="4" width="12" height="12" fill="#E7D0A3"/>
+  <rect x="16" y="16" width="12" height="12" fill="#E7D0A3"/>
+  <rect x="16" y="4" width="12" height="12" fill="#9C6C3C"/>
+  <rect x="4" y="16" width="12" height="12" fill="#9C6C3C"/>
+  <rect x="3.5" y="3.5" width="25" height="25" fill="none" stroke="#A9822F" stroke-width="1"/>
+</svg>

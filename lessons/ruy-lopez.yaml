@@ -1,0 +1,74 @@
+# Ruy Lopez, Closed: 1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 d6 8.c3 O-O (ECO C84 family).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Ruy Lopez
+kind: opening
+aliases:
+  - Spanish Game
+  - Ruy Lopez, Closed Variation
+eco: C84
+side: white
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      A pawn to the centre. It frees the queen and the light-squared bishop.
+  - san: e5
+    note: >-
+      Black mirrors the move and stakes an equal claim to the centre.
+  - san: Nf3
+    note: >-
+      The knight develops towards the middle and puts pressure on e5.
+  - san: Nc6
+    note: >-
+      Black brings out a knight that guards e5.
+  - san: Bb5
+    note: >-
+      The Spanish bishop. It eyes the knight that defends e5, so the pressure
+      on Black's centre lasts for many moves.
+    alternatives:
+      - san: Bc4
+        note: The Italian Game, aiming the bishop at f7 instead.
+  - san: a6
+    note: >-
+      Black asks the bishop at once whether it wants to trade or retreat.
+  - san: Ba4
+    note: >-
+      White keeps the bishop and the pin-like pressure on c6. Taking on c6 is
+      also possible but gives up the bishop pair.
+  - san: Nf6
+    note: >-
+      Black develops and hits the pawn on e4.
+  - san: O-O
+    note: >-
+      White castles first. The pawn on e4 looks loose, but taking it opens the
+      e-file towards Black's own king.
+  - san: Be7
+    note: >-
+      A calm developing move that prepares castling. This is the Closed
+      Variation.
+  - san: Re1
+    note: >-
+      The rook guards e4. Now White really threatens to take on c6 and then
+      win the pawn on e5.
+  - san: b5
+    note: >-
+      Black drives the bishop away so the knight on c6 is no longer under
+      pressure.
+  - san: Bb3
+    note: >-
+      The bishop settles on a fine diagonal that still points at f7.
+  - san: d6
+    note: >-
+      Black firmly supports e5 and opens a path for the bishop on c8.
+  - san: c3
+    note: >-
+      White prepares d4 and gives the bishop a retreat square on c2 if it is
+      ever attacked.
+  - san: O-O
+    note: >-
+      Both kings are safe. White will push d4 and manoeuvre slowly; Black
+      will look for play on the queen side.
+objectives:
+  - Use Bb5 to keep lasting pressure on the knight that guards e5.
+  - Castle early and use Re1 to protect e4 instead of rushing.
+  - Prepare d4 with c3, keeping a retreat square for the bishop.

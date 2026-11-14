@@ -1,0 +1,15 @@
+{
+  "stage": "functional-design",
+  "unit": "u6-training",
+  "upstream_ids": ["FR7.1","FR7.2","FR7.3","FR7.4","FR7.5","FR7.6","FR7.7","FR8.1"],
+  "coverage": [
+    { "id": "FR7.1", "status": "OK", "target": "BR3.1, BR1.3, BR2.2, BR5.1" },
+    { "id": "FR7.2", "status": "OK", "target": "BR3.1" },
+    { "id": "FR7.3", "status": "OK", "target": "BR4.1, BR4.5, BR1.3, BR5.1" },
+    { "id": "FR7.4", "status": "OK", "target": "BR4.3" },
+    { "id": "FR7.5", "status": "OK", "target": "BR4.2, BR4.4, BR2.3" },
+    { "id": "FR7.6", "status": "OK", "target": "BR1.1, BR2.1" },
+    { "id": "FR7.7", "status": "OK", "target": "BR1.2, BR2.2" },
+    { "id": "FR8.1", "status": "OK", "target": "BR1.4" }
+  ]
+}

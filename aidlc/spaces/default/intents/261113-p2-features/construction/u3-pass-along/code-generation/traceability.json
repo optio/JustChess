@@ -1,0 +1,31 @@
+{
+  "stage": "code-generation",
+  "unit": "u3-pass-along",
+  "upstream_ids": ["FR3.1","FR3.2","FR3.3","FR3.4","FR3.5","FR3.6","FR3.7","FR3.8","FR3.9","FR9.1","FR9.2","BR1.1","BR1.5","BR1.2","BR1.3","BR1.4","BR2.1","BR2.2","BR2.3","BR2.4","BR2.5","BR3.1","BR3.2","BR4.1"],
+  "coverage": [
+    { "id": "FR3.1", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR3.2", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR3.3", "status": "OK", "target": "justchess/api.py" },
+    { "id": "FR3.4", "status": "OK", "target": "justchess/notifications.py" },
+    { "id": "FR3.5", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "FR3.6", "status": "OK", "target": "static/js/pass-along.js" },
+    { "id": "FR3.7", "status": "OK", "target": "tests/core/test_join_requests.py" },
+    { "id": "FR3.8", "status": "OK", "target": "justchess/games.py" },
+    { "id": "FR3.9", "status": "OK", "target": "tests/core/test_pass_along.py" },
+    { "id": "FR9.1", "status": "OK", "target": ".env.example" },
+    { "id": "FR9.2", "status": "OK", "target": "tests/test_envfile.py" },
+    { "id": "BR1.1", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "BR1.5", "status": "OK", "target": "justchess/games.py" },
+    { "id": "BR1.2", "status": "OK", "target": "justchess/games.py" },
+    { "id": "BR1.3", "status": "OK", "target": "tests/core/test_pass_along.py" },
+    { "id": "BR1.4", "status": "OK", "target": "justchess/games.py" },
+    { "id": "BR2.1", "status": "OK", "target": "justchess/api.py" },
+    { "id": "BR2.2", "status": "OK", "target": "justchess/rooms.py" },
+    { "id": "BR2.3", "status": "OK", "target": "static/js/room-flow.js" },
+    { "id": "BR2.4", "status": "OK", "target": "justchess/housekeeping.py" },
+    { "id": "BR2.5", "status": "OK", "target": "justchess/notifications.py" },
+    { "id": "BR3.1", "status": "OK", "target": "justchess/ratelimit.py" },
+    { "id": "BR3.2", "status": "OK", "target": "README.md" },
+    { "id": "BR4.1", "status": "OK", "target": "static/js/screens/game.js" }
+  ]
+}

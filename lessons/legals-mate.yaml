@@ -1,0 +1,56 @@
+# Legal's Mate: 1.e4 e5 2.Nf3 d6 3.Bc4 Bg4 4.Nc3 g6 5.Nxe5 Bxd1 6.Bxf7+ Ke7 7.Nd5# (ECO C41).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Legal's Mate
+kind: trap
+aliases:
+  - Blackburne's Mate trap
+eco: C41
+side: white
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      A normal start: pawn to the centre.
+  - san: e5
+    note: >-
+      Black replies in the same way.
+  - san: Nf3
+    note: >-
+      The knight attacks e5.
+  - san: d6
+    note: >-
+      Black defends with a pawn, the Philidor Defence.
+  - san: Bc4
+    note: >-
+      The bishop aims at f7, the weak spot next to Black's king.
+  - san: Bg4
+    note: >-
+      Black pins the knight to the queen. It looks strong, but the pin is
+      not absolute: the knight is allowed to move.
+  - san: Nc3
+    note: >-
+      White develops and quietly waits for a careless reply.
+  - san: g6
+    note: >-
+      The mistake. Black plays a slow move and leaves e5 and f7 open to a
+      combination.
+  - san: Nxe5
+    note: >-
+      The surprise. White breaks the pin and gives up the queen.
+  - san: Bxd1
+    note: >-
+      Black grabs the queen. Declining was the only way to limit the damage.
+  - san: Bxf7+
+    note: >-
+      Check. The king has only one square to go to.
+  - san: Ke7
+    note: >-
+      Forced: the king steps to e7.
+  - san: "Nd5#"
+    note: >-
+      Checkmate with three minor pieces. The bishop and both knights cover
+      every square around the king.
+objectives:
+  - Learn why a pin on a knight in front of the queen is not absolute.
+  - See how Bc4 and two knights combine against f7 and the king.
+  - As Black, do not grab a queen without checking what follows.

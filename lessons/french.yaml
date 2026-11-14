@@ -1,0 +1,50 @@
+# French Defence, Advance Variation: 1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Nc6 5.Nf3 Qb6 (ECO C02).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: French Defence
+kind: opening
+aliases:
+  - French Defence, Advance Variation
+eco: C02
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White starts with the king's pawn.
+  - san: e6
+    note: >-
+      The French. A modest pawn move that prepares d5, so Black can challenge
+      e4 with support behind it.
+  - san: d4
+    note: >-
+      White builds the classic two-pawn centre on d4 and e4.
+  - san: d5
+    note: >-
+      Black hits e4 at once. White must decide how to deal with the attack.
+  - san: e5
+    note: >-
+      The Advance Variation. White gains space and locks the centre, which
+      cramps Black's knight on g8.
+    alternatives:
+      - san: Nc3
+        note: The main line, defending e4 with a piece.
+  - san: c5
+    note: >-
+      The key French idea: strike at the base of White's pawn chain on d4.
+  - san: c3
+    note: >-
+      White props up d4 with another pawn.
+  - san: Nc6
+    note: >-
+      Black adds a second attacker to d4.
+  - san: Nf3
+    note: >-
+      White defends d4 again and develops.
+  - san: Qb6
+    note: >-
+      The queen joins the attack on d4 and also eyes b2. Black keeps piling
+      up pressure on the centre.
+objectives:
+  - Prepare d5 with e6 so the pawn has support.
+  - After e5, attack the base of the pawn chain with c5.
+  - Pile up on d4 with Nc6 and Qb6.

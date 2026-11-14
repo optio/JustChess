@@ -1,0 +1,57 @@
+# French Defence, Exchange Variation, Monte Carlo: 1.e4 e6 2.d4 d5 3.exd5 exd5 4.c4 (ECO C01).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: "French Exchange: Monte Carlo Variation"
+aliases:
+  - French Defence, Exchange Variation, Monte Carlo
+  - French Exchange, Monte Carlo Variation
+eco: C01
+side: white
+start: startpos
+moves:
+  - san: e4
+    uci: e2e4
+    note: >-
+      White puts a pawn in the centre. It also opens lines for the queen
+      and for the bishop on f1.
+  - san: e6
+    uci: e7e6
+    note: >-
+      The French Defence. Black gets ready to play d5 next and challenge
+      the pawn on e4, with the pawn on e6 there to support it.
+  - san: d4
+    uci: d2d4
+    note: >-
+      White takes more of the centre: two pawns side by side on e4 and d4.
+  - san: d5
+    uci: d7d5
+    note: >-
+      Black strikes at e4 straight away. The pawn on e6 backs up the pawn on d5.
+  - san: exd5
+    uci: e4d5
+    note: >-
+      The Exchange Variation. White trades pawns, which opens the position
+      and ends the tension in the centre.
+    alternatives:
+      - san: e5
+        note: The Advance Variation, which gains space and keeps the centre closed.
+      - san: Nc3
+        note: One of the main lines, which defends e4 with a piece.
+  - san: exd5
+    uci: e6d5
+    note: >-
+      Black takes back with the e-pawn. Black keeps a pawn in the centre on d5,
+      and the bishop on c8 now has an open diagonal.
+  - san: c4
+    uci: c2c4
+    note: >-
+      The Monte Carlo idea. White attacks the pawn on d5 with another pawn,
+      aiming for active piece play instead of a quiet, symmetrical game.
+    alternatives:
+      - san: Nf3
+        note: The calm main line. White develops and keeps the pawns symmetrical.
+      - san: Bd3
+        note: Another quiet move that develops the bishop towards Black's king.
+objectives:
+  - Know why 1...e6 prepares d5 to challenge White's pawn on e4.
+  - After the pawn trade, use c4 to attack Black's pawn on d5 and unbalance the game.
+  - Develop quickly (Nc3, Nf3) so that the pressure on d5 counts.

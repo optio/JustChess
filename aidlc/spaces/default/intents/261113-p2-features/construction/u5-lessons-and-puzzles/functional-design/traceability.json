@@ -1,0 +1,15 @@
+{
+  "stage": "functional-design",
+  "unit": "u5-lessons-and-puzzles",
+  "upstream_ids": ["FR7.1","FR7.2","FR7.3","FR8.1","FR8.3","FR8.4","FR8.5","FR8.6"],
+  "coverage": [
+    { "id": "FR7.1", "status": "OK", "target": "BR1.1, BR1.2, BR1.3" },
+    { "id": "FR7.2", "status": "OK", "target": "BR1.1, BR1.3" },
+    { "id": "FR7.3", "status": "OK", "target": "BR1.3" },
+    { "id": "FR8.1", "status": "OK", "target": "BR3.1, BR3.4" },
+    { "id": "FR8.3", "status": "OK", "target": "BR2.1, BR2.2, BR2.3, BR2.4, BR2.5" },
+    { "id": "FR8.4", "status": "OK", "target": "BR1.1, BR1.2, BR1.3" },
+    { "id": "FR8.5", "status": "OK", "target": "BR3.1, BR3.2" },
+    { "id": "FR8.6", "status": "OK", "target": "BR2.2, BR3.3" }
+  ]
+}

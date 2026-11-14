@@ -1,0 +1,61 @@
+# Englund Gambit trap: 1.d4 e5 2.dxe5 Nc6 3.Nf3 Qe7 4.Bf4 Qb4+ 5.Bd2 Qxb2 6.Bc3 Bb4 7.Qd2 Bxc3 8.Qxc3 Qc1# (ECO A40).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Englund Gambit Trap
+kind: trap
+eco: A40
+side: black
+start: startpos
+moves:
+  - san: d4
+    note: >-
+      White opens with the queen's pawn.
+  - san: e5
+    note: >-
+      The Englund Gambit. Black offers a pawn straight away.
+  - san: dxe5
+    note: >-
+      White accepts the pawn.
+  - san: Nc6
+    note: >-
+      Black develops and attacks the pawn on e5.
+  - san: Nf3
+    note: >-
+      White defends the extra pawn.
+  - san: Qe7
+    note: >-
+      The queen adds pressure on e5 and gets ready to swing to b4.
+  - san: Bf4
+    note: >-
+      White defends e5 again. Natural, but it leaves b2 without a guard.
+  - san: Qb4+
+    note: >-
+      Check, and the queen attacks the pawn on b2 at the same time.
+  - san: Bd2
+    note: >-
+      White blocks with the bishop.
+  - san: Qxb2
+    note: >-
+      Black wins the pawn back and now attacks the rook on a1.
+  - san: Bc3
+    note: >-
+      White attacks the queen. It looks like a good answer, but it is the
+      decisive error.
+  - san: Bb4
+    note: >-
+      Black pins the bishop on c3 to the queen behind it.
+  - san: Qd2
+    note: >-
+      White defends the bishop with the queen.
+  - san: Bxc3
+    note: >-
+      Black takes the bishop.
+  - san: Qxc3
+    note: >-
+      White takes back, and the queen leaves the c1 square unguarded.
+  - san: "Qc1#"
+    note: >-
+      Checkmate on the back rank. The king's own pieces block every escape.
+objectives:
+  - Use a queen check to hit a second target at the same time.
+  - Pin a piece to the queen and then remove its defender.
+  - Watch for back-rank mates when the queen leaves the first rank.

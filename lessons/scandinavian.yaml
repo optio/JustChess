@@ -1,0 +1,54 @@
+# Scandinavian Defence: 1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 c6 6.Bc4 Bf5 (ECO B01).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Scandinavian Defence
+kind: opening
+aliases:
+  - Centre Counter Defence
+eco: B01
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White takes the centre with the king's pawn.
+  - san: d5
+    note: >-
+      The Scandinavian. Black attacks e4 at once.
+  - san: exd5
+    note: >-
+      White takes the pawn.
+  - san: Qxd5
+    note: >-
+      Black takes back with the queen. It comes out early, but White has no
+      easy way to punish it.
+  - san: Nc3
+    note: >-
+      White develops and attacks the queen, gaining a move.
+  - san: Qa5
+    note: >-
+      The queen moves aside to a5, out of the way and still active against
+      the knight.
+  - san: d4
+    note: >-
+      White takes the centre.
+  - san: Nf6
+    note: >-
+      Black develops a knight.
+  - san: Nf3
+    note: >-
+      White develops too.
+  - san: c6
+    note: >-
+      Black gives the queen a retreat to c7 and keeps the knight off b5 and
+      d5.
+  - san: Bc4
+    note: >-
+      The bishop finds an active diagonal.
+  - san: Bf5
+    note: >-
+      Black's light-squared bishop comes out before e6. Black is solid and
+      ready to castle.
+objectives:
+  - After the early queen move, place it on a5 where it is hard to chase.
+  - Play c6 to give the queen a retreat and guard b5 and d5.
+  - Develop the bishop to f5 before playing e6.

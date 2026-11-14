@@ -1,0 +1,205 @@
+/*
+ * JustChess "Club Set" design tokens (U2).
+ *
+ * Every colour in the interface comes from this file (BR5.1). Values are from
+ * inception/refined-mockups/design-system-mapping.md, with these contrast fixes
+ * made in the build (tested by tests/js/contrast.test.mjs):
+ *   - Walnut and maple dark square  #A3713F -> #9C6C3C  (white label 4.5:1)
+ *   - Tournament green dark square  #5A8160 -> #597F5F  (white label 4.5:1)
+ *   - --accent-text (quiet buttons) #785C1E in light mode (brass text 4.5:1 on --page)
+ *   - --focus-ring uses the darkened brass #8A6A22 in light mode (3:1 on --page)
+ *   - --on-baize #14110D in dark mode (text on #5A9A7E 4.5:1)
+ * and this one made in U3 for the U2 review finding (labels under the
+ * last-move highlight):
+ *   - --hl-last tint --brass (#A9822F light, #D3AE5C dark) -> --hl-last-tint
+ *     #8A6A22 in both themes, opacity unchanged at 38%. Lowest label pairs
+ *     under the highlight: white on Walnut dark 4.73:1, white on Tournament
+ *     dark 4.81:1, dark label on Rosewood light 6.93:1 (was 4.13 / 3.32 on
+ *     Walnut and 4.21 / 3.37 on Tournament, light / dark theme).
+ * and this one made in U6 for the training arrow:
+ *   - --arrow is #785C1E in light mode, not --hl-last-tint #8A6A22 as planned:
+ *     #8A6A22 reaches only 2.80:1 on the Rosewood light square, where the
+ *     paper outline is 1.58:1. #785C1E gives 3.48:1 there; the paper outline
+ *     covers the dark squares (3.99:1 on Walnut and Tournament dark).
+ *     Dark mode keeps the brass #D3AE5C with the dark paper outline.
+ *
+ * Layout of this file is parsed by static/js/contrast.js: one declaration per
+ * line inside plain `selector { ... }` blocks. Keep it that way.
+ *
+ * Theme: :root holds light values; dark values apply under
+ * prefers-color-scheme unless data-theme="light", and always under
+ * data-theme="dark". Board theme: data-board on the root (or any element).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Page and surfaces */
+  --page: #E2DACB;
+  --surface: #EDE6D8;
+  --paper: #F5F0E4;
+  --rule: #C9BBA3;
+  --text: #2A2019;
+  --muted: #6A5B4C;
+
+  /* Board frame */
+  --walnut: #4B3323;
+  --walnut-hi: #6A4A33;
+  --engrave: #D9C29A;
+
+  /* Identity colours */
+  --brass: #A9822F;
+  --ink: #294A93;
+  --baize: #2E5C49;
+  --on-baize: #F4EFE3;
+  --oxblood: #8E2C27;
+
+  /* Accent (decision: brass) */
+  --accent: var(--brass);
+  --accent-fill: #8A6A22;
+  --on-accent: #FBF7EE;
+  --accent-text: #785C1E;
+  --focus-ring: #8A6A22;
+  --link: var(--ink);
+
+  /* Overlays */
+  --scrim: rgba(30, 20, 12, 0.45);
+  --shadow-dialog: 0 18px 40px rgba(0, 0, 0, 0.25);
+
+  /* Board squares: Walnut and maple is the default */
+  --sq-light: #E7D0A3;
+  --sq-dark: #9C6C3C;
+  --label-on-light: #1E1611;
+  --label-on-dark: #FFFFFF;
+
+  /* Highlights (the same on every board theme, BR3.1). The last-move tint is
+     fixed (not the theme's --brass) so square labels keep 4.5:1 in both themes. */
+  --hl-last-tint: #8A6A22;
+  --hl-last: color-mix(in srgb, var(--hl-last-tint) 38%, transparent);
+  --hl-target: rgba(20, 14, 8, 0.32);
+  --hl-check: rgba(190, 40, 30, 0.75);
+  --hl-check-soft: rgba(190, 40, 30, 0.35);
+
+  /* Training arrow (U6, BR4.3): a dashed fill over a 2 px paper outline. On
+     every square the fill or the outline reaches 3:1 (contrast.test.mjs). */
+  --arrow: #785C1E;
+  --arrow-edge: var(--paper);
+
+  /* Pieces: the cburnett SVG colours, mirrored here for the contrast tests */
+  --piece-white-fill: #FFFFFF;
+  --piece-white-edge: #000000;
+  --piece-black-fill: #000000;
+  --piece-black-edge: rgba(245, 236, 215, 0.7);
+  --piece-edge: drop-shadow(0 0 0.6px rgba(245, 236, 215, 0.7)) drop-shadow(0 0 0.6px rgba(245, 236, 215, 0.7));
+
+  /* Type */
+  --f-display: "Libre Caslon Display", "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --f-book: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --f-ui: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-26: 26px;
+  --fs-30: 30px;
+  --fs-hero: clamp(40px, 7vw, 68px);
+
+  /* Radius, one per role */
+  --r-button: 8px;
+  --r-frame: 10px;
+  --r-inlay: 3px;
+  --r-sheet: 4px;
+  --r-dialog: 10px;
+  --r-code: 6px;
+
+  /* Motion (BR4.1, BR4.2; P2 U1 BR1.3: the capture shrink-and-fade is 260 ms
+     with --ease-out, the captured row's settle is 200 ms after it) */
+  --t-slide: 200ms;
+  --t-capture: 260ms;
+  --t-settle: 200ms;
+  --t-pulse: 300ms;
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #1B1511;
+    --surface: #251D17;
+    --paper: #2D241C;
+    --rule: #4A3D30;
+    --text: #EEE5D6;
+    --muted: #B4A390;
+    --walnut: #3A2719;
+    --walnut-hi: #57402D;
+    --engrave: #CDB386;
+    --brass: #D3AE5C;
+    --ink: #93AEEA;
+    --baize: #5A9A7E;
+    --on-baize: #14110D;
+    --oxblood: #E07A6F;
+    --accent-fill: #D3AE5C;
+    --on-accent: #17120E;
+    --accent-text: #D3AE5C;
+    --focus-ring: #D3AE5C;
+    --scrim: rgba(0, 0, 0, 0.6);
+    --arrow: #D3AE5C;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #1B1511;
+  --surface: #251D17;
+  --paper: #2D241C;
+  --rule: #4A3D30;
+  --text: #EEE5D6;
+  --muted: #B4A390;
+  --walnut: #3A2719;
+  --walnut-hi: #57402D;
+  --engrave: #CDB386;
+  --brass: #D3AE5C;
+  --ink: #93AEEA;
+  --baize: #5A9A7E;
+  --on-baize: #14110D;
+  --oxblood: #E07A6F;
+  --accent-fill: #D3AE5C;
+  --on-accent: #17120E;
+  --accent-text: #D3AE5C;
+  --focus-ring: #D3AE5C;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --arrow: #D3AE5C;
+}
+
+/* Board themes (BR5.2): only the square and label colours change. */
+:root[data-board="walnut-maple"], [data-board="walnut-maple"] {
+  --sq-light: #E7D0A3;
+  --sq-dark: #9C6C3C;
+  --label-on-light: #1E1611;
+  --label-on-dark: #FFFFFF;
+}
+
+:root[data-board="tournament"], [data-board="tournament"] {
+  --sq-light: #EEEDD2;
+  --sq-dark: #597F5F;
+  --label-on-light: #1E1611;
+  --label-on-dark: #FFFFFF;
+}
+
+:root[data-board="rosewood"], [data-board="rosewood"] {
+  --sq-light: #DDBB9C;
+  --sq-dark: #6E3C2B;
+  --label-on-light: #1E1611;
+  --label-on-dark: #FFFFFF;
+}
+
+/* Reduced motion (BR4.3): every duration becomes 0. board.js also skips
+   creating animations, so nothing waits on a zero-length animation. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-slide: 0ms;
+    --t-capture: 0ms;
+    --t-settle: 0ms;
+    --t-pulse: 0ms;
+  }
+}

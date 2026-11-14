@@ -1,0 +1,53 @@
+# Queen's Gambit Declined: 1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O 6.Nf3 (ECO D55).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Queen's Gambit
+kind: opening
+aliases:
+  - Queen's Gambit Declined
+eco: D55
+side: white
+start: startpos
+moves:
+  - san: d4
+    note: >-
+      The queen's pawn takes the centre. It is protected by the queen from
+      the start.
+  - san: d5
+    note: >-
+      Black answers in kind and stops White from playing e4 easily.
+  - san: c4
+    note: >-
+      The Queen's Gambit. White offers a side pawn to pull Black's d-pawn away
+      from the centre.
+  - san: e6
+    note: >-
+      Black declines and holds d5 with a pawn.
+    alternatives:
+      - san: dxc4
+        note: The Queen's Gambit Accepted. White usually wins the pawn back.
+  - san: Nc3
+    note: >-
+      White adds pressure on d5.
+  - san: Nf6
+    note: >-
+      Black defends d5 a second time and develops.
+  - san: Bg5
+    note: >-
+      The bishop pins the knight to the queen, weakening Black's hold on d5.
+  - san: Be7
+    note: >-
+      Black breaks the pin by putting a piece between knight and queen.
+  - san: e3
+    note: >-
+      White supports d4 and opens a path for the bishop on f1.
+  - san: O-O
+    note: >-
+      Black tucks the king away.
+  - san: Nf3
+    note: >-
+      White develops the last minor piece towards the centre and gets ready
+      to castle.
+objectives:
+  - Offer the c-pawn to pull Black's centre pawn away.
+  - Pin the knight on f6 with Bg5 to weaken d5.
+  - Develop every minor piece before starting play.

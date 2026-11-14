@@ -1,0 +1,22 @@
+{
+  "stage": "code-generation",
+  "unit": "u4-blunder-warnings",
+  "upstream_ids": ["FR3.7","FR3.8","FR3.9","FR3.11","BR1.1","BR1.2","BR1.3","BR1.4","BR1.5","BR2.1","BR2.2","BR3.1","BR3.2","BR3.3","BR3.4"],
+  "coverage": [
+    { "id": "FR3.7", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "FR3.8", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "FR3.9", "status": "OK", "target": "static/js/blunder.js" },
+    { "id": "FR3.11", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "BR1.1", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "BR1.2", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "BR1.3", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "BR1.4", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "BR1.5", "status": "OK", "target": "justchess/analysis.py" },
+    { "id": "BR2.1", "status": "OK", "target": "justchess/api.py" },
+    { "id": "BR2.2", "status": "OK", "target": "tests/test_check_move_api.py" },
+    { "id": "BR3.1", "status": "OK", "target": "static/js/blunder.js" },
+    { "id": "BR3.2", "status": "OK", "target": "static/js/blunder.js" },
+    { "id": "BR3.3", "status": "OK", "target": "static/js/screens/blunder-dialog.js" },
+    { "id": "BR3.4", "status": "OK", "target": "static/js/room-flow.js" }
+  ]
+}

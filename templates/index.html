@@ -1,29 +1,69 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JustChess — Play. Learn. Improve.</title>
-<script src="https://unpkg.com/htmx.org@2.0.4"></script>
-<link rel="stylesheet" href="/static/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JustChess — Play a friend. Learn an opening.</title>
+  <meta name="description" content="Play chess with a friend from a link. No accounts. No subscriptions. Just chess.">
+  <!-- Sets data-theme and data-board before first paint (U2). -->
+  <script src="/static/js/boot.js"></script>
+  <link rel="preload" href="/static/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/libre-caslon-text-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/board.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/training.css">
+  <link rel="icon" href="/static/logo.svg" type="image/svg+xml">
 </head>
 <body>
-<header><h1>♞ JustChess</h1><p>No accounts. No subscriptions. Just chess.</p></header>
-<main>
-<section class="panel" id="lobby"><h2>Play with a friend</h2>
-<button id="create">Create game</button>
-<form id="join"><input id="code" maxlength="6" placeholder="6-character room code" required><button>Join game</button></form>
-<p id="lobby-error" role="alert"></p></section>
-<section class="panel hidden" id="game">
-<div class="heading"><h2>Room <span id="room-code"></span></h2><button id="copy">Copy code</button></div>
-<p id="game-status"></p><div id="board" class="board" aria-label="Chessboard"></div>
-<p id="score"></p><p id="moves"></p><p id="game-error" role="alert"></p>
-<button id="notify">Enable notifications</button></section>
-<section class="panel"><h2>Learn openings</h2><p>Watch the moves, then practice from memory.</p>
-<select id="lesson"><option value="italian">Italian Game</option><option value="monte-carlo">Monte Carlo Variation</option></select>
-<button id="load-lesson">Load lesson</button>
-<div id="training" class="hidden"><p id="lesson-title"></p><div id="training-board" class="board"></div>
-<p id="lesson-note"></p><div class="controls"><button id="prev-step">Back</button><button id="next-step">Next</button><button id="practice">Practice</button><button id="reset-lesson">Restart</button></div></div>
-</section>
-</main>
-<script src="/static/app.js"></script>
-</body></html>
+  <header class="topbar" data-testid="topbar">
+    <a class="logo" href="/" id="home-link" aria-label="JustChess home" data-testid="home-link">
+      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect class="tile" x="1" y="1" width="30" height="30" rx="5"/>
+        <rect class="light" x="4" y="4" width="12" height="12"/>
+        <rect class="light" x="16" y="16" width="12" height="12"/>
+        <rect class="dark" x="16" y="4" width="12" height="12"/>
+        <rect class="dark" x="4" y="16" width="12" height="12"/>
+        <rect class="inlay" x="3.5" y="3.5" width="25" height="25"/>
+      </svg>
+      <span class="logo-word">JustChess</span>
+    </a>
+    <div class="topbar-room" id="room-bar" hidden>
+      <span class="room-code t-code" id="room-code" data-testid="room-code"></span>
+      <button class="btn btn-primary" id="share" type="button" data-testid="share">Share</button>
+    </div>
+  </header>
+  <!-- P2 U1 share dialog (BR3.1-BR3.6), driven by static/js/share-dialog.js -->
+  <dialog class="share-dialog" id="share-dialog" aria-labelledby="share-title" aria-describedby="share-line" data-testid="share-dialog">
+    <div class="share-body">
+      <h2 class="share-title" id="share-title" data-testid="share-title">Invite a friend</h2>
+      <p class="share-line" id="share-line" data-testid="share-line"></p>
+      <label class="share-label" for="share-link">Invite link</label>
+      <div class="link-row">
+        <input class="link-field" id="share-link" type="text" readonly data-testid="share-link">
+        <button class="btn btn-primary" type="button" data-testid="share-copy">Copy link</button>
+      </div>
+      <p class="share-label" id="share-apps-label">Send it with</p>
+      <div class="share-apps" role="group" aria-labelledby="share-apps-label">
+        <div class="share-app-links" data-testid="share-apps"></div>
+        <button class="btn btn-secondary" type="button" hidden data-testid="share-more">More…</button>
+      </div>
+      <div class="share-qr">
+        <canvas role="img" aria-label="QR code of the invite link" data-testid="share-qr"></canvas>
+        <p class="share-qr-note" data-testid="share-qr-note"></p>
+      </div>
+      <div class="share-actions">
+        <button class="btn btn-secondary" type="button" data-testid="share-close">Close</button>
+      </div>
+    </div>
+  </dialog>
+  <main id="app" class="app" tabindex="-1" data-testid="app">
+    <noscript><p>JustChess needs JavaScript to play.</p></noscript>
+  </main>
+  <div id="announcer" class="visually-hidden" role="status" aria-live="polite" data-testid="announcer"></div>
+  <!-- P2 U4: the page's gameplay settings from gameplay.yaml, read by static/js/gameplay.js -->
+  <script type="application/json" id="gameplay-config">{{ gameplay | tojson }}</script>
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

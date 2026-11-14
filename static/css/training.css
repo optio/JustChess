@@ -1,0 +1,258 @@
+/*
+ * JustChess opening trainer styles (U6). DOM is built by
+ * static/js/training/trainer.js. Requires tokens.css, base.css, board.css and
+ * app.css (the .sheet scoresheet and the [hidden] rule). No colour is defined
+ * here: every colour is a token, and the arrow's --arrow and --arrow-edge are
+ * checked at 3:1 against every square by tests/js/contrast.test.mjs.
+ *
+ * Layout:
+ *   page (/learn)  board and panel side by side from 1024 px, stacked below;
+ *                  the board is at most 560 px wide.
+ *   drawer         always stacked; the board is the drawer width, at most
+ *                  480 px and never under 300 px, so its squares keep 44 px
+ *                  targets from a 352 px board.
+ */
+
+.trainer { display: grid; gap: 16px; }
+
+.trainer[data-variant="page"] {
+  max-width: 1080px;
+  margin: 8px auto 0;
+}
+
+.trainer[data-variant="drawer"] { padding: 8px 0 4px; }
+
+/* --- lesson list ------------------------------------------------------------ */
+.trainer-list { display: grid; gap: 10px; }
+.trainer-list-title { margin: 0; font: 400 var(--fs-30)/1.1 var(--f-display); }
+.trainer[data-variant="drawer"] .trainer-list-title { font-size: var(--fs-18); }
+.trainer-lede { margin: 0; color: var(--muted); }
+.trainer[data-variant="drawer"] .trainer-lede { font-size: var(--fs-14); }
+.trainer-list-status { margin: 0; font-size: var(--fs-14); }
+.trainer-list-status:empty { display: none; }
+
+.trainer-options {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trainer[data-variant="page"] .trainer-options { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+.trainer-option {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sheet);
+  background: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+
+.trainer-option:hover { background: var(--surface); }
+.trainer-option-name { font: 400 var(--fs-18)/1.2 var(--f-display); }
+.trainer-option-meta, .trainer-option-alias { font-size: var(--fs-13); color: var(--muted); }
+
+/* --- one lesson ------------------------------------------------------------- */
+.trainer-lesson { display: grid; gap: 16px; }
+
+.trainer[data-variant="page"] .trainer-lesson { grid-template-columns: minmax(0, 1fr); }
+
+@media (min-width: 1024px) {
+  .trainer[data-variant="page"] .trainer-lesson {
+    grid-template-columns: minmax(400px, 560px) minmax(0, 1fr);
+    align-items: start;
+  }
+  .trainer[data-variant="page"] .trainer-head { grid-column: 1 / -1; }
+}
+
+.trainer-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.trainer-titles { min-width: 0; }
+.trainer-name { margin: 0; font: 400 var(--fs-26)/1.15 var(--f-display); }
+.trainer[data-variant="drawer"] .trainer-name { font-size: var(--fs-18); }
+.trainer-meta { margin: 0; font-size: var(--fs-14); }
+
+.trainer-play { display: grid; gap: 10px; justify-items: center; }
+
+/* "Practise as White / Black": a two-option segmented control (radio semantics) */
+.trainer-side {
+  display: inline-flex;
+  justify-self: stretch;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-button);
+  overflow: hidden;
+}
+
+.trainer-side-option {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.trainer-side-option + .trainer-side-option { border-left: 1px solid var(--rule); }
+.trainer-side-option[aria-checked="true"] { background: var(--accent-fill); color: var(--on-accent); font-weight: 700; }
+.trainer-side-option:focus-visible { outline-offset: -4px; }
+
+.trainer-board { position: relative; width: 100%; }
+.trainer[data-variant="page"] .trainer-board { max-width: 560px; }
+
+.trainer[data-variant="drawer"] .trainer-board {
+  max-width: 480px;
+  min-width: 300px;
+}
+
+/* Arrow layer over U2's .board-grid (position: relative) */
+.trainer-arrow {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.trainer-arrow .arrow-edge {
+  fill: var(--arrow-edge);
+  stroke: var(--arrow-edge);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trainer-arrow polygon.arrow-edge { stroke-width: 1; }
+
+.trainer-arrow .arrow-line {
+  fill: none;
+  stroke: var(--arrow);
+  stroke-width: 2.2;
+  stroke-dasharray: 3 2;
+  stroke-linecap: butt;
+}
+
+.trainer-arrow .arrow-head { fill: var(--arrow); stroke: none; }
+
+/* --- panel ------------------------------------------------------------------ */
+.trainer-panel { display: grid; gap: 12px; align-content: start; min-width: 0; }
+
+.trainer-message {
+  margin: 0;
+  padding: 10px 14px;
+  min-height: 1.5em;
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  font: italic var(--fs-16)/1.45 var(--f-book);
+}
+
+.trainer-message:empty { display: none; }
+.trainer-message[data-tone="error"] { border-color: var(--oxblood); color: var(--oxblood); font-style: normal; font-family: var(--f-ui); }
+.trainer-message[data-tone="warn"] { border-color: var(--accent); }
+.trainer-message[data-tone="success"] { border-color: var(--baize); }
+.trainer-message[data-tone="info"] { font-style: normal; font-family: var(--f-ui); }
+
+.trainer-prompt { margin: 0; font-size: var(--fs-14); }
+.trainer-prompt:empty { display: none; }
+
+.trainer-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.trainer-objectives {
+  padding: 10px 14px;
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.trainer-objectives-title { margin: 0 0 4px; font: 400 var(--fs-18)/1.2 var(--f-display); }
+.trainer-objectives ul { margin: 0; padding-left: 1.2em; }
+.trainer-objectives li + li { margin-top: 4px; }
+
+/* Scoresheet: the note is a margin annotation beside its move, in book italic */
+.trainer-sheet td.move { width: 6em; white-space: nowrap; color: var(--text); text-align: left; }
+.trainer-sheet td.move.is-latest { color: var(--ink); font-weight: 700; }
+.trainer-sheet td:first-child { width: 6em; }
+.trainer-note { font: italic var(--fs-14)/1.4 var(--f-book); color: var(--muted); }
+.trainer-note span { display: block; }
+.trainer-alternatives { margin-top: 2px; font-style: normal; font-family: var(--f-ui); font-size: var(--fs-13); }
+
+.trainer[data-variant="drawer"] .trainer-sheet table { font-size: var(--fs-14); }
+
+/* --- P2 U5 trainer hub (/learn), built by static/js/training/hub.js ---------- */
+.hub { display: grid; gap: 12px; max-width: 1080px; margin: 8px auto 0; min-width: 0; }
+.hub-title { margin: 0; font: 400 var(--fs-30)/1.1 var(--f-display); }
+
+/* ARIA tablist: scrolls sideways on a phone instead of widening the page */
+.hub-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--rule);
+  scrollbar-width: thin;
+}
+
+.hub-tab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.hub-tab[aria-selected="true"] { border-bottom-color: var(--accent); font-weight: 700; }
+.hub-tab:focus-visible { outline-offset: -4px; }
+.hub-tab-count { font-size: var(--fs-13); color: var(--muted); font-weight: 400; }
+.hub-tab-count:empty { display: none; }
+
+.hub-panel { display: grid; gap: 10px; }
+.hub-summary { margin: 0; font-size: var(--fs-14); }
+.hub-rows { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.hub-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sheet);
+  background: var(--paper);
+}
+
+.hub-row-text { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.hub-row-title { font: 400 var(--fs-18)/1.2 var(--f-display); }
+.hub-row-subtitle { font-size: var(--fs-13); color: var(--muted); }
+.hub-row-done { font-size: var(--fs-13); font-weight: 700; color: var(--baize); }
+.hub-row-action { flex: 0 0 auto; min-height: 44px; }
+.hub-credit { margin: 0; font-size: var(--fs-13); }
+.hub-credit:empty { display: none; }
+
+/* --- P2 U5 puzzle screen (/learn/tactics/{theme}), built by puzzle.js -------- */
+.puzzle { display: grid; gap: 16px; max-width: 1080px; margin: 8px auto 0; min-width: 0; }
+.puzzle-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.puzzle-titles { min-width: 0; }
+.puzzle-status { margin: 0; font: 400 var(--fs-26)/1.15 var(--f-display); }
+.puzzle-sub { margin: 0; font-size: var(--fs-14); }
+.puzzle-board { justify-self: center; max-width: 560px; }
+.puzzle-panel { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.puzzle-credit { margin: 0; font-size: var(--fs-13); }
+.puzzle[data-phase="solved"] .puzzle-message { border-color: var(--baize); color: var(--baize); font-weight: 700; }
+
+@media (min-width: 1024px) {
+  .puzzle { grid-template-columns: minmax(400px, 560px) minmax(0, 1fr); align-items: start; }
+  .puzzle-head { grid-column: 1 / -1; }
+}

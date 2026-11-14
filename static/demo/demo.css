@@ -1,0 +1,76 @@
+/* Layout for the U2 demo page only (static/demo/board.html). Not product CSS. */
+
+.demo-bar {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 0;
+}
+
+.demo {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .demo { grid-template-columns: minmax(560px, 640px) minmax(280px, 1fr); align-items: start; gap: 28px; }
+  .demo-wide { grid-column: 1 / -1; }
+}
+
+.demo h1, .demo h2 { margin: 0 0 12px; }
+
+.demo-board { width: 100%; max-width: 640px; }
+
+.demo-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--r-button);
+  background: var(--surface);
+}
+
+.demo-status::before {
+  content: "";
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.demo-status.is-yours { background: var(--baize); color: var(--on-baize); }
+
+.demo-controls { display: grid; gap: 8px; margin-top: 12px; }
+
+.demo-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0; padding: 0; border: 0; }
+.demo-inline legend { float: left; margin-right: 8px; font-weight: 700; }
+
+.demo-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.demo-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sheet);
+  padding: 16px;
+}
+
+.demo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.demo-gallery figure { margin: 0; }
+.demo-gallery figcaption { margin-top: 6px; font-size: var(--fs-14); color: var(--muted); }
+
+.contrast-list { margin: 0; padding-left: 20px; }
+.contrast-ok { color: var(--text); }
+.contrast-fail { color: var(--oxblood); font-weight: 700; }

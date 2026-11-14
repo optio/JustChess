@@ -1,0 +1,53 @@
+# Caro-Kann Defence, Classical: 1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Bf5 5.Ng3 Bg6 6.h4 h6 (ECO B18).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Caro-Kann Defence
+kind: opening
+aliases:
+  - Caro-Kann, Classical Variation
+eco: B18
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White takes the centre with the king's pawn.
+  - san: c6
+    note: >-
+      The Caro-Kann. Like the French, Black prepares d5, but the bishop on c8
+      stays free to come out.
+  - san: d4
+    note: >-
+      White adds a second centre pawn.
+  - san: d5
+    note: >-
+      Black challenges e4 with a well supported pawn.
+  - san: Nc3
+    note: >-
+      White defends e4 with the knight.
+  - san: dxe4
+    note: >-
+      Black releases the tension by taking on e4.
+  - san: Nxe4
+    note: >-
+      White takes back and the knight stands proudly in the centre.
+  - san: Bf5
+    note: >-
+      The Classical move. The bishop comes out before e6 shuts it in, and it
+      hits the knight.
+  - san: Ng3
+    note: >-
+      The knight steps back and attacks the bishop.
+  - san: Bg6
+    note: >-
+      The bishop keeps its good diagonal.
+  - san: h4
+    note: >-
+      White threatens h5 to trap or chase the bishop and gains space on the
+      king side.
+  - san: h6
+    note: >-
+      Black gives the bishop a safe retreat on h7 if h5 comes.
+objectives:
+  - Prepare d5 with c6 while keeping the light-squared bishop free.
+  - Develop the bishop to f5 before playing e6.
+  - Keep a retreat square for the bishop when White pushes the h-pawn.

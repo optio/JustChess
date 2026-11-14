@@ -1,0 +1,63 @@
+# Wayward Queen Attack: 1.e4 e5 2.Qh5 Nc6 3.Bc4 g6 4.Qf3 Nf6 5.Ne2 Bg7 6.Nbc3 d6 7.d3 Bg4 8.Qg3 Nd4 (ECO C20).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Wayward Queen Attack
+kind: defence
+aliases:
+  - Parham Attack
+eco: C20
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White opens with the king's pawn.
+  - san: e5
+    note: >-
+      Black takes the centre too.
+  - san: Qh5
+    note: >-
+      The Wayward Queen. She attacks e5 and eyes f7 on move two.
+  - san: Nc6
+    note: >-
+      First defend e5 with a developing move.
+  - san: Bc4
+    note: >-
+      Now queen and bishop threaten Qxf7, mate.
+  - san: g6
+    note: >-
+      Block the queen and attack her at once.
+  - san: Qf3
+    note: >-
+      The queen aims at f7 again from f3.
+  - san: Nf6
+    note: >-
+      The knight blocks the line and develops.
+  - san: Ne2
+    note: >-
+      White develops, but the knight cannot go to its best square on f3.
+  - san: Bg7
+    note: >-
+      Black's bishop comes to the long diagonal behind the pawn on g6.
+  - san: Nbc3
+    note: >-
+      White brings out the other knight.
+  - san: d6
+    note: >-
+      Black supports e5 and opens the bishop on c8.
+  - san: d3
+    note: >-
+      White opens a path for the dark-squared bishop.
+  - san: Bg4
+    note: >-
+      The bishop attacks the queen and gains another move.
+  - san: Qg3
+    note: >-
+      The queen has to move again.
+  - san: Nd4
+    note: >-
+      Black's pieces are out and active, threatening c2 and e2. The early
+      queen move has only helped Black develop.
+objectives:
+  - Defend e5 and f7 with moves that also develop pieces.
+  - Attack the early queen to gain time.
+  - Finish development and castle before going for an attack.

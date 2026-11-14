@@ -1,0 +1,17 @@
+New requirements:
+
+In main screen player should be able to see their ongoing sessions
+
+When taking or losing a piece, there should be a small animation
+
+When starting a game that no one joined, the game should be convertible to a pass-along game. When a player eventually does join, convert it back to a multiplayer game.
+
+When showing the board ingame, make sure that it fits above the fold without scrolling. L
+
+The share button should open a modal so that it doesn't change the main gui with also  a copy to clipboard button and convenient links to share by email or other apps like whatsapp
+
+Add single player using stockfish.
+
+Expand the opening trainer with more opening tactics.
+
+Add additional trainers for specific situation

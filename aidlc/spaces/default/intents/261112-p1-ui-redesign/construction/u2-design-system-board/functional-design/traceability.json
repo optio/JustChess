@@ -1,0 +1,23 @@
+{
+  "stage": "functional-design",
+  "unit": "u2-design-system-board",
+  "upstream_ids": ["FR3.1","FR3.3","FR3.6","FR3.9","FR5.1","FR5.2","FR5.3","FR10.1","FR10.2","FR10.3","FR10.4","FR10.5"],
+  "coverage": [
+    { "id": "FR3.1", "status": "OK", "target": "BR2.1, BR2.3, BR3.1" },
+    { "id": "FR3.3", "status": "OK", "target": "BR2.2" },
+    { "id": "FR3.6", "status": "OK", "target": "BR3.1, BR4.2" },
+    { "id": "FR3.9", "status": "OK", "target": "BR6.1, BR6.2" },
+    { "id": "FR5.1", "status": "OK", "target": "BR1.1" },
+    { "id": "FR5.2", "status": "OK", "target": "BR1.2" },
+    { "id": "FR5.3", "status": "OK", "target": "BR1.3, BR6.1" },
+    { "id": "FR10.1", "status": "OK", "target": "BR5.1, BR5.3" },
+    { "id": "FR10.2", "status": "OK", "target": "BR5.1, BR6.1" },
+    { "id": "FR10.3", "status": "OK", "target": "BR5.2, BR6.1" },
+    { "id": "FR10.4", "status": "OK", "target": "BR4.1, BR4.2, BR4.3" },
+    { "id": "FR10.5", "status": "OK", "target": "BR5.4" }
+  ],
+  "reverse": [
+    { "id": "BR2.4", "status": "N/A", "target": "keyboard play from NFR6" },
+    { "id": "BR3.2", "status": "N/A", "target": "screen-reader labels from NFR6" }
+  ]
+}

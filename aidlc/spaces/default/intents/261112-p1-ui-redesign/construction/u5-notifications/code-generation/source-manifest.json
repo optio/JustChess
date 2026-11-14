@@ -1,0 +1,31 @@
+{
+  "stage": "code-generation",
+  "unit": "u5-notifications",
+  "version": 1,
+  "writes": [
+    {"path": "justchess/notifications.py"},
+    {"path": "justchess/vapid.py"},
+    {"path": "justchess/db.py"},
+    {"path": "justchess/api.py"},
+    {"path": "justchess/live.py"},
+    {"path": "justchess/housekeeping.py"},
+    {"path": "justchess/__init__.py"},
+    {"path": "static/sw.js"},
+    {"path": "static/js/notifications.js"},
+    {"path": "static/js/notify-core.js"},
+    {"path": "static/js/app.js"},
+    {"path": "static/js/hooks.js"},
+    {"path": "static/js/live.js"},
+    {"path": "static/js/screens/game.js"},
+    {"path": "static/css/app.css"},
+    {"path": "tests/test_notifications.py"},
+    {"path": "tests/test_push_api.py"},
+    {"path": "tests/core/test_db.py"},
+    {"path": "tests/test_game_screen.py"},
+    {"path": "tests/js/notify-core.test.mjs"},
+    {"path": "tests/js/notifications.test.mjs"},
+    {"path": "README.md"},
+    {"path": "pyproject.toml"},
+    {"path": "uv.lock"}
+  ]
+}

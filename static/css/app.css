@@ -1,0 +1,665 @@
+/*
+ * JustChess app styles (U3): the shell, top bar, lobby, game layout, status,
+ * claims, notices, scoresheet, room score, lessons drawer, settings sheet,
+ * the end-of-game overlay and the win-sequence end state, and (U4) the
+ * blunder dialog.
+ * Requires tokens.css, base.css and board.css. Only U2 tokens are used: the
+ * four button roles and the focus ring come from base.css, every target is at
+ * least 44 px, and no colour is defined here.
+ *
+ * Layout (BR5.1, interaction-spec.md breakpoints; P2 U1 board fit):
+ *   phone  (< 768 px)  top bar at most 56 px; the board is the viewport width
+ *                      minus 8 px gutters (edge to edge under 400 px), its
+ *                      top edge at most 72 px down; the overlay sits between
+ *                      the board and the status.
+ *   tablet (768-1023)  the board is as wide as fits.
+ *   desktop (>= 1024)  the board is at most 640 px in the left column with
+ *                      the panel on the right; the overlay sits over the lower
+ *                      third of the board on a translucent paper backing.
+ *   phone landscape    (height <= 500 px) board left, top bar and panel right.
+ *   Every mode also fits the board to the viewport height ("board fit").
+ * P2 U1 also adds the captured row and the share dialog.
+ * P2 U2 adds the lobby's "Your games" panel (rows, thumbnails and pills).
+ */
+
+/* base.css gives .btn a display, which would beat the hidden attribute */
+[hidden] { display: none !important; }
+
+body { padding-bottom: 40px; }
+
+/* --- top bar ------------------------------------------------------------ */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.topbar-room { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.room-code {
+  padding: 8px 10px;
+  border-radius: var(--r-code);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+}
+
+.link-field {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-button);
+  background: var(--paper);
+  color: var(--text);
+}
+
+/* --- shell ---------------------------------------------------------------- */
+.app { max-width: 1080px; margin: 0 auto; padding-top: 8px; }
+.app:focus { outline: none; }
+
+.field-error { margin: 6px 0 0; font-size: var(--fs-14); color: var(--oxblood); }
+.field-error:empty { display: none; }
+
+/* --- lobby ---------------------------------------------------------------- */
+.lobby { display: grid; gap: 24px; align-items: center; padding-top: 8px; }
+.lobby-title { margin: 0 0 12px; }
+.lobby-lede { max-width: 34ch; margin: 0 0 22px; }
+.lobby-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.join-form { margin-top: 18px; }
+.join-form label { display: block; margin-bottom: 6px; font-size: var(--fs-14); color: var(--muted); }
+.join-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.code-input {
+  min-height: 44px;
+  width: 11ch;
+  padding: 0 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-button);
+  background: var(--paper);
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.code-input[aria-invalid="true"] { border-color: var(--oxblood); }
+.lobby-board { width: 100%; max-width: 520px; justify-self: center; }
+
+@media (min-width: 900px) {
+  .lobby { grid-template-columns: 1fr 1fr; gap: 48px; }
+}
+
+/* --- your games (P2 U2, BR3.1-BR3.5, mockups Screen 1) ----------------------
+   A scoresheet-style paper panel (.sheet) beside the actions from 900 px, under
+   them below that. Each row is one link, at least 72 px tall: thumbnail, label
+   and meta line, pill. "Your move" is baize, a join request has a brass
+   outline, finished games are muted with a desaturated thumbnail. */
+.lobby:has(.your-games) { align-items: start; }
+.your-games { min-width: 0; padding-bottom: 0; }
+.your-games-status,
+.your-games-stale { margin: 0 14px 12px; font-size: var(--fs-14); color: var(--muted); }
+.your-games-stale .btn { margin-left: 4px; }
+.your-games-list { list-style: none; margin: 0; padding: 0; }
+
+.game-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--rule);
+  color: var(--text);
+  text-decoration: none;
+}
+.game-row:hover { background: var(--surface); }
+.game-row-text { min-width: 0; }
+.game-row-label { display: block; font-weight: 700; overflow-wrap: anywhere; }
+.game-row-meta { display: block; margin-top: 2px; font-size: var(--fs-14); color: var(--muted); }
+.game-row.is-finished .game-row-label { color: var(--muted); }
+.game-row.is-finished .game-thumb { filter: grayscale(.85); opacity: .7; }
+
+.game-thumb {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--walnut);
+  border-radius: var(--r-inlay);
+  overflow: hidden;
+}
+.thumb-sq { background: var(--sq-light); }
+.thumb-sq.is-dark { background: var(--sq-dark); }
+.thumb-sq img { display: block; width: 100%; height: 100%; }
+
+.pill {
+  justify-self: end;
+  padding: 4px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pill-your-move { background: var(--baize); border-color: var(--baize); color: var(--on-baize); }
+.pill-request { border: 2px solid var(--brass); color: var(--accent-text); }
+.pill-won { border-color: var(--baize); color: var(--text); }
+.pill-stale { border-color: var(--oxblood); color: var(--oxblood); }
+
+@media (max-width: 420px) {
+  .game-row { grid-template-columns: 48px minmax(0, 1fr); }
+  .game-thumb { width: 48px; height: 48px; }
+  .game-row .pill { grid-column: 2; justify-self: start; }
+}
+
+/* --- game layout ---------------------------------------------------------- */
+.game { display: grid; gap: 16px; }
+
+.game-board-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+}
+
+.game-board { position: relative; grid-row: 1; grid-column: 1; min-width: 0; }
+.game-board-col .overlay { grid-row: 2; grid-column: 1; }
+.game-board-col .players { grid-row: 3; grid-column: 1; }
+
+.game-side { display: grid; gap: 12px; align-content: start; min-width: 0; }
+
+/* Phone: the board spans the viewport minus 8 px gutters (body has 16 px). */
+@media (max-width: 767px) {
+  .game-board { margin-inline: -8px; }
+  .topbar.is-room .logo-word { display: none; }
+}
+
+/* Phone touch targets (NFR6, Build and Test loop-back 1). U2's board.css
+   defaults stay for >= 768 px; only the phone boards are slimmed here.
+   - Both boards span the viewport minus 8 px gutters: 374 px at 390 px.
+   - Inside labels: frame 2 px + inlay border 1 px, no inlay padding, so the
+     grid is 374 - 6 = 368 px and every square is 46 px.
+   - Frame labels: the engraved band shrinks from 22 px to 16 px, so the grid
+     is 374 - 20 = 354 px and every square is 44.25 px; the frame stays 374 px.
+   - The home link keeps its 28 px mark but gets a 44 x 44 px hit area; the
+     negative margin keeps the mark where it was. */
+@media (max-width: 767px) {
+  .lobby-board { width: auto; max-width: none; justify-self: stretch; margin-inline: -8px; }
+
+  .game-board .board-frame,
+  .lobby-board .board-frame { padding: 2px; }
+  .game-board .board-inlay,
+  .lobby-board .board-inlay { padding: 0; }
+
+  .game-board .board-frame[data-labels="frame"],
+  .lobby-board .board-frame[data-labels="frame"] { padding: 2px 2px 16px 16px; }
+  .game-board .frame-files,
+  .lobby-board .frame-files { left: 17px; right: 3px; bottom: 3px; }
+  .game-board .frame-ranks,
+  .lobby-board .frame-ranks { top: 3px; bottom: 17px; left: 2px; width: 12px; }
+
+  .topbar .logo {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+    margin-inline: -8px;
+    justify-content: center;
+  }
+}
+
+/* --- board fit (P2 U1, BR2.1-BR2.5; functional-spec.md W2) ----------------
+   The board frame's side is the smaller of the width it has and the viewport
+   height minus what must stay visible with it (--reserve), capped by --cap and
+   never below --floor (so squares stay >= 44 px; the content below scrolls).
+   static/js/layout.js mirrors these numbers for the unit tests.
+     portrait         reserve 152 px (top bar 56, status line 64, gaps 32), floor 352
+     desktop          reserve 110 px (top bar 56, gaps 54), cap 640, floor 352
+     landscape-phone  height - 24 px, floor 288 (8 x 36); its query comes last so
+                      it wins over desktop (a 1024 x 500 window is landscape-phone)
+   Portrait under 400 px is edge to edge with square corners (BR2.3). */
+.game { --reserve: 152px; --cap: 100000px; --floor: 352px; }
+
+.game-board .board-frame {
+  width: max(var(--floor), min(100%, calc(100vh - var(--reserve)), var(--cap)));
+  width: max(var(--floor), min(100%, calc(100svh - var(--reserve)), var(--cap)));
+  max-width: none;
+  margin-inline: auto;
+}
+
+@media (max-width: 399px) and (orientation: portrait) {
+  .game-board { margin-inline: -16px; }
+  .game-board .board-frame,
+  .game-board .board-inlay { border-radius: 0; }
+}
+
+/* Desktop: board column 560-640 px, panel on the right; overlay over the board. */
+@media (min-width: 1024px) {
+  .game { --reserve: 110px; --cap: 640px; grid-template-columns: minmax(560px, 640px) minmax(280px, 1fr); gap: 28px; align-items: start; }
+  .game-board-col .overlay {
+    grid-row: 1;
+    align-self: end;
+    z-index: 6;
+    margin: 0 8% 8%;
+  }
+  .game-board-col .players { grid-row: 2; }
+}
+
+/* Phone landscape (BR2.2): board on the left at the viewport height minus
+   24 px, the compact top bar and the panel on the right. Comes after the
+   desktop query on purpose. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --lp-side: max(288px, min(calc(100vh - 24px), calc(100vw - 272px))); }
+  @supports (height: 100svh) {
+    :root { --lp-side: max(288px, min(calc(100svh - 24px), calc(100vw - 272px))); }
+  }
+  .app { max-width: none; margin: 0; padding-top: 12px; }
+  .game { grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+  .game-board { margin-inline: 0; }
+  .game-board .board-frame { width: var(--lp-side); }
+  .game-board-col .overlay {
+    grid-row: 1;
+    align-self: end;
+    z-index: 6;
+    margin: 0 8% 8%;
+  }
+  .game-board-col .players { grid-row: 2; }
+  .topbar.is-room {
+    position: absolute;
+    top: 0;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    width: calc(100vw - 48px - var(--lp-side));
+    height: 48px;
+    max-width: none;
+    margin: 0;
+  }
+  .topbar.is-room ~ .app .game-side { padding-top: 40px; }
+}
+
+.players { margin: 0; font-size: var(--fs-14); color: var(--muted); }
+
+/* Reconnecting: the last known board stays, dimmed; no blocking spinner. */
+.game-board.is-reconnecting .board-grid { filter: saturate(.6) brightness(.88); }
+
+/* --- status (BR3.4) ------------------------------------------------------ */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-radius: var(--r-button);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.status[data-tone="baize"] { background: var(--baize); color: var(--on-baize); }
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status[data-dot="none"] .status-dot { display: none; }
+.status[data-dot="hollow"] .status-dot { background: transparent; border: 2px solid currentColor; }
+.status[data-dot="red"] .status-dot { background: var(--hl-check); box-shadow: 0 0 0 2px currentColor; }
+
+.status-body { margin: 0; display: grid; }
+.status-text { font: 400 var(--fs-18)/1.3 var(--f-book); }
+.status-sub { font-size: var(--fs-14); }
+.status[data-tone="surface"] .status-sub { color: var(--muted); }
+
+.status-flash {
+  margin: -4px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--oxblood);
+  background: var(--surface);
+  font-size: var(--fs-14);
+}
+
+.status-flash:empty { display: none; }
+
+/* U5: the in-page alert ("Your move", "Your opponent has joined", "Game over — …") */
+.notify-banner {
+  margin: -4px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--baize);
+  background: var(--surface);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notify-banner[hidden] { display: none; }
+
+.claims,
+.game-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* --- play the computer (P2 U4, BR8.1, BR8.2) -------------------------------- */
+.computer-panel { margin-top: 18px; padding: 12px 0 14px; }
+.computer-panel > .btn,
+.computer-panel > .field-error,
+.computer-panel > .computer-unavailable { margin-left: 14px; margin-right: 14px; }
+.computer-group { margin: 0 14px 10px; padding: 0; border: 0; min-width: 0; }
+.computer-legend { padding: 0; margin-bottom: 6px; font-size: var(--fs-14); color: var(--muted); }
+.computer-options { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Each option is a native radio stretched (transparent) over its whole label, so the
+   touch target is the 44 x 44 px label (NFR6) and keyboard and screen readers keep the
+   radio group; the label draws the checked and focus states. */
+.computer-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 14px;
+  border: 0; /* the outline is a box-shadow, so the stretched input covers the full 44 px */
+  border-radius: var(--r-sheet);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  background: var(--surface);
+  cursor: pointer;
+}
+.computer-option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.computer-option:has(input:checked) { box-shadow: inset 0 0 0 2px var(--baize); font-weight: 700; }
+.computer-option:has(input:checked)::before { content: "\2713\00a0"; color: var(--baize); }
+.computer-option:has(input:focus-visible) { outline: 3px solid var(--baize); outline-offset: 2px; }
+.computer-unavailable { margin-top: 0; margin-bottom: 10px; font-size: var(--fs-14); color: var(--oxblood); }
+.computer-unavailable[hidden] { display: none; }
+
+.computer-controls { display: grid; gap: 8px; }
+.computer-controls[hidden],
+.computer-controls [hidden] { display: none; }
+.computer-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.computer-confirm {
+  padding: 10px 12px;
+  border: 2px solid var(--oxblood);
+  border-radius: var(--r-sheet);
+  background: var(--surface);
+}
+.computer-confirm-text { margin: 0 0 8px; font-weight: 700; }
+.computer-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.computer-no-answer { margin: 0; font-size: var(--fs-14); }
+.computer-no-answer .btn { margin-left: 6px; }
+
+/* --- pass-along and join requests (P2 U3, Screens 5-6) --------------------- */
+.pass-along { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pass-along[hidden],
+.pass-along [hidden] { display: none; }
+.pass-along-note { flex-basis: 100%; margin: 0; }
+
+.join-request {
+  padding: 10px 12px;
+  border: 2px solid var(--brass);
+  border-radius: var(--r-sheet);
+  background: var(--surface);
+}
+.join-request[hidden] { display: none; }
+.join-request-text { margin: 0 0 8px; font-size: var(--fs-14); font-weight: 700; }
+.join-request-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* --- captured row (P2 U1, BR1.3, BR1.6) ----------------------------------- */
+.captured { display: grid; gap: 2px; margin-top: -4px; }
+
+.captured-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.captured-title { flex: none; width: 5.5em; }
+.captured-pieces { display: flex; flex-wrap: wrap; align-items: center; min-height: 22px; }
+.captured-pieces:empty::before { content: "—"; }
+.captured-piece { width: 22px; height: 22px; margin-right: -4px; }
+.captured-piece.is-black { filter: var(--piece-edge); }
+
+/* A newly taken piece settles in over 200 ms; after a capture on the board it
+   waits for the 260 ms shrink-and-fade copy to end first. */
+.captured-piece.is-new { animation: captured-settle var(--t-settle) var(--ease-out) both; }
+.captured-piece.is-new.is-waiting { animation-delay: var(--t-capture); }
+
+@keyframes captured-settle {
+  from { opacity: 0; transform: scale(.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .captured-piece.is-new { animation: none; }
+}
+
+/* --- notices (BR5.2) ------------------------------------------------------ */
+.notices { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  font-size: var(--fs-14);
+}
+
+/* --- Game settings sheet -------------------------------------------------- */
+.settings-sheet {
+  padding: 16px;
+  border-radius: var(--r-dialog);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.settings-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.settings-sheet-title { margin: 0; font: 400 var(--fs-18)/1.2 var(--f-display); }
+
+.continue-row { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.continue-title { margin: 0; font-weight: 700; }
+.continue-result { display: grid; gap: 6px; }
+.continue-result p { margin: 0; }
+.continue-warning { font-weight: 700; color: var(--oxblood); }
+.continue-result label { font-size: var(--fs-14); color: var(--muted); }
+.link-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* --- scoresheet (BR3.5) --------------------------------------------------- */
+.sheet {
+  padding: 10px 0 4px;
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.sheet-title { margin: 0 14px 6px; font: 400 var(--fs-18)/1.2 var(--f-display); }
+
+.sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--fs-16)/1.2 var(--f-book);
+  font-variant-numeric: oldstyle-nums;
+}
+
+.sheet th {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--rule);
+  font: 400 var(--fs-13) var(--f-ui);
+  color: var(--muted);
+  text-align: left;
+}
+
+.sheet td { padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+
+.sheet td:first-child {
+  width: 3em;
+  border-right: 1px solid var(--rule);
+  color: var(--muted);
+  text-align: right;
+}
+
+.sheet td.is-latest { color: var(--ink); font-weight: 700; }
+.sheet-toggle { margin: 4px 6px 0; }
+
+.sheet-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px 6px;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.sheet-result b {
+  min-width: 2.2em;
+  min-height: 1em;
+  font: 400 var(--fs-26)/1 var(--f-display);
+  color: var(--ink);
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .sheet.is-collapsed tr.is-older { display: none; }
+}
+
+@media (min-width: 768px) {
+  .sheet-toggle { display: none !important; }
+}
+
+/* --- score and lessons drawer (BR3.6, BR3.8) ------------------------------ */
+.score { margin: 0; font-size: var(--fs-14); color: var(--muted); }
+
+.lessons { border-top: 1px solid var(--rule); padding-top: 4px; }
+
+.lessons summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.lessons summary span { font-weight: 400; color: var(--muted); }
+.lessons-mount:empty::before { content: "Opening lessons will appear here."; color: var(--muted); font-size: var(--fs-14); }
+
+.lessons-banner {
+  position: sticky;
+  bottom: 12px;
+  z-index: 8;
+  justify-self: center;
+  box-shadow: var(--shadow-dialog);
+}
+
+/* --- end-of-game overlay (BR4.2) ------------------------------------------ */
+.overlay-card {
+  padding: 16px 18px;
+  border-radius: var(--r-dialog);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .overlay-card {
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    box-shadow: var(--shadow-dialog);
+  }
+}
+
+.overlay-title { margin: 0; font: 400 var(--fs-30)/1.1 var(--f-display); }
+.overlay-title:focus { outline: none; }
+.overlay-subtitle { margin: 6px 0 12px; color: var(--muted); }
+.overlay-note { margin: 0 0 12px; }
+.overlay-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.overlay-message { margin: 8px 0 0; font-size: var(--fs-14); }
+.overlay-message:empty { display: none; }
+
+/* --- win sequence end state (BR4.1); win-sequence.js animates into these --- */
+.board-grid.is-ended { filter: saturate(.7) brightness(.86); }
+.piece.is-tipped { transform: rotate(80deg) translate(8%, 6%); }
+.piece.is-glow { filter: drop-shadow(0 0 3px var(--brass)) drop-shadow(0 0 8px var(--brass)); transition: filter 400ms var(--ease-out); }
+.piece.is-black.is-glow { filter: var(--piece-edge) drop-shadow(0 0 3px var(--brass)) drop-shadow(0 0 8px var(--brass)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .piece.is-glow { transition: none; }
+}
+
+/* --- blunder dialog (U4, BR3.2, BR3.3; mockups.md Screen 3) --------------- */
+.blunder-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--scrim);
+}
+
+.blunder-dialog {
+  width: min(440px, 100%);
+  padding: 18px 20px 16px;
+  border-radius: var(--r-dialog);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--text);
+  box-shadow: var(--shadow-dialog);
+}
+
+.blunder-title { margin: 0 0 8px; font: 400 var(--fs-26)/1.15 var(--f-display); }
+.blunder-body { margin: 0 0 16px; }
+.blunder-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.blunder-actions .btn { min-height: 44px; }
+
+@media (max-width: 420px) {
+  .blunder-actions .btn { flex: 1 1 100%; }
+}
+
+/* --- share dialog (P2 U1, BR3.1-BR3.6; mockups.md Screen 4) ------------------
+   A native modal <dialog>: the page behind is inert and does not move. Its
+   padding is 0 so a click on the dialog element itself is a backdrop click. */
+.share-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border-radius: var(--r-dialog);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--text);
+  box-shadow: var(--shadow-dialog);
+}
+
+.share-dialog::backdrop { background: var(--scrim); }
+
+.share-body { display: grid; gap: 10px; padding: 18px 20px 16px; }
+.share-title { margin: 0; font: 400 var(--fs-26)/1.15 var(--f-display); }
+.share-line { margin: 0 0 4px; }
+.share-label { margin: 0; font-size: var(--fs-14); color: var(--muted); }
+.share-apps,
+.share-app-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-qr { display: grid; justify-items: center; gap: 4px; padding-top: 4px; }
+.share-qr canvas { display: block; border-radius: var(--r-sheet); }
+.share-qr-note { margin: 0; font-size: var(--fs-13); color: var(--muted); text-align: center; }
+.share-actions { display: flex; justify-content: flex-end; }
+
+@media (max-width: 420px) {
+  .share-app-links .btn { flex: 1 1 calc(50% - 4px); }
+}

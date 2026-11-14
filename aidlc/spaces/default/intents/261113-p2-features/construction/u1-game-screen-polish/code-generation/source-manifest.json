@@ -1,0 +1,27 @@
+{
+  "stage": "code-generation",
+  "unit": "u1-game-screen-polish",
+  "version": 1,
+  "writes": [
+    { "path": "static/js/vendor/qrcode.js" },
+    { "path": "static/js/captures.js" },
+    { "path": "static/js/layout.js" },
+    { "path": "static/js/share-dialog.js" },
+    { "path": "static/js/qr-canvas.js" },
+    { "path": "static/js/board/board.js" },
+    { "path": "static/js/screens/game.js" },
+    { "path": "static/js/share.js" },
+    { "path": "static/js/app.js" },
+    { "path": "static/css/tokens.css" },
+    { "path": "static/css/app.css" },
+    { "path": "static/css/board.css" },
+    { "path": "templates/index.html" },
+    { "path": "static/ASSETS.md" },
+    { "path": "README.md" },
+    { "path": "tests/js/captures.test.mjs" },
+    { "path": "tests/js/layout.test.mjs" },
+    { "path": "tests/js/qr.test.mjs" },
+    { "path": "tests/js/share.test.mjs" },
+    { "path": "tests/test_u1_polish_browser.py" }
+  ]
+}

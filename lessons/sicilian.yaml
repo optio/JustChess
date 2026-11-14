@@ -1,0 +1,51 @@
+# Sicilian Defence, Najdorf: 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 (ECO B90).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Sicilian Defence
+kind: opening
+aliases:
+  - Sicilian, Najdorf Variation
+eco: B90
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White opens with the king's pawn and claims the centre.
+  - san: c5
+    note: >-
+      The Sicilian. Black fights for d4 from the side instead of copying
+      White, which makes the game unbalanced from move one.
+    alternatives:
+      - san: e5
+        note: The symmetrical reply, leading to open games.
+  - san: Nf3
+    note: >-
+      White develops and gets ready to push d4.
+  - san: d6
+    note: >-
+      Black guards e5 so a White knight cannot use it, and opens the bishop
+      on c8.
+  - san: d4
+    note: >-
+      White opens the centre to get quick piece play.
+  - san: cxd4
+    note: >-
+      Black trades a side pawn for a centre pawn. That leaves Black with two
+      centre pawns against one, a long-term plus.
+  - san: Nxd4
+    note: >-
+      White takes back with the knight, which stands well in the middle.
+  - san: Nf6
+    note: >-
+      Black develops with a threat: the pawn on e4 is attacked.
+  - san: Nc3
+    note: >-
+      White defends e4 with a piece and develops at the same time.
+  - san: a6
+    note: >-
+      The Najdorf. A small move that keeps White's pieces off b5 and prepares
+      b5 for Black later on.
+objectives:
+  - Meet 1.e4 with c5 to fight for d4 from the side.
+  - Trade the c-pawn for White's d-pawn to keep two centre pawns.
+  - Develop with tempo (Nf6 hits e4) and use a6 to control b5.

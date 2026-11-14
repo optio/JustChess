@@ -1,0 +1,15 @@
+{
+  "stage": "functional-design",
+  "unit": "u2-data-and-your-games",
+  "upstream_ids": ["FR1.1","FR1.2","FR1.3","FR1.4","FR2.1"],
+  "coverage": [
+    { "id": "FR1.1", "status": "OK", "target": "BR3.1, BR3.4, BR3.6" },
+    { "id": "FR1.2", "status": "OK", "target": "BR1.2, BR2.2, BR3.2" },
+    { "id": "FR1.3", "status": "OK", "target": "BR3.5" },
+    { "id": "FR1.4", "status": "OK", "target": "BR2.1, BR2.2, BR2.3, BR3.3" },
+    { "id": "FR2.1", "status": "OK", "target": "BR1.3" }
+  ],
+  "reverse": [
+    { "id": "BR1.1", "status": "N/A", "target": "NFR7 (fresh schema v4, ADR-010); no FR row" }
+  ]
+}

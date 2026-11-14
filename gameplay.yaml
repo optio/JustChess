@@ -1,0 +1,74 @@
+# JustChess gameplay settings.
+#
+# Read once when the app starts (restart the app after a change). Another file can be
+# used by setting JUSTCHESS_GAMEPLAY_FILE. A key left out keeps its built-in default,
+# which is the value shown here; an unknown key or a value out of range stops start-up
+# with an error naming the key. Protocol and security limits (token sizes, message
+# sizes, socket timeouts) are not here on purpose.
+
+computer:
+  # Play the computer: one entry per level. The level names are fixed.
+  levels:
+    beginner:
+      skill: 0                 # Stockfish "Skill Level", 0 (weakest) to 20 (full strength)
+      depth: 1                 # deepest search in half-moves, 1 to 99, or null for no limit
+      think_seconds: 0.05      # think time per move, 0.01 to 10 seconds
+      random_move_chance: 0.35 # chance (0 to 1) of playing a random legal move instead of the engine's
+    casual:
+      skill: 2                 # Stockfish "Skill Level", 0 to 20
+      depth: 3                 # deepest search in half-moves, or null for no limit
+      think_seconds: 0.1       # think time per move in seconds
+      random_move_chance: 0.15 # chance of a random legal move instead of the engine's
+    club:
+      skill: 6                 # Stockfish "Skill Level", 0 to 20
+      depth: 6                 # deepest search in half-moves, or null for no limit
+      think_seconds: 0.3       # think time per move in seconds
+      random_move_chance: 0.05 # chance of a random legal move instead of the engine's
+    strong:
+      skill: 11                # Stockfish "Skill Level", 0 to 20
+      depth: 10                # deepest search in half-moves, or null for no limit
+      think_seconds: 0.6       # think time per move in seconds
+      random_move_chance: 0    # chance of a random legal move instead of the engine's
+    maximum:
+      skill: 16                # Stockfish "Skill Level", 0 to 20
+      depth: null              # deepest search in half-moves, or null for no limit
+      think_seconds: 1.0       # think time per move in seconds
+      random_move_chance: 0    # chance of a random legal move instead of the engine's
+  # The Hint button: always this strength whatever the level, and never random.
+  hint:
+    skill: 20                  # Stockfish "Skill Level" for hints, 0 to 20
+    think_seconds: 0.5         # think time for a hint, 0.05 to 10 seconds
+
+engine:
+  queue_cap: 32                # most requests waiting for the one engine; more are refused as busy (1 to 1000)
+  hint_refusal_queue: 16       # hints are refused once this many requests wait, so replies keep their place (0 to queue_cap)
+  overrun_grace_seconds: 5     # a search still running this long after its think time counts as a crash (0.1 to 60)
+  restarts: 1                  # automatic restarts after a crash before the computer stays unavailable (0 to 10)
+  retry_backoff_seconds: 5     # after a failed reply, wait this long before asking the engine again for that room (0 to 600)
+
+rate_limits:
+  # Most requests per minute from one client address (see JUSTCHESS_TRUSTED_PROXIES behind a proxy).
+  computer_create: 10          # new computer rooms (1 to 10000)
+  hint: 20                     # hints (1 to 10000)
+  computer_move: 30            # "ask the computer to move" calls from the page (1 to 10000)
+  join_request: 5              # join requests to pass-along rooms (1 to 10000)
+
+join_requests:
+  lifetime_minutes: 10         # an unanswered join request lapses after this long (0.5 to 1440)
+  declined_block_minutes: 10   # after a decline, that address cannot ask again in that room for this long (0 to 1440)
+  address_book_cap: 10000      # most client addresses remembered for join requests and declines (100 to 1000000)
+
+rooms:
+  claim_win_away_hours: 24     # an opponent away this long counts as abandoned, so the win can be claimed (0.01 to 8760)
+  idle_room_delete_days: 30    # rooms with no activity for this long are deleted (1 to 3650)
+
+blunder_check:
+  time_budget_ms: 250          # most time the "Warn me before blunders" check may spend on one move (10 to 10000)
+
+client:
+  # Sent to the page with the app shell; the page keeps its built-in values if these are missing.
+  capture_animation_ms: 260          # how long a captured piece takes to shrink and fade (0 to 2000; 0 under reduced motion anyway)
+  your_games_refresh_seconds: 60     # how often the lobby's "Your games" list refreshes while visible (10 to 3600)
+  computer_retry_limit: 3            # how many times the page asks the computer again before "The computer didn't answer." (0 to 20)
+  computer_retry_delay_seconds: 5    # the wait between those tries (1 to 300)
+  join_poll_seconds: 3               # how often a visitor's page checks whether its join request was answered (1 to 60)

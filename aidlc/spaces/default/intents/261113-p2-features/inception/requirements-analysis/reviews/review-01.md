@@ -1,0 +1,22 @@
+## Review
+
+**Verdict:** READY
+**Reviewer:** aidlc-product-lead-agent
+**Date:** 2026-11-13T00:00:00Z
+**Iteration:** 1
+**Verdict Dictated:** no
+
+### Findings
+
+| ID | Severity | Location | Finding | Required action | Status |
+|---|---|---|---|---|---|
+| R-01 | Major | aidlc/spaces/default/intents/261113-p2-features/inception/requirements-analysis/requirements.md > FR4.2 | On a 360 px wide phone in portrait, 8 squares of at least 44 px need a 352 px board. That leaves 4 px per side, which clashes with normal page gutters. FR4.2 allows squares under 44 px only in phone landscape, so as written the board must run edge to edge at 360 px. A developer cannot tell whether to go edge to edge or to allow smaller squares. | State that the board is full-bleed at 360 px portrait, or set a minimum viewport width at which 44 px holds. Add 360×640 and the two minimum sizes (768×600 and 640×360) to the listed browser test sizes. | New |
+| R-02 | Major | aidlc/spaces/default/intents/261113-p2-features/inception/requirements-analysis/requirements.md > FR6.2, FR8.2, FR8.4 | The scope is open-ended. FR6.2 says "fixed engine setting" but gives no move times (the Assumptions fix only the skill levels), so the levels cannot be tested against the NFR1 3 s p95. FR8.2 and FR8.4 give no number of endgame positions or defence lessons. FR8.2's "held draw" has no pass rule (for example, reaching N moves, the 50-move rule, or a repetition). | Give a thinking time per level that stays under the NFR1 limit. Give a minimum count of endgame positions per category and of defence lessons. Define the pass rule for a held draw. | New |
+| R-03 | Minor | aidlc/spaces/default/intents/261113-p2-features/inception/requirements-analysis/requirements.md > Assumptions "Signal" and FR5.3 | Q7 was answered B, which includes a Signal button. The requirements replace it with the share sheet (the "More…" button), which is a deviation from the user's answer. It is reasoned and listed under Out of scope, but the user has not confirmed it. | Name the deviation at the approval gate so the user explicitly accepts it. | New |
+| R-04 | Minor | aidlc/spaces/default/intents/261113-p2-features/inception/requirements-analysis/requirements.md > NFR1, FR6.4, FR8.2, FR6.7 | One search at a time is shared by computer replies, hints and the endgame trainer. Nothing says what happens when requests queue, so the 3 s p95 cannot hold under contention. FR6.7 covers only "Play the computer" when Stockfish is missing. Hints, endgame trainers and resuming a single-player game when it is the computer's turn are not covered. | Say how queued requests behave (wait or "engine busy"). Say what the hint, the endgame trainer and a resumed game show when Stockfish is unavailable. | New |
+| R-05 | Minor | aidlc/spaces/default/intents/261113-p2-features/inception/requirements-analysis/requirements.md > FR3, FR6 | Several corners are silent. For pass-along: does the mode survive the creator closing or reloading the page, and can the creator leave it? For single player: do these games count toward the room score (FR3.8 says only practice games do not), and are resign, draw and rematch available? For takeback: what happens when only the computer's opening move exists, or while the engine is thinking? | State each as a requirement, an assumption with a reason, or out of scope. | New |
+| R-06 | Minor | aidlc/spaces/default/intents/261113-p2-features/inception/requirements-analysis/requirements.md > NFR4, FR3.4 | "Rate limited" has no threshold, so it cannot be tested. FR3.4's notification when the page is closed does not say what happens when the creator has no push subscription. FR1.4 does not say that a transient failure must not remove stored seats. | Give a rate limit (for example, N requests per minute). Give a fallback when the creator has no push subscription (the banner on next open). State that seats are dropped only on an explicit "not found" or "wrong token" answer. | New |
+
+### Summary
+
+The requirements cover all 18 answers and are mostly testable. Traceability.json lists every FR and NFR ID, with no orphans. The two Major findings are the 44 px board at 360 px wide (FR4.2) and the missing engine times and content counts (FR6.2, FR8.2, FR8.4). Neither blocks design, and both can be settled at the gate, so the verdict is READY. The Minor items are edge cases and one deviation from an answer (Signal) for the user to confirm.

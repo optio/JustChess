@@ -1,0 +1,52 @@
+# King's Indian Defence, Classical: 1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 (ECO E92).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: King's Indian Defence
+kind: opening
+aliases:
+  - King's Indian, Classical Variation
+eco: E92
+side: black
+start: startpos
+moves:
+  - san: d4
+    note: >-
+      White opens with the queen's pawn.
+  - san: Nf6
+    note: >-
+      Black develops and stops e4 for now.
+  - san: c4
+    note: >-
+      White grabs more space in the centre.
+  - san: g6
+    note: >-
+      Black prepares to put the bishop on g7, a fianchetto.
+  - san: Nc3
+    note: >-
+      White develops and supports a later e4.
+  - san: Bg7
+    note: >-
+      The bishop stares down the long diagonal at White's centre.
+  - san: e4
+    note: >-
+      White builds a big pawn centre. Black lets it happen and plans to
+      attack it later.
+  - san: d6
+    note: >-
+      Black keeps the e5 square under control and prepares e5.
+  - san: Nf3
+    note: >-
+      White develops another piece.
+  - san: O-O
+    note: >-
+      Black castles early, behind the fianchettoed bishop.
+  - san: Be2
+    note: >-
+      White develops quietly and prepares to castle too.
+  - san: e5
+    note: >-
+      The signature strike. Black challenges d4 and claims a share of the
+      centre.
+objectives:
+  - Let White build a centre, then strike at it with e5.
+  - Fianchetto the bishop to g7 and castle early.
+  - Keep the pawn on d6 to support the e5 break.

@@ -1,0 +1,74 @@
+# Early queen raids: the Scotch, Steinitz Variation: 1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nb5 Bb4+ 6.Bd2 Qxe4+ 7.Be2 Kd8 8.O-O Bxd2 9.Nxd2 Qg6 10.Bf3 (ECO C45).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Early Queen Raids
+kind: defence
+aliases:
+  - Scotch Game, Steinitz Variation
+eco: C45
+side: white
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White opens with the king's pawn.
+  - san: e5
+    note: >-
+      Black replies the same way.
+  - san: Nf3
+    note: >-
+      The knight attacks e5.
+  - san: Nc6
+    note: >-
+      Black defends.
+  - san: d4
+    note: >-
+      The Scotch Game: White opens the centre at once.
+  - san: exd4
+    note: >-
+      Black takes.
+  - san: Nxd4
+    note: >-
+      White takes back with a central knight.
+  - san: Qh4
+    note: >-
+      An early queen raid. The queen eyes e4 and f2 and hopes White panics.
+  - san: Nb5
+    note: >-
+      Do not panic: counterattack. The knight threatens c7, forking king and
+      rook.
+  - san: Bb4+
+    note: >-
+      Black develops with check.
+  - san: Bd2
+    note: >-
+      Block with a piece that develops.
+  - san: Qxe4+
+    note: >-
+      The queen grabs a pawn with check. Greedy, and it costs Black time.
+  - san: Be2
+    note: >-
+      Block again and get ready to castle. White's pieces come out with
+      every move.
+  - san: Kd8
+    note: >-
+      Black's king has to guard c7 itself and loses the right to castle.
+  - san: O-O
+    note: >-
+      White's king is safe. White is a pawn down but far ahead in development.
+  - san: Bxd2
+    note: >-
+      Black trades bishops.
+  - san: Nxd2
+    note: >-
+      A knight takes back and attacks the queen.
+  - san: Qg6
+    note: >-
+      The queen has to move again.
+  - san: Bf3
+    note: >-
+      Another piece comes out. Black's king is stuck in the centre, the
+      price of the early queen raid.
+objectives:
+  - When the queen comes out early, answer with threats and development.
+  - Block checks with pieces that develop, not with king moves.
+  - A pawn is a fair price for a big lead in development and a safe king.

@@ -1,0 +1,76 @@
+# Defending against the Fried Liver: 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Na5 6.Bb5+ c6 7.dxc6 bxc6 8.Be2 h6 9.Nf3 e4 10.Ne5 (ECO C59).
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: Defending against the Fried Liver
+kind: defence
+aliases:
+  - Two Knights Defence, Main Line with 5...Na5
+eco: C59
+side: black
+start: startpos
+moves:
+  - san: e4
+    note: >-
+      White opens with the king's pawn.
+  - san: e5
+    note: >-
+      Black answers the same way.
+  - san: Nf3
+    note: >-
+      The knight attacks e5.
+  - san: Nc6
+    note: >-
+      Black defends it.
+  - san: Bc4
+    note: >-
+      The bishop aims at f7.
+  - san: Nf6
+    note: >-
+      The Two Knights Defence: Black counterattacks e4.
+  - san: Ng5
+    note: >-
+      Knight and bishop both attack f7.
+  - san: d5
+    note: >-
+      Block the bishop's line with a pawn. This is the right reply.
+  - san: exd5
+    note: >-
+      White takes, opening the bishop's line again.
+  - san: Na5
+    note: >-
+      The safe recapture is NOT on d5. The knight hits the bishop instead,
+      and Black gets the pawn back later with active play.
+    alternatives:
+      - san: b5
+        note: The Ulvestad Variation, another way to avoid Nxd5.
+  - san: Bb5+
+    note: >-
+      The bishop escapes with check.
+  - san: c6
+    note: >-
+      Black blocks and attacks the bishop.
+  - san: dxc6
+    note: >-
+      White takes the pawn.
+  - san: bxc6
+    note: >-
+      Black takes back. Black is a pawn down but develops fast and opens lines.
+  - san: Be2
+    note: >-
+      The bishop retreats to safety.
+  - san: h6
+    note: >-
+      Black chases the knight from g5.
+  - san: Nf3
+    note: >-
+      The knight goes back.
+  - san: e4
+    note: >-
+      Black gains more time by attacking the knight again.
+  - san: Ne5
+    note: >-
+      The knight finds a central post. Black has fast development and open
+      lines in return for the pawn.
+objectives:
+  - After 4.Ng5, block with d5.
+  - After 5.exd5, avoid Nxd5, because that is exactly what the Fried Liver needs.
+  - Trade the pawn for quick development and time spent chasing White's pieces.
