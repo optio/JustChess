@@ -11,6 +11,7 @@ set in the shell wins over the file (see ``justchess.envfile``).
 """
 
 from pathlib import Path
+import os
 
 from justchess import envfile
 
@@ -23,4 +24,5 @@ from justchess.db import resolve_db_path  # noqa: E402
 DB: Path = resolve_db_path()
 ENGINE_DIR: Path = Path(__file__).resolve().parent / ".engines" / f"stockfish-{stockfish_install.PINNED_VERSION}"
 
-app = create_app(db_path=lambda: DB, engine_dir=lambda: ENGINE_DIR)
+app = create_app(db_path=lambda: DB, engine_dir=lambda: ENGINE_DIR,
+                 database_url=lambda: os.environ.get("DATABASE_URL"))

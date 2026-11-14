@@ -2,18 +2,20 @@
 
 ## Run Record
 
-- Date: 2026-11-13T14:02:42Z
-- Commit: 50e87bdd5a4e3ad22903a8d49df32a0718a2853c
+- Date: 2026-11-14
+- Commit: e6b8274f317f40420804aaac30b142439a5424a8
+- Source snapshot: git:2ec937281d09e51a4da301de9b31b56ec5a9c86c
+- Store generation reviewed: sha256:58db062a5924e6b45ab9a59a1d1526f8ebb9da52e8d2132bb66ed63c453dc65c
 
-Focused scan at Standard depth for intent `261113-p2-features`, merged into a STALE store (the previous full scan, by intent `p1-ui-redesign` on 2026-11-12, described the pre-redesign two-file app). Deep analysis covered the backend package, the entry point, the installer, the page template, the lesson files, all browser modules, the stylesheets and the service worker, as on disk: nearly all of it is uncommitted (`justchess/`, `static/js/`, `static/css/`, `static/sw.js`, `lessons/` and `stockfish_install.py` untracked; `app.py` and `templates/index.html` modified). During the scan `app.py`, `justchess/envfile.py` (new), `justchess/vapid.py`, `tests/test_envfile.py` and `.env.example` changed on disk; the artifacts describe the state after those edits. Skimmed only: `tests/`, `pyproject.toml`, `README.md`, `uv.lock` (searched for one package), `static/demo/`, `static/ASSETS.md`. The previous run's whole-repository deep coverage could not be re-verified and is recorded as shallow. Left out unopened: `.venv/`, every `__pycache__/`, `.pytest_cache/`, `.engines/`, `.git/`, `justchess.sqlite3`, `justchess.sqlite3.old`, `.env`, the binary assets in `static/fonts/` and `static/pieces/`, and AI-DLC's own install. No tests, builds or programs were run.
+Application-wide runtime rescan replaces prior historical prose with current verified findings. All backend modules, frontend ES modules, authored styles, template, lesson/endgame content, installer, curator and listed configuration were read. Database and environment tests were deeply read; remaining tests, generated puzzle rows, binary assets and demo files received inventory/selected-reference coverage only. Selected dependency records and README operational sections were inspected. Consequently coverage is explicitly partial rather than claiming every root file was deeply analyzed. No application edits, tests, builds, database access, installation or publication occurred. Secrets, local database files, dependencies, caches and AI-DLC framework/workspace are excluded.
 
 ## Scope of Analysis
 
 ```yaml
 scope_version: 1
 kind: partial
-intent: 261113-p2-features
-fingerprint: 44459ac9b4045738fe10ef7485be570234245a3f
+intent: postgresql-support
+fingerprint: 171b70a6d100c9743a33e3ff7945ab17d8f06c6e
 analyzed:
   paths:
     - justchess/
@@ -22,8 +24,16 @@ analyzed:
     - static/sw.js
     - templates/
     - lessons/
+    - endgames/
     - app.py
     - stockfish_install.py
+    - scripts/curate_puzzles.py
+    - gameplay.yaml
+    - pyproject.toml
+    - .env.example
+    - tests/core/test_db.py
+    - tests/core/conftest.py
+    - tests/test_envfile.py
   components:
     - Env File Loader
     - App Entry Point
@@ -64,13 +74,33 @@ analyzed:
     - Opening Trainer
     - Contrast Audit
     - Stylesheets
+    - Persistence Backend
+    - Database Configuration
+    - Room Persistence Rules
+    - Game Persistence Rules
+    - Room Summaries
+    - Persistence Regression Tests
+    - Engine
+    - Computer Coordination
+    - Gameplay Settings
+    - Rate Limiter
+    - Puzzle Store
+    - Puzzle Trainer
+    - Endgame Store
+    - Endgame Trainer
+    - Trainer Hub
+    - Trainer Progress
+    - Share Dialog and QR
+    - Curation Tool
 shallow:
   paths:
-    - ./
-    - uv.lock
     - tests/
-    - pyproject.toml
     - README.md
+    - uv.lock
+    - puzzles/
     - static/demo/
     - static/ASSETS.md
+    - static/fonts/
+    - static/pieces/
 ```
+

@@ -1,0 +1,1 @@
+"Support PostgreSQL via DATABASE_URL in .env, falling back to the built-in SQLite"

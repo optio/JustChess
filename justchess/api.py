@@ -180,7 +180,7 @@ from justchess import DomainError, analysis, computer, endgames, games, housekee
 from justchess import engine as engine_module
 from justchess import gameplay as gameplay_module
 from justchess import vapid as vapid_keys
-from justchess.db import Database, prepare_database, resolve_db_path
+from justchess.db import Database, prepare_configured_database
 from justchess.live import CLOSE_POLICY, CLOSE_SERVER_ERROR, RECEIVE_TIMEOUT, LiveHub, SnapshotFor
 from justchess.security import MAX_BODY_BYTES, BodyLimitMiddleware, OriginGuardMiddleware
 
@@ -847,8 +847,13 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
                colour_chooser: ColourChooser = secrets.choice,
                gameplay: gameplay_module.Gameplay | None = None,
                move_chooser: computer.MoveChooser | None = None,
-               endgames_dir: PathSetting = None) -> FastAPI:
+               endgames_dir: PathSetting = None,
+               database_url: str | Callable[[], str | None] | None = None) -> FastAPI:
     """Build the JustChess app. Nothing touches the database until the app starts.
+
+    ``database_url`` explicitly selects PostgreSQL (a callable resolves at startup).
+    Otherwise an explicit ``db_path`` selects isolated SQLite; with neither,
+    DATABASE_URL takes precedence over JUSTCHESS_DB from the environment.
 
     ``lessons_dir`` is resolved here, once: the argument, else ``JUSTCHESS_LESSONS_DIR``,
     else ``lessons/`` at the project root. ``vapid`` defaults to the keys from the
@@ -870,7 +875,9 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        db = prepare_database(_resolve_path(db_path, resolve_db_path))
+        url = database_url() if callable(database_url) else database_url
+        path = _resolve_path(db_path, lambda: None) if db_path is not None else None
+        db = prepare_configured_database(path, database_url=url)
         keys = vapid if vapid is not None else vapid_keys.load_vapid(os.environ, ROOT)
         chess_engine = engine_factory() if engine_factory is not None else _engine_for(settings)
         svc = Services(db, clock, receive_timeout, vapid=keys, push_sender=push_sender,

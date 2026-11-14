@@ -2,7 +2,7 @@
 
 **Play. Learn. Improve.** Anonymous two-player chess with room codes and interactive opening lessons.
 
-Built with FastAPI, lightweight JavaScript, WebSockets, SQLite and python-chess, with Stockfish for games against the computer. No accounts, subscriptions or matchmaking.
+Built with FastAPI, lightweight JavaScript, WebSockets, SQLite or PostgreSQL and python-chess, with Stockfish for games against the computer. No accounts, subscriptions or matchmaking.
 
 ## Getting started (uv)
 
@@ -35,6 +35,7 @@ Settings can go in a `.env` file at the project root, which is ignored by git. C
 | Variable | Default | Purpose |
 |---|---|---|
 | `JUSTCHESS_DB` | `justchess.sqlite3` in the working directory | Path of the SQLite database file. |
+| `DATABASE_URL` | unset | PostgreSQL connection URL; takes precedence over `JUSTCHESS_DB` when nonempty. |
 | `JUSTCHESS_ORIGIN` | the request's own `Host` (scheme from `X-Forwarded-Proto` when present) | The app's public origin, such as `https://chess.example.com`. POST requests and WebSocket connections whose `Origin` header differs are refused. Set it when running behind a proxy that rewrites `Host`. |
 | `JUSTCHESS_LESSONS_DIR` | `lessons/` next to `app.py` | Folder of opening lesson files; see [Opening lessons](#opening-lessons). |
 | `JUSTCHESS_PUZZLES_DIR` | `puzzles/` next to `app.py` | Folder of the curated tactics puzzles, read once at start-up; see [Tactics puzzles](#tactics-puzzles). |
@@ -53,7 +54,13 @@ Never list an address that untrusted clients can connect from: whoever connects 
 
 **Run one process.** Room locks and live WebSocket connections are kept in memory, so run a single Uvicorn worker (the default). Several workers or several instances would need shared locking and pub/sub, which the app does not have.
 
-**Database upgrades.** The current schema version is 4 (room modes, computer seats, capture info and join requests). The first start after this version moves the old database to `justchess.sqlite3.old` (replacing any earlier `.old`) and starts with a fresh, empty one: nothing is migrated, so earlier rooms and scores are not carried over, and the "Your games" list drops their seats (ADR-010). The same happens to any older, unmarked or non-SQLite file. A version-4 file is kept as it is. A file with a newer version than the app refuses to start and is left where it is, and if the old file cannot be renamed, startup stops with the reason. Rooms with no activity for 30 days are deleted at startup and then hourly, with their push subscriptions, alert records and join requests.
+**SQLite database upgrades.** The current schema version is 4 (room modes, computer seats, capture info and join requests). The first start after this version moves the old database to `justchess.sqlite3.old` (replacing any earlier `.old`) and starts with a fresh, empty one: nothing is migrated, so earlier rooms and scores are not carried over, and the "Your games" list drops their seats (ADR-010). The same happens to any older, unmarked or non-SQLite file. A version-4 file is kept as it is. A file with a newer version than the app refuses to start and is left where it is, and if the old file cannot be renamed, startup stops with the reason. Rooms with no activity for 30 days are deleted at startup and then hourly, with their push subscriptions, alert records and join requests.
+
+**Optional PostgreSQL.** Set `DATABASE_URL=postgresql://user:password@host:5432/justchess` in `.env` (the `postgres://` spelling is also accepted). Shell variables override `.env`. A nonempty URL selects PostgreSQL ahead of `JUSTCHESS_DB`; an unset or empty URL keeps SQLite. Invalid URLs, missing drivers, connection and schema/permission errors stop startup with credential-safe diagnostics; they never redirect writes to SQLite. Install the locked psycopg dependency with `uv sync --frozen`.
+
+Create the PostgreSQL database and grant its role access to an empty schema with permission to create tables/indexes and use identity sequences. The app creates schema version 4 transactionally on first startup and retains it on subsequent starts. Unsupported schema versions and unversioned occupied schemas are refused unchanged; no older PostgreSQL schema migration exists yet. Future supported upgrades belong in startup's version handling. Switching backends selects independent databases: existing SQLite files are left untouched, and no games or seats are transferred automatically. Continue running **one Uvicorn worker**: locks and WebSocket fan-out remain process-local with either backend.
+
+**PostgreSQL verification.** Use a dedicated disposable test database, never your application database. Set `JUSTCHESS_TEST_DATABASE_URL` to its PostgreSQL URL, then run `uv run --frozen pytest -q tests/test_postgres.py tests/test_envfile.py`. The test role must create/drop schemas; each integration test creates a unique schema and removes it afterward. Without this variable, PostgreSQL integration cases explicitly skip. The ordinary `DATABASE_URL` is cleared by the test suite to protect production data; explicit `create_app(db_path=...)` also overrides ambient database selection for isolated SQLite callers.
 
 Request bodies are limited to 4 KB and WebSocket messages to 1 KB.
 

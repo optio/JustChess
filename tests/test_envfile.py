@@ -29,11 +29,13 @@ def test_values_comments_quotes_and_export_are_parsed(tmp_path):
 
 def test_the_real_environment_wins_over_the_file(tmp_path):
     f = tmp_path / ".env"
-    f.write_text("JUSTCHESS_DB=from-file.sqlite3\nJUSTCHESS_ORIGIN=https://x.example\n", encoding="utf-8")
-    env = {"JUSTCHESS_DB": "from-shell.sqlite3"}
+    f.write_text("JUSTCHESS_DB=from-file.sqlite3\nJUSTCHESS_ORIGIN=https://x.example\n"
+                 "DATABASE_URL=postgresql://file.invalid/db\n", encoding="utf-8")
+    env = {"JUSTCHESS_DB": "from-shell.sqlite3", "DATABASE_URL": "postgresql://shell.invalid/db"}
     applied = envfile.load(f, env)
     assert env["JUSTCHESS_DB"] == "from-shell.sqlite3"
     assert env["JUSTCHESS_ORIGIN"] == "https://x.example"
+    assert env["DATABASE_URL"] == "postgresql://shell.invalid/db"
     assert applied == ["JUSTCHESS_ORIGIN"]
 
 
@@ -61,7 +63,7 @@ def test_the_example_file_only_names_settings_the_app_reads():
         "JUSTCHESS_VAPID_KEY_FILE", "JUSTCHESS_VAPID_PRIVATE_KEY", "JUSTCHESS_VAPID_SUBJECT",
         "JUSTCHESS_PUSH_HOSTS", "JUSTCHESS_DB", "JUSTCHESS_ORIGIN", "JUSTCHESS_LESSONS_DIR",
         "JUSTCHESS_PUZZLES_DIR", "STOCKFISH_AUTO_INSTALL", "JUSTCHESS_TRUSTED_PROXIES",
-        "JUSTCHESS_GAMEPLAY_FILE",
+        "JUSTCHESS_GAMEPLAY_FILE", "DATABASE_URL",
     }
 
 

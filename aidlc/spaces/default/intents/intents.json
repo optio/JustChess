@@ -22,5 +22,13 @@
     "scope": "refactor",
     "status": "complete",
     "request": "1179fe5c"
+  },
+  {
+    "uuid": "01a1dbfe-ad9c-7c2f-96c7-1eb89e184914",
+    "slug": "postgresql-support",
+    "dirName": "261114-postgresql-support",
+    "scope": "express",
+    "status": "complete",
+    "request": "59290f1e"
   }
 ]

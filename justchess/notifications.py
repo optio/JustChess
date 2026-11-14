@@ -364,8 +364,8 @@ def delete_room_data(conn: sqlite3.Connection, code: str) -> None:
 def claim(conn: sqlite3.Connection, event: AlertEvent, now: float) -> bool:
     """Claim the event's key for its seat; False when it was claimed before."""
     cur = conn.execute(
-        "INSERT OR IGNORE INTO alert_records (room_code, slot, event_key, status, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO alert_records (room_code, slot, event_key, status, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (room_code, slot, event_key) DO NOTHING",
         (event.room_code, event.target_slot, event.event_key, CLAIMED, now, now),
     )
     return cur.rowcount == 1

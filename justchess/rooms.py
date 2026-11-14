@@ -235,10 +235,10 @@ def authorize_seat(conn: sqlite3.Connection, code: str, token: str | None) -> Se
 
 def _insert_seat_hash(conn: sqlite3.Connection, code: str, slot: str, token_hash: str, now: float) -> Seat:
     cur = conn.execute(
-        "INSERT INTO seats (room_code, slot, token_hash, last_seen_at) VALUES (?, ?, ?, ?)",
+        "INSERT INTO seats (room_code, slot, token_hash, last_seen_at) VALUES (?, ?, ?, ?) RETURNING seat_id",
         (code, slot, token_hash, now),
     )
-    return Seat(cur.lastrowid, code, slot, token_hash, None, None, now)
+    return Seat(cur.fetchone()[0], code, slot, token_hash, None, None, now)
 
 
 def _insert_seat(conn: sqlite3.Connection, code: str, slot: str, now: float) -> tuple[Seat, str]:
@@ -624,10 +624,10 @@ def create_join_request(conn: sqlite3.Connection, code: str, token: str | None, 
     new_token = issue_token()
     cur = conn.execute(
         "INSERT INTO join_requests (room_code, requester_token_hash, status, created_at, expires_at) "
-        "VALUES (?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?) RETURNING request_id",
         (code, hash_token(new_token), PENDING, now, now + ttl),
     )
-    request = JoinRequestRow(cur.lastrowid, code, hash_token(new_token), PENDING, now, now + ttl, None)
+    request = JoinRequestRow(cur.fetchone()[0], code, hash_token(new_token), PENDING, now, now + ttl, None)
     return JoinRequestOutcome("created", request, new_token, lapsed)
 
 
