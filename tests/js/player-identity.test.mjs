@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createPlayerIdentity, recoveryFragment } from "../../static/js/player-identity.js";
+import { createNicknameEditor, createPlayerIdentity, recoveryFragment } from "../../static/js/player-identity.js";
 
 const token = "a".repeat(43), recovery = "b".repeat(43), newer = "c".repeat(43);
 function storage() { const map = new Map(); return { getItem:k => map.get(k) || null, setItem:(k,v) => map.set(k,v) }; }
@@ -36,4 +36,30 @@ test("regeneration replaces recovery while retaining this device's session", asy
   assert.equal(player.token,token);
   assert.equal(player.link("https://chess.test"),`https://chess.test/#player=${newer}`);
   assert.equal(action[1].headers["X-Player-Token"],token);
+});
+
+test("nickname editor preserves drafts across refresh and returns saved names to display", async () => {
+  let saved = "", value;
+  const editor = createNicknameEditor({getName: () => saved, save: async draft => { value = draft; saved = draft; return {ok:true}; }});
+  assert.deepEqual(editor.state, {draft:"",editing:true,pending:false});
+  editor.change("Alice"); await editor.submit();
+  assert.equal(value,"Alice"); assert.equal(editor.state.editing,false);
+  editor.begin(); editor.change("Draft"); saved = "Name from another device"; editor.sync();
+  assert.equal(editor.state.draft,"Draft"); assert.equal(editor.state.editing,true);
+  await editor.submit(); assert.equal(saved,"Draft"); assert.equal(editor.state.editing,false);
+  editor.begin(); editor.change(""); await editor.submit();
+  assert.equal(editor.state.editing,true); assert.equal(editor.state.draft,"");
+});
+
+test("pending nickname save blocks duplicates and failures retain editable draft", async () => {
+  let finish, calls = 0, saved = "Alice";
+  const editor = createNicknameEditor({getName:() => saved, save:() => {calls++; return new Promise(resolve => {finish = resolve;});}});
+  editor.begin(); editor.change("Invalid draft");
+  const pending = editor.submit();
+  assert.equal(editor.state.pending,true);
+  assert.equal(await editor.submit(),null); assert.equal(calls,1);
+  saved = "Refreshed name"; editor.sync(); assert.equal(editor.state.draft,"Invalid draft");
+  finish({ok:false,message:"Choose another nickname"});
+  assert.equal((await pending).ok,false); assert.equal(editor.state.pending,false);
+  assert.equal(editor.state.editing,true); assert.equal(editor.state.draft,"Invalid draft");
 });

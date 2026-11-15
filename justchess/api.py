@@ -177,6 +177,8 @@ from pydantic import BaseModel, Field
 
 import stockfish_install
 from justchess import DomainError, analysis, computer, endgames, games, housekeeping, lessons, notifications, players, puzzles, ratelimit, rooms, summaries
+from justchess.coordination import Coordination, AddressBook
+from justchess import outbox, work
 from justchess import engine as engine_module
 from justchess import gameplay as gameplay_module
 from justchess import vapid as vapid_keys
@@ -375,15 +377,25 @@ class Services:
         # P2 U3: in-memory join-request state (reset by a restart, by design).
         self.join_limiter = ratelimit.RateLimiter(limit=settings.join_requests_per_minute)
         self.player_limiter = ratelimit.RateLimiter(limit=settings.player_per_minute)
+        if db.backend == "postgresql":
+            for name in ("create", "hint", "computer_move", "endgame", "join", "player"):
+                local = getattr(self, name + "_limiter")
+                setattr(self, name + "_limiter", ratelimit.SharedRateLimiter(db, name, local.limit))
         self.request_addresses = rooms.RequestAddressBook(memory=settings.decline_memory,
                                                           limit=settings.address_book_cap)
         self.trusted_proxies = tuple(trusted_proxies)
         self._locks: weakref.WeakValueDictionary[str, asyncio.Lock] = weakref.WeakValueDictionary()
         self.hub = LiveHub(snapshot_source=self.snapshot_source, identify=self.identify,
                            mark_seen=self.mark_seen, clock=clock, receive_timeout=receive_timeout)
+        self.coordination = Coordination(db, clock)
+        self.hub.coordination = self.coordination
         self.vapid = vapid if vapid is not None else vapid_keys.disabled("not configured")
         self.push_hosts = tuple(push_hosts)
         self.notifier = notifications.Notifier(db, self.vapid, sender=push_sender, clock=clock)
+        self.outbox = outbox.Outbox(db, self.vapid,
+                                  push_sender or notifications.WebPushSender(timeout=3, ttl=300),
+                                  clock, self.presence_of)
+        self.serverless = os.environ.get("VERCEL") == "1"
 
     # notifications (U5) ------------------------------------------------------
 
@@ -396,12 +408,14 @@ class Services:
         """Queue the alert to run after the response is sent; presence is captured here."""
         if event is None:
             return
+        with self.db.transaction() as conn:
+            outbox.enqueue(conn, event, self.clock())
         background.add_task(self.dispatch_alert, event, self.presence_of(event.room_code, event.target_slot))
 
     async def dispatch_alert(self, event: notifications.AlertEvent, presence: notifications.Presence) -> None:
         """Background task: claim and send in a worker thread; never raises."""
         try:
-            await asyncio.to_thread(self.notifier.dispatch_safely, event, presence)
+            await asyncio.to_thread(self.outbox.dispatch, event)
         except Exception:  # dispatch_safely logs its own failures; this guards the thread hand-off
             logger.exception("Alert %s for room %s could not be scheduled", event.event_key, event.room_code)
 
@@ -523,7 +537,16 @@ class Services:
         async with lock:
             try:
                 with self.db.transaction() as conn:
-                    return action(conn, self.clock())
+                    if code:
+                        self.db.lock_room(conn, code)
+                    result = action(conn, self.clock())
+                    if isinstance(result, tuple):
+                        for item in result:
+                            if isinstance(item, notifications.AlertEvent):
+                                outbox.enqueue(conn, item, self.clock())
+                    if code:
+                        self.db.notify_room(conn, code)
+                    return result
             except DomainError as error:
                 if error.status == 409 and code:
                     self._attach_snapshot(code, viewer_token, error)
@@ -533,6 +556,55 @@ class Services:
                 raise HTTPException(500, SERVER_ERROR) from None
 
     # P2 U4: the computer's reply (BR5.1-BR5.6) ------------------------------------
+
+    async def request_reply(self, code: str, respect_backoff: bool = False) -> ReplyAsk:
+        """Vercel finishes bounded engine work within the invoking request.
+
+        The lease survives instance interruption; another request can retry after
+        expiry. apply_reply revalidates game/version under the SQL room lock.
+        """
+        if not self.serverless:
+            return self.ask_reply(code, respect_backoff)
+        with self.db.transaction() as conn:
+            self.db.lock_room(conn, code)
+            room = rooms.get_room(conn, code)
+            game = games.current_game(conn, code)
+            if room.mode != rooms.MODE_COMPUTER or game.status != games.PLAYING:
+                return ReplyAsk()
+            board = games.replay_board(games.load_moves(conn, game.game_id))
+            if game.slot_of(board.turn) != "B" or not self.engine.available:
+                return ReplyAsk()
+            key = f"engine:{code}:{game.game_id}:{game.version}"
+            owner = work.claim(conn, key, self.clock(), 60)
+        if owner is None:
+            return ReplyAsk()
+        try:
+            level = computer.reply_settings(room.computer_level, self.gameplay.levels)
+            try:
+                ticket = self.engine.submit(board, level.skill, level.think, depth=level.depth)
+            except engine_module.EngineBusy as busy:
+                return ReplyAsk(message=busy.reason)
+            except engine_module.EngineUnavailable:
+                return ReplyAsk()
+            flight = computer.ReplyInFlight(game.game_id, game.version, ticket.request_id, "thinking",
+                                            random_move_chance=level.random_move_chance)
+            self.coordinator.set_reply(code, flight)
+            try:
+                try:
+                    await asyncio.wait_for(self._complete_reply(code, flight, ticket), 30)
+                except TimeoutError:
+                    self.coordinator.set_backoff(code)
+                    return ReplyAsk(message="The computer is busy, try again in a moment")
+            finally:
+                self.coordinator.clear_reply(code, flight.request_id)
+            return ReplyAsk(asked=True)
+        finally:
+            with self.db.transaction() as conn:
+                if self.coordinator.in_backoff(code):
+                    conn.execute("UPDATE work_claims SET expires_at = ? WHERE work_key = ? AND owner = ?",
+                                 (self.clock() + self.gameplay.retry_backoff, key, owner))
+                else:
+                    work.release(conn, key, owner)
 
     def ask_reply(self, code: str, respect_backoff: bool = False) -> ReplyAsk:
         """BR5.1/BR5.4: enqueue the computer's reply when it is due; never raises.
@@ -597,7 +669,10 @@ class Services:
         async with self.lock(code):
             try:
                 with self.db.transaction() as conn:
+                    self.db.lock_room(conn, code)
                     applied = self.apply_reply(conn, self.clock(), code, flight, move)
+                    if applied:
+                        self.db.notify_room(conn, code)
             except (DomainError, sqlite3.Error):
                 logger.exception("The computer's reply in room %s could not be applied", code)
         if not applied:
@@ -895,10 +970,16 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
         await _load_puzzles(puzzle_store)
         await _load_endgames(endgame_store)
         engine_folder = _resolve_path(engine_dir, lambda: DEFAULT_ENGINE_DIR)
-        tasks = [asyncio.create_task(_prepare_engine(app, engine_folder, chess_engine)),
-                 asyncio.create_task(housekeeping.run_forever(
-                     db, clock, (notifications.delete_room_data, *cleanup_hooks),
-                     retention=settings.idle_room_retention))]
+        if svc.serverless:
+            # A cold start must finish preparation before accepting engine requests.
+            # Vercel may suspend between requests; no autonomous housekeeping loop.
+            await _prepare_engine(app, engine_folder, chess_engine)
+            tasks = []
+        else:
+            tasks = [asyncio.create_task(_prepare_engine(app, engine_folder, chess_engine)),
+                     asyncio.create_task(housekeeping.run_forever(
+                         db, clock, (notifications.delete_room_data, *cleanup_hooks),
+                         retention=settings.idle_room_retention))]
         try:
             yield
         finally:
@@ -909,6 +990,26 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
             await chess_engine.stop()
 
     app = FastAPI(title="JustChess", lifespan=lifespan)
+
+    @app.get("/api/cron/maintenance")
+    async def maintenance(request: Request):
+        secret = os.environ.get("CRON_SECRET", "")
+        supplied = request.headers.get("authorization", "")
+        if not secret or not secrets.compare_digest(supplied, "Bearer " + secret):
+            raise HTTPException(401, "Unauthorized")
+        svc = services(request)
+        drained = await asyncio.to_thread(svc.outbox.drain)
+        await asyncio.to_thread(housekeeping.run_lapse, svc.db, svc.clock())
+        # Bounded cleanup instead of traversing an unbounded room backlog in cron.
+        deleted = await asyncio.to_thread(housekeeping.run_cleanup, svc.db, svc.clock(),
+                                         (notifications.delete_room_data, *cleanup_hooks),
+                                         settings.idle_room_retention, 20)
+        with svc.db.transaction() as conn:
+            conn.execute("DELETE FROM live_presence WHERE heard_at < ?", (svc.clock() - 60,))
+            conn.execute("DELETE FROM work_claims WHERE expires_at < ?", (svc.clock() - 3600,))
+            conn.execute("DELETE FROM rate_windows WHERE started_at < ?", (svc.clock() - 3600,))
+            conn.execute("DELETE FROM room_declines WHERE declined_at < ?", (svc.clock() - settings.decline_memory,))
+        return {"processed": drained, "deleted": deleted}
     app.state.gameplay = settings
     app.state.lessons = lesson_store
     app.state.puzzles = puzzle_store
@@ -1300,6 +1401,7 @@ def _add_room_routes(app: FastAPI) -> None:
                 games.mark_playing(conn, game, now)
                 games.mark_counted(conn, game)
                 rooms.touch_room(conn, code, now)
+                outbox.enqueue(conn, notifications.joined_event(code), now)
             return joined, game.colour_of(joined.seat.slot)
 
         result = await svc.mutate(code, action, viewer_token=token)
@@ -1378,7 +1480,7 @@ async def _create_computer_room(request: Request, body: CreateRoomRequest) -> JS
 
     code, token = await svc.mutate(None, action)
     logger.info("Created computer room %s at level %s", code, level)
-    asked = svc.ask_reply(code)  # BR3.1: the computer moves first when it plays white
+    asked = await svc.request_reply(code)  # BR3.1: the computer moves first when it plays white
     snapshot = _snapshot_with(svc, code, "A", asked.message)
     return JSONResponse({"code": code, "token": token, "slot": "A", "colour": chosen, "computer": snapshot["computer"]},
                         status_code=201, headers={"Location": f"/r/{code}"})
@@ -1389,10 +1491,12 @@ def _ask_to_join(svc: Services, conn: sqlite3.Connection, code: str, token: str 
     """BR2.1/BR3.1 inside the join transaction: rate limit first, then the request outcome (never raises after a write)."""
     if not svc.join_limiter.allow(address, now):
         raise DomainError(429, TOO_MANY, error="too_many")
-    declined = svc.request_addresses.declined_recently(code, address, now)
+    book = AddressBook(conn, svc.gameplay.decline_memory) if svc.db.backend == "postgresql" else svc.request_addresses
+    declined = book.declined_recently(code, address, now)
     outcome = rooms.create_join_request(conn, code, token, now, declined, ttl=svc.gameplay.join_request_ttl)
     if outcome.kind == "created":
-        svc.request_addresses.note_request(outcome.request.request_id, address)
+        book.note_request(outcome.request.request_id, address)
+        outbox.enqueue(conn, notifications.join_request_event(code, outcome.request.request_id), now)
     return outcome
 
 
@@ -1443,7 +1547,8 @@ def _add_join_request_routes(app: FastAPI) -> None:
 
         def action(conn: sqlite3.Connection, now: float) -> rooms.Answer:
             seat = rooms.authorize_seat(conn, code, body.token)
-            answer = rooms.answer_request(conn, code, seat, body.accept, now, svc.request_addresses)
+            book = AddressBook(conn, svc.gameplay.decline_memory) if svc.db.backend == "postgresql" else svc.request_addresses
+            answer = rooms.answer_request(conn, code, seat, body.accept, now, book)
             if answer.kind != "none":
                 _after_action(conn, code, seat.slot, now)
             return answer
@@ -1480,7 +1585,7 @@ def _add_game_routes(app: FastAPI) -> None:
         """
         svc = services(request)
         slot, changed, event = await svc.mutate(code, action, viewer_token=token)
-        asked = svc.ask_reply(code) if reply else ReplyAsk()
+        asked = await svc.request_reply(code) if reply else ReplyAsk()
         if changed or asked.asked:
             await svc.hub.broadcast(code)
         if background is not None:
@@ -1627,7 +1732,7 @@ def _add_computer_routes(app: FastAPI, run_and_broadcast: Callable[..., Awaitabl
         except sqlite3.Error:
             logger.exception("Database error in room %s", code)
             raise HTTPException(500, SERVER_ERROR) from None
-        asked = svc.ask_reply(code, respect_backoff=True)
+        asked = await svc.request_reply(code, respect_backoff=True)
         if asked.asked:
             await svc.hub.broadcast(code)
         return _snapshot_with(svc, code, "A", asked.message)

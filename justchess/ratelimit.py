@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import ipaddress
 import logging
+import hashlib
 from collections import OrderedDict, deque
 from collections.abc import Iterable, Mapping
 from typing import Protocol
@@ -83,12 +84,30 @@ class RateLimiter:
         return True
 
     def _drop_stale(self, now: float) -> None:
-        """Drop windows that are empty by now; the least recently used come first, so stop at a live one."""
+        """Drop expired windows, starting with the least recently used."""
         while self._windows:
             times = next(iter(self._windows.values()))
             if now - times[-1] < self.window:
                 return
             self._windows.popitem(last=False)
+
+
+class SharedRateLimiter:
+    """PostgreSQL fixed-window cap shared across instances; keys are hashed."""
+
+    def __init__(self, db, name, limit, window=WINDOW_SECONDS):
+        self.db, self.name, self.limit, self.window = db, name, limit, window
+
+    def allow(self, key, now):
+        digest = hashlib.sha256((self.name + ":" + key).encode()).hexdigest()
+        with self.db.transaction() as conn:
+            row = conn.execute(
+                "INSERT INTO rate_windows(rate_key, started_at, attempts) VALUES (?, ?, 1) "
+                "ON CONFLICT(rate_key) DO UPDATE SET "
+                "started_at = CASE WHEN rate_windows.started_at <= ? THEN excluded.started_at ELSE rate_windows.started_at END, "
+                "attempts = CASE WHEN rate_windows.started_at <= ? THEN 1 ELSE rate_windows.attempts + 1 END "
+                "RETURNING attempts", (digest, now, now - self.window, now - self.window)).fetchone()
+            return row[0] <= self.limit
 
 
 def parse_trusted_proxies(raw: str | None) -> tuple[Network, ...]:

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "installCommand": "uv sync --frozen --no-dev",
+  "functions": {
+    "app.py": {
+      "maxDuration": 300,
+      "includeFiles": "{templates/**,static/**,lessons/**,puzzles/**,endgames/**,gameplay.yaml}",
+      "excludeFiles": "{.env*,*.sqlite3*,**/*.pem,**/*.key,.mcp.json,.vercel/**,.engines/**,.git/**,.codex/**,.agents/**,.claude/**,aidlc/**,tests/**,scripts/**,data/**,docs/**,node_modules/**,.pytest_cache/**,__pycache__/**}"
+    }
+  },
+  "crons": [{"path": "/api/cron/maintenance", "schedule": "17 3 * * *"}]
+}

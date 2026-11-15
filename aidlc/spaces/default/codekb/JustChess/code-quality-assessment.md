@@ -1,6 +1,6 @@
 # Code Quality Assessment
 
-> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+> Historical baseline retained from earlier scans. The Current footer sections below supersede conflicting identity/presentation statements. Outside-focus prose is preserved, not newly verified.
 
 ## Verified strengths
 
@@ -24,4 +24,13 @@ Naming and explicit error handling: good in inspected storage/domain helpers. Fu
 Personalized outcomes must distinguish watchers, pass-along uncounted practice, computer rooms, rematches with swapped colours and finished pages reopened later. Existing end lifecycle animates only a newly ended game and cancels on rematch. Confetti should preserve that lifecycle and reduced-motion behavior. Existing renderers use textContent, a suitable seam for untrusted nicknames; moderation rules (languages, normalization, length, false positives, updates) remain undecided.
 
 No tests/builds or database connections ran in this focused scan. Only the two listed JavaScript storage/settings tests were deeply read; prior broad verification prose above is historical and demoted in the timestamp scope. No current test pass counts or code coverage are claimed.
+
+
+## Current footer findings and verification boundary
+
+Focused naming/error handling: good; renderers use textContent and credential requests avoid query strings. UI state clarity: fair; focused field preservation exists but there is no saved/edit state and no pending guard on nickname/regenerate controls. Clipboard fallback focuses a bookmarkable anchor and should remain usable after consolidation. A render may overwrite transient operation status; preserve errors/input deliberately during the new async edit flow.
+
+Density is driven by two wrapping rows, broad margins and multiple explanatory lines, rather than a compact footer group. Inline icons need accessible labels and usable targets; saved nickname should be readonly until explicit edit. Compact styling should wrap without horizontal overflow or shrinking keyboard targets.
+
+Existing browser tests depend on player-save and player-link, set the nickname field directly and override window.confirm before regeneration. Update those expectations for edit activation and actual modal confirm/cancel/Escape/focus return. Add meaningful failure/pending coverage; current Node tests exercise the client, not mountPlayerFooter DOM states. No tests, builds, screenshot checks or browser runs were executed for this scan. Backend/persistence and other prior prose are not reverified.
 

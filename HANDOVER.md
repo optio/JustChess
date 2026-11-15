@@ -1,51 +1,42 @@
 # JustChess — Handover and Remaining Work
 
-Last updated: 2026-11-15. This file lets a new, empty session pick up where the last one stopped.
+Last updated: 2026-11-15. Keep this file limited to outstanding work; remove completed to-dos.
 
-## How to resume in a new session
+## Current checkpoint
 
-1. Open your coding assistant in this folder and read this file.
-2. Player identity/game polish (`261115-player-identity-polish`) and PostgreSQL support are complete; do not repeat either. Build and Test is approved. No deployment target was selected, so deployment and monitoring stages did not apply. Start new work only when requested.
-3. Keep this file limited to outstanding work: remove completed items as they finish and update the active checkpoint.
+Active intent: `261115-compact-player-footer`. Owner approved Code Generation for the authorized Vercel extension VFR1–VFR6 (f59f2390, approval recorded as 6aeffd02). Preserve the completed footer. Intent state: `aidlc/spaces/default/intents/261115-compact-player-footer/aidlc-state.md`; implementation and test artifacts are under `construction/code-generation/` and `construction/build-and-test/`.
 
-## Remaining tasks
+Build and Test ran the frozen dependency check, full JavaScript suite, real Chromium footer/accessibility checks and the implementation regression. Evidence is **446 passed, 1 optional external Web Push skip** over 447 unique Python cases and **226 Node tests**, including isolated PostgreSQL 17 multi-instance coordination/outbox checks. Exact regression commands and limits are in `construction/code-generation/code-summary.md`; current stage matrix/results are in `construction/build-and-test/`. Traceability passes all 13 requirement IDs. Two Preview-only checks remain Unverified: deployed startup/Stockfish/assets and Preview smoke; Deployment Execution is scheduled to own them. No application-code fix is pending.
 
-### 1. Check push notifications by hand
-The push end-to-end test can't run on the Pi's headless Chromium. Check on a real phone that turn alerts arrive.
-- Web Push needs the VAPID settings in `.env`. **Never put VAPID keys inside the project folder.** Keep the key file outside it and point to it from `.env`.
-- The start-up line "Web Push is disabled: …" means those settings are missing.
+The owner answered **Accept failure** to Build and Test question `95ea8b39` (message `be05da5e`), and the answer was recorded. The attempted lifecycle report using `--result failed` was rejected because `failed` is not a supported outcome. Workflow state therefore still shows Build and Test in progress; no stage approval or advancement has been recorded. On resumption, run `aidlc engine orchestrate next` and follow the exact action it returns. Do not repeat the completed regression checks unless new code changes.
 
-### 2. Decide which credit to show for the chess pieces
-The cburnett pieces in `pieces/cburnett/` come from the Lichess repo, which carries two licence statements: CC BY-SA 3.0 and GPLv2+. Both are recorded in `pieces/cburnett/LICENSE.md` and `static/ASSETS.md`. Which credit the site shows is the owner's decision. It currently shows "Pieces: cburnett, CC BY-SA 3.0".
+Disposable test service `justchess-vercel-verification` (postgres:17 tmpfs localhost55439) was stopped/removed after verification. Dedicated URL was `postgresql://postgres@127.0.0.1:55439/justchess_test`; each PG case created/dropped only its unique schema. Verification commands (recreate a disposable service before running PG):
 
-### 3. Optional follow-ups from the code reviews (all minor)
-- **U3 pass-along:**
-  - The hourly clean-up lapses expired join requests without telling open pages. The page's own countdown hides the banner anyway.
-  - The 10-minute block after a decline is kept in memory, so it resets on restart.
-  - A malformed `X-Forwarded-For` behind a trusted proxy falls back to the proxy's address, so everyone behind that proxy shares one rate window.
-  - The join-request status poll has no rate limit.
-- **U6 endgames:**
-  - No test covers a client disconnecting during an endgame move (the 409 "The move was cancelled"). The shared helper is covered through the hint tests.
-  - The rate limit is applied before the 404 and body checks, so bad requests use up the allowance.
-- **Deprecation warnings in the test run:**
-  - python-chess uses `asyncio.DefaultEventLoopPolicy`, which is removed in Python 3.16. Upgrade python-chess when a fixed version exists.
-  - `tests/test_nfr_integration.py` uses the old `websockets` `connect()` style.
+- `env JUSTCHESS_TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:55439/justchess_test uv run --frozen pytest -q tests/test_serverless.py tests/core tests/test_computer.py tests/test_notifications.py tests/test_push_api.py tests/test_postgres.py`
+- `uv run --frozen pytest -q tests/test_accessibility_browser.py tests/test_game_screen.py tests/test_player_identity_browser.py`
+- `uv run --frozen pytest -q tests/test_analysis.py tests/test_check_move_api.py tests/test_curate_puzzles.py tests/test_endgame_judge.py tests/test_endgames.py tests/test_endgames_content.py tests/test_envfile.py tests/test_frontend_js.py tests/test_gameplay.py tests/test_lessons.py tests/test_lessons_api.py tests/test_player_api.py tests/test_players.py tests/test_push_e2e.py tests/test_puzzles.py tests/test_puzzles_api.py tests/test_rate_limit.py`
 
-## Standing rules for this project
-- Run Python through `uv run --frozen`.
-- Tests never open or migrate the real `justchess.sqlite3`. They use temporary databases.
-- Seat and request tokens never go in URLs, logs or error bodies.
-- Never write VAPID keys inside the project.
-- Commit or push only when the owner asks.
-- Gameplay numbers (computer levels, limits, timings) live in `gameplay.yaml`, so tune them there rather than in code.
-- Do not restore database files merely because of a workflow file-change warning. The owner explicitly permits database recreation for the player-identity change (2026-11-15); tests still use isolated databases.
+## Deployment still pending
 
-## Useful pointers
-- **Completed player identity/polish record:** `aidlc/spaces/default/intents/261115-player-identity-polish/`; final tests: 429 Python passed, 1 existing push E2E skip; 224 JavaScript passed; real PostgreSQL/Chromium checks passed. Owner requested commit and push on 2026-11-15; no deployment was requested. Schema 5: SQLite archives older files; PostgreSQL needs an empty/recreated application schema. Owner permits recreation because the app is not live; no backward compatibility is required.
-- **Completed PostgreSQL record:** `aidlc/spaces/default/intents/261114-postgresql-support/`; final tests: 405 Python passed, 1 existing push E2E skip; 221 JavaScript passed; real PostgreSQL checks passed. The owner requested commit and push on 2026-11-15. No deployment was requested.
-- **Current code knowledge:** `aidlc/spaces/default/codekb/JustChess/`.
-- **Unit designs and code summaries:** `aidlc/spaces/default/intents/261113-p2-features/construction/<unit>/`.
-- **PostgreSQL requirements:** `aidlc/spaces/default/intents/261114-postgresql-support/inception/requirements-analysis/requirements.md`.
-- **Decisions (ADRs):** `aidlc/spaces/default/intents/261113-p2-features/inception/domain-design/decisions.md`.
-- **Running and configuring the app:** `README.md`, including the "Play the computer", "Endgame trainer" and "Tuning gameplay" sections.
-- **Asset credits:** `static/ASSETS.md`.
+Root owns external settings/deployment. Vercel target is team `sachavandewalle-6312s-projects`, project `just-chess`, GitHub `optio/JustChess`. Root verified productionBranch=`production`; no Production branch creation/push/merge or Production deployment authorized. Preview is authorized after implementation/Build-Test gates.
+
+Root securely synchronized DATABASE_URL, JUSTCHESS_VAPID_PRIVATE_KEY and generated CRON_SECRET into Preview+Production as Secrets. Local ignored .env remains chmod0600; do not display/read it for testing. Existing VAPID public identity was preserved. Direct non-pooled Neon URL is confirmed by owner. Preview and Production currently share that database/key: do not perform destructive Preview tests. Root's dry source run succeeded with FastAPI145 files/~2.14MB before final tool-config/key excludes were added; verify final upload list and actual Preview runtime.
+
+Actual Preview smoke must establish template/static/training bundling, FastAPI lifespan, writable ephemeral verified Stockfish download/execution, WebSockets/reconnect, real Neon events and cron unauthorized response. No local test substitutes for that smoke. Vercel supports FastAPI ASGI WebSockets with Fluid Compute on all plans; each socket owns one direct PG listener connection and function max duration closes it. Budget Neon connections. Daily03:17UTC cron is eventual retry/cleanup, not a promise of prompt delivery without traffic. Remote send interruption has unavoidable at-least-once ambiguity; stable notification tags coalesce it. These limits are documented in README.
+
+## Preserved completed footer evidence
+
+Compact responsive footer, readonly nickname/pencil and inline save/edit states, draft/pending/error handling, one Copy player link action/manual bookmark fallback, styled help/regeneration dialogs and accessible keyboard/focus/touch controls are complete. Nine masked screenshots under the current record's `construction/code-generation/screenshots/` were visually inspected at320/375/1280 and dark375. Original final regression425 passed/8 skipped, Node226; do not rebuild completed UI.
+
+## Outstanding manual/optional work
+
+- Check closed-tab Web Push on a real phone; external Web Push E2E needs explicit browser credentials and normally skips. Reuse existing VAPID key; private values stay in ignored env or environment secrets.
+- Owner may choose another cburnett license attribution: source lists CC BY-SA3.0 and GPLv2+; current UI shows CC BY-SA3.0. References: `static/ASSETS.md` and piece license.
+- Minor existing follow-ups: cleanup lapses requests without broadcasting (page countdown hides banner); malformed trusted-proxy headers share the proxy rate window; join-request status polling has no rate cap; endgame disconnect-specific test absent (shared cancellation helper covered); engine/endgame limits precede some body/404 checks.
+- Existing python-chess asyncio policy and websockets legacy deprecations remain.
+
+## Standing rules and pointers
+
+Run Python through `uv run --frozen`. Tests use temporary databases and never normal data. Do not reset external PostgreSQL schemas; auxiliary runtime tables are additive. Credentials never appear in server URLs/logs/error bodies. No commit/push unless owner requests. No Production deployment. Gameplay settings live in gameplay.yaml.
+
+Player identity/polish and PostgreSQL support were completed/pushed through `dea733e`; records `261115-player-identity-polish` and `261114-postgresql-support`. Current CodeKB: `aidlc/spaces/default/codekb/JustChess/`. App configuration and runtime limits: README.md. Keep this checkpoint current after every milestone/result so another AI tool can resume without overlapping finished work.

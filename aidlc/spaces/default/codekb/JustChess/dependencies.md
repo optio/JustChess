@@ -1,6 +1,6 @@
 # Dependencies
 
-> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+> Historical baseline retained from earlier scans. The Current footer sections below supersede conflicting identity/presentation statements. Outside-focus prose is preserved, not newly verified.
 
 The entry point depends on envfile and the API factory. API composition depends on room/game persistence, summaries, live hub, security, limiter, catalogs, engine/computer coordination, analysis and notifications. Rooms calls game helpers; games uses python-chess and caller-owned connections. Notifications and housekeeping also execute database operations, so database adaptation is broader than db.py.
 
@@ -19,4 +19,14 @@ Frontend modules import local HTTP, state, storage, board, dialog and training h
 - share.js constructs invite/continue URLs; seat-store.js validates fragments and persists room capabilities.
 
 A moderation dependency/service choice is unresolved. Keep nickname normalization and enforcement consistent at server boundaries; client-only filtering would be bypassable. Do not send private recovery links through public invite sharing destinations.
+
+
+## Current footer dependencies
+
+- player-identity.js -> seat-store.safeStorage; injected fetch/storage/seats/onChange; mount controller -> document, window, clipboard and currently window.confirm.
+- app.js -> createPlayerIdentity/mountPlayerFooter; onChange -> footer.render (skimmed integration).
+- template -> app.css footer selectors and player data-testid hooks.
+- share-dialog.js -> share helpers and lazy QR module; blunder dialog -> game-specific CHOICES. Use their interaction patterns without coupling footer confirmation to unrelated sharing/board flows.
+
+No backend dependency change is indicated for this presentation-only task.
 

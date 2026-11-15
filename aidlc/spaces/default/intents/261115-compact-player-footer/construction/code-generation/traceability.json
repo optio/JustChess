@@ -1,0 +1,24 @@
+{
+  "stage": "code-generation",
+  "upstream_ids": ["FR1", "FR2", "FR3", "FR4", "FR5", "NFR1", "NFR2", "VFR1", "VFR2", "VFR3", "VFR4", "VFR5", "VFR6"],
+  "coverage": [
+    {"id":"FR1","status":"OK","target":"static/css/app.css"},
+    {"id":"FR2","status":"OK","target":"static/js/player-identity.js"},
+    {"id":"FR3","status":"OK","target":"static/js/player-identity.js"},
+    {"id":"FR4","status":"OK","target":"templates/index.html"},
+    {"id":"FR5","status":"OK","target":"templates/index.html"},
+    {"id":"NFR1","status":"OK","target":"tests/test_player_identity_browser.py"},
+    {"id":"NFR2","status":"OK","target":"HANDOVER.md"},
+    {"id":"VFR1","status":"OK","target":"app.py"},
+    {"id":"VFR2","status":"OK","target":"justchess/db.py"},
+    {"id":"VFR3","status":"OK","target":"justchess/coordination.py"},
+    {"id":"VFR4","status":"OK","target":"justchess/work.py"},
+    {"id":"VFR5","status":"OK","target":"justchess/outbox.py"},
+    {"id":"VFR6","status":"OK","target":"vercel.json"}
+  ],
+  "verification_limits": [
+    "VFR1 implementation and isolated runtime configuration tests pass; actual Vercel Preview startup/Stockfish/static/WebSocket smoke remains a deployment-stage obligation.",
+    "VFR6 remote Production branch setting is complete according to root; no Preview URL exists yet and no Production deployment was performed.",
+    "External closed-tab Web Push E2E remains optional; fake transport verifies durable targeting/retries and real phone delivery remains manual."
+  ]
+}

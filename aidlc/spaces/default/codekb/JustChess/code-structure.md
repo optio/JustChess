@@ -1,6 +1,6 @@
 # Code Structure
 
-> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+> Historical baseline retained from earlier scans. The Current footer sections below supersede conflicting identity/presentation statements. Outside-focus prose is preserved, not newly verified.
 
 | Location | Responsibility |
 |---|---|
@@ -30,4 +30,14 @@ Generated puzzle rows, demo files, binary fonts/pieces and the broad test suite 
 - Frontend presentation: settings-panel.js, board/board.js, screens/overlay.js, screens/win-sequence.js; tokens.css/board.css; templates/index.html.
 - Controller/orchestration excerpts: api.py continue routes and app.js end lifecycle/fragment handling; screens/game.js private-link row. These larger files were only skimmed in this run.
 - Tests deeply inspected: tests/js/seat-store.test.mjs and settings.test.mjs. Broader route/room/result/browser/PostgreSQL tests were located, not deeply reverified.
+
+
+## Current footer change surface
+
+- templates/index.html: persistent footer outside the route main; nickname form, recovery anchor, copy/regenerate buttons and live status paragraph.
+- static/js/player-identity.js: credential store/client plus mountPlayerFooter DOM controller.
+- static/css/app.css: footer-only rules at lines 666–670; broad form/link flex rows, margins, 44px input and explanatory paragraphs. Only relevant style sections were skimmed.
+- static/js/share-dialog.js and screens/blunder-dialog.js: deeply read modal patterns.
+- tests/js/player-identity.test.mjs: pure identity-client checks; tests/test_player_identity_browser.py: actual recovery/footer interactions.
+- static/js/app.js: skimmed mounting/onChange/startup integration; README player-help section skimmed.
 

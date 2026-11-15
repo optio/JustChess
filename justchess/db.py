@@ -226,6 +226,19 @@ class Database:
             return postgres.connect(self._database_url)
         return open_connection(self.path)
 
+    def lock_room(self, conn, code: str) -> None:
+        """Serialize a room across PostgreSQL instances until this transaction ends."""
+        if self.backend == "postgresql":
+            conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", ("room:" + code,))
+
+    def notify_room(self, conn, code: str) -> None:
+        """Queue the safe room invalidation in the same transaction as its state."""
+        if self.backend == "postgresql":
+            import hashlib
+            schema = conn.execute("SELECT current_schema()").fetchone()[0]
+            channel = "jc_" + hashlib.sha256((schema + ":" + code).encode()).hexdigest()[:40]
+            conn.execute("SELECT pg_notify(?, ?)", (channel, code))
+
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
         """Open a connection and run the block in one ``BEGIN IMMEDIATE`` transaction."""
@@ -313,7 +326,9 @@ def prepare_database(path: Path) -> Database:
         found = read_schema_version(path)
         if found == SCHEMA_VERSION:
             logger.info("Using the database %s (schema version %s)", path, SCHEMA_VERSION)
-            return Database(path)
+            db = Database(path)
+            _prepare_runtime(db)
+            return db
         if found is not None and found > SCHEMA_VERSION:
             raise DatabaseStartupError(
                 f"The database {path} has schema version {found}, newer than this app ({SCHEMA_VERSION}); "
@@ -325,10 +340,78 @@ def prepare_database(path: Path) -> Database:
             "Database %s had schema version %s (expected %s); moved it to %s and created a fresh one",
             path, found if found is not None else "none", SCHEMA_VERSION, old,
         )
-        return Database(path)
+        db = Database(path)
+        _prepare_runtime(db)
+        return db
     _create_schema(path)
     logger.info("Created a fresh database at %s (schema version %s)", path, SCHEMA_VERSION)
-    return Database(path)
+    db = Database(path)
+    _prepare_runtime(db)
+    return db
+
+
+RUNTIME_SCHEMA = """
+CREATE TABLE IF NOT EXISTS live_presence (
+    connection_id TEXT PRIMARY KEY,
+    room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+    slot TEXT NOT NULL,
+    visible INTEGER NOT NULL,
+    heard_at DOUBLE PRECISION NOT NULL
+);
+CREATE INDEX IF NOT EXISTS live_presence_room ON live_presence(room_code, heard_at);
+CREATE TABLE IF NOT EXISTS work_claims (
+    work_key TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    expires_at DOUBLE PRECISION NOT NULL
+);
+CREATE TABLE IF NOT EXISTS notification_outbox (
+    room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+    slot TEXT NOT NULL,
+    event_key TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at DOUBLE PRECISION NOT NULL,
+    available_at DOUBLE PRECISION NOT NULL,
+    lease_owner TEXT,
+    lease_until DOUBLE PRECISION NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY(room_code, slot, event_key)
+);
+CREATE INDEX IF NOT EXISTS notification_ready ON notification_outbox(status, available_at);
+CREATE TABLE IF NOT EXISTS notification_deliveries (
+    room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+    slot TEXT NOT NULL,
+    event_key TEXT NOT NULL,
+    subscription_id INTEGER NOT NULL,
+    PRIMARY KEY(room_code, slot, event_key, subscription_id)
+);
+CREATE TABLE IF NOT EXISTS rate_windows (
+    rate_key TEXT PRIMARY KEY,
+    started_at DOUBLE PRECISION NOT NULL,
+    attempts INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS request_addresses (
+    request_id INTEGER PRIMARY KEY REFERENCES join_requests(request_id) ON DELETE CASCADE,
+    address_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS room_declines (
+    room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+    address_hash TEXT NOT NULL,
+    declined_at DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY(room_code, address_hash)
+);
+"""
+
+
+def _prepare_runtime(db: Database) -> None:
+    """Add auxiliary coordination tables without changing or deleting application data."""
+    with db.transaction() as conn:
+        if db.backend == "postgresql":
+            conn.execute("SELECT pg_advisory_xact_lock(1935897194)")
+        for statement in _statements(RUNTIME_SCHEMA):
+            conn.execute(statement)
 
 
 def prepare_configured_database(path: Path | None = None, *, database_url: str | None = None,
@@ -375,4 +458,5 @@ def _prepare_postgres(url: str) -> Database:
     except sqlite3.Error as exc:
         raise DatabaseStartupError(f"PostgreSQL startup failed: {exc}") from None
     logger.info("Using PostgreSQL (schema version %s)", SCHEMA_VERSION)
+    _prepare_runtime(db)
     return db

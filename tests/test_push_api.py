@@ -298,7 +298,10 @@ def test_a_failing_send_never_fails_the_request(make_client, caplog):
 
     assert moved.status_code == 200 and moved.json()["version"] == 2
     assert any("could not be dispatched" in r.getMessage() for r in caplog.records)
-    assert ("B", "move:1:1", "claimed") in alerts(client, a["code"]), "a crashed claim stays claimed and is never resent"
+    assert ("B", "move:1:1", "failed") in alerts(client, a["code"])
+    with client.app.state.services.db.read() as conn:
+        pending = conn.execute("SELECT status, attempts FROM notification_outbox WHERE event_key = 'move:1:1'").fetchone()
+    assert tuple(pending) == ("pending", 1), "transport failure is durably retained for retry"
 
 
 async def _call_asgi(app, path: str, body: dict, events: list) -> None:

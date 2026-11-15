@@ -1,6 +1,6 @@
 # Technology Stack
 
-> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+> Historical baseline retained from earlier scans. The Current footer sections below supersede conflicting identity/presentation statements. Outside-focus prose is preserved, not newly verified.
 
 | Layer | Verified technology |
 |---|---|
@@ -19,4 +19,9 @@ Versions are selected resolved records verified in uv.lock, not an audit of ever
 ## Current focused verification
 
 pyproject.toml retains Python >=3.11, uv package=false and pytest configuration; psycopg is now declared. Other resolved version numbers above are retained prior-store information, not refreshed from uv.lock in this scan. No profanity or confetti dependency is currently declared; browser Web Animations implements existing game motion.
+
+
+## Current footer technologies
+
+Plain ES modules and DOM APIs; native dialog.showModal is already used by sharing. Clipboard API copies private links; CSS flex wrapping styles current footer. Node built-in tests cover the client and pytest-driven Chromium checks cover real interaction. No new dependency is needed to match existing modal/icon patterns. Manifest, backend schema and lock versions above remain historical outside-focus context.
 

@@ -1,6 +1,6 @@
 # Component Inventory
 
-> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+> Historical baseline retained from earlier scans. The Current footer sections below supersede conflicting identity/presentation statements. Outside-focus prose is preserved, not newly verified.
 
 ## Env File Loader
 
@@ -237,7 +237,7 @@ postgres.py translates qmarks/transactions, supports named and positional rows a
 
 ## Account-free Identity Seam
 
-No durable player principal exists. Room Seat is a hashed capability, not a global identity; a future player-to-seat association must preserve authorization.
+Historical seam finding: room seats were separate capabilities. The current Player Identity Client now restores profile and associated seats; backend internals were not rescanned.
 
 ## Private Continue Link
 
@@ -254,4 +254,21 @@ interaction.js owns selection and board.js toggles square classes. board.css cur
 ## Focused Browser Storage Tests
 
 tests/js/settings.test.mjs and seat-store.test.mjs cover malformed/blocked storage, defaults, cross-tab settings, boot consistency, legacy seats and continue-fragment validation.
+
+
+## Player Identity Client
+
+player-identity.js stores token/recovery under justchess.player.v1, initializes/restores profiles, attaches seats and exposes nickname/regenerate/link operations. Failed requests preserve credentials; regeneration retains sessions.
+
+## Player Footer
+
+mountPlayerFooter binds a persistent template footer. Current nickname is always editable with a separate submit button; no readonly/pencil state exists. Save my player is an anchor, Copy private link invokes clipboard, and Generate new link uses win.confirm. Status text uses textContent.
+
+## Modal Patterns
+
+share-dialog.js manages a native modal with focus wrapping/restoration; screens/blunder-dialog.js manages a custom labelled alertdialog with safe initial focus, Escape cancellation and focus containment.
+
+## Player Footer Regression Tests
+
+Node tests cover recovery parsing, credential restoration and regeneration session retention. Browser tests submit nickname, use the recovery anchor across devices and stub native confirmation. They do not currently test saved/edit UI or a footer regeneration modal.
 

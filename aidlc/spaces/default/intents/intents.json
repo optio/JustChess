@@ -38,5 +38,13 @@
     "scope": "express",
     "status": "complete",
     "request": "e7fe1843"
+  },
+  {
+    "uuid": "01a1defb-b41f-7f29-a9dc-df69fb850968",
+    "slug": "compact-player-footer",
+    "dirName": "261115-compact-player-footer",
+    "scope": "express",
+    "status": "in-flight",
+    "request": "38f55d05"
   }
 ]

@@ -33,6 +33,7 @@ CleanupHook = Callable[[sqlite3.Connection, str], None]
 def _delete_if_still_idle(db: Database, code: str, cutoff: float,
                           hooks: Sequence[CleanupHook]) -> bool:
     with db.transaction() as conn:
+        db.lock_room(conn, code)
         row = conn.execute("SELECT last_activity_at FROM rooms WHERE code = ?", (code,)).fetchone()
         if row is None or row["last_activity_at"] >= cutoff:
             return False  # deleted meanwhile, or touched since it was listed
@@ -43,12 +44,15 @@ def _delete_if_still_idle(db: Database, code: str, cutoff: float,
     return True
 
 
-def run_cleanup(db: Database, now: float, hooks: Sequence[CleanupHook] = (), retention: float = RETENTION) -> int:
+def run_cleanup(db: Database, now: float, hooks: Sequence[CleanupHook] = (), retention: float = RETENTION,
+                limit: int | None = None) -> int:
     """Delete every room idle for longer than the retention period; return how many."""
     cutoff = now - retention
     try:
         with db.read() as conn:
             idle = rooms.list_idle_rooms(conn, cutoff)
+            if limit is not None:
+                idle = idle[:limit]
     except sqlite3.Error:
         logger.exception("Housekeeping could not list idle rooms; retrying next run")
         return 0

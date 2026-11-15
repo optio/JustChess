@@ -1,6 +1,6 @@
 # Architecture
 
-> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+> Historical baseline retained from earlier scans. The Current footer sections below supersede conflicting identity/presentation statements. Outside-focus prose is preserved, not newly verified.
 
 FastAPI serves a Jinja2 shell, static ES modules, JSON endpoints and a room WebSocket. Domain modules receive caller-owned database connections. Database provides short-lived SQLite or PostgreSQL connections and explicit write transactions; API Services serialize mutations with per-room asyncio locks, commit, then broadcast viewer-specific snapshots. Move history is authoritative; cached FEN accelerates snapshots.
 
@@ -49,4 +49,25 @@ sequenceDiagram
 ```
 
 Text fallback: existing continue links authorize a current room seat, store a short-lived hash, then rotate the seat credential on redemption and downgrade the old device to a watcher. This flow cannot supply permanent identity recovery unchanged.
+
+
+## Current footer architecture
+
+mountPlayerFooter in player-identity.js binds template controls to createPlayerIdentity. Player operations use POST /api/player/{action}; onChange triggers footer render. render currently avoids overwriting a focused nickname field, but tracks no edit/saved/pending state. Regeneration calls win.confirm before an asynchronous request. Clipboard failure focuses the recovery anchor.
+
+The share controller uses native dialog.showModal with labelled content, background inertness, Tab wrapping, Escape/backdrop dismissal and trigger focus restoration. The custom blunder alertdialog instead captures keyboard/focus and defaults to cancellation. These are existing modal precedents; the footer can adopt a small purpose-specific confirmation without importing game-specific snapshot behavior.
+
+```mermaid
+sequenceDiagram
+  participant Footer
+  participant PlayerClient
+  participant API
+  Footer->>PlayerClient: nickname(value)
+  PlayerClient->>API: POST nickname with player header
+  API-->>PlayerClient: profile or validation error
+  PlayerClient-->>Footer: onChange and operation answer
+  Footer->>Footer: render nickname and status
+```
+
+Text fallback: footer submits through the player client, receives an authoritative profile or error, then renders profile state and operation feedback. New saved/edit UI should transition only after successful submission.
 

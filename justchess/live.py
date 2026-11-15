@@ -34,8 +34,9 @@ import asyncio
 import json
 import logging
 import sqlite3
+import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
@@ -70,6 +71,8 @@ class Connection:
     token_hash: str | None
     visible: bool = True
     last_heard: float = 0.0  # clock time of the last hello, ping or visibility message
+    connection_id: str = ""
+    credential: str | None = field(default=None, repr=False)
 
 
 class LiveHub:
@@ -86,11 +89,14 @@ class LiveHub:
         self.max_message_bytes = max_message_bytes
         self._rooms: dict[str, set[Connection]] = {}
         self._seen_written: dict[tuple[str, str], float] = {}
+        self.coordination = None
 
     # --- registry ----------------------------------------------------------
 
     def connected_slots(self, code: str) -> set[str]:
         """Return the slots with at least one live socket in the room."""
+        if self.coordination and self.coordination.db.backend == "postgresql":
+            return {row["slot"] for row in self.coordination.presence(code)}
         return {conn.slot for conn in self._rooms.get(code, ()) if conn.slot is not None}
 
     def is_visible(self, code: str, slot: str) -> bool:
@@ -99,6 +105,9 @@ class LiveHub:
 
     def is_fresh_visible(self, code: str, slot: str, now: float, window: float = FRESH_WINDOW) -> bool:
         """U5: True when one of the seat's sockets reports a visible page and was heard within ``window``."""
+        if self.coordination and self.coordination.db.backend == "postgresql":
+            return any(row["slot"] == slot and row["visible"] and now - row["heard_at"] <= window
+                       for row in self.coordination.presence(code))
         return any(c.visible and now - c.last_heard <= window
                    for c in self._rooms.get(code, ()) if c.slot == slot)
 
@@ -136,6 +145,11 @@ class LiveHub:
         return None
 
     async def broadcast(self, code: str) -> None:
+        if self.coordination:
+            self.coordination.publish(code)
+        await self.broadcast_local(code)
+
+    async def broadcast_local(self, code: str) -> None:
         """Send every socket in the room its own snapshot (seat A, seat B or watcher)."""
         members = list(self._rooms.get(code, ()))
         if not members:
@@ -144,6 +158,11 @@ class LiveHub:
         if snapshot_for is None:
             return
         for conn in members:
+            if conn.slot is not None and conn.credential is not None and self._identify(code, conn.credential) is None:
+                conn.slot, conn.token_hash = None, None
+                if self.coordination:
+                    self.coordination.leave(conn.connection_id)
+                await self._send(code, conn, {"type": "seat-moved"})
             await self._send(code, conn, {"type": "state", **snapshot_for(conn.slot)})
 
     async def send_event(self, code: str, message: dict) -> None:
@@ -218,9 +237,16 @@ class LiveHub:
         identity = self._identify(code, token)
         slot, token_hash = identity if identity else (None, None)
         return Connection(ws, slot, token_hash, visible=hello.get("visible", True) is not False,
-                          last_heard=self._clock())
+                          last_heard=self._clock(), credential=token)
 
     async def serve(self, ws: WebSocket, code: str) -> None:
+        if self.coordination:
+            async with self.coordination.listening(code, self.broadcast_local):
+                await self._serve(ws, code)
+        else:
+            await self._serve(ws, code)
+
+    async def _serve(self, ws: WebSocket, code: str) -> None:
         """Run one socket from accept to close. The caller has checked origin and room."""
         await ws.accept()
         conn: Connection | None = None
@@ -229,7 +255,9 @@ class LiveHub:
             if conn is None:
                 return
             newly_present = conn.slot is not None and conn.slot not in self.connected_slots(code)
+            conn.connection_id = uuid.uuid4().hex
             self._register(code, conn)
+            self._presence(code, conn)
             if conn.slot is not None:
                 self._seen(code, conn.slot, force=True)
             if newly_present:
@@ -263,9 +291,17 @@ class LiveHub:
                 conn.visible = message.get("visible") is not False
             else:
                 logger.debug("Ignoring a %r message in room %s", kind, code)
+            if kind in ("ping", "visibility"):
+                self._presence(code, conn)
+
+    def _presence(self, code, conn):
+        if self.coordination:
+            self.coordination.touch(code, conn.connection_id, conn.slot, conn.visible, conn.last_heard)
 
     async def _leave(self, code: str, conn: Connection) -> None:
         self._unregister(code, conn)
+        if self.coordination:
+            self.coordination.leave(conn.connection_id)
         if conn.slot is not None and conn.slot not in self.connected_slots(code):
             self._seen(code, conn.slot, force=True)
             await self.broadcast(code)
