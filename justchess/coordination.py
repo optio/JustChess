@@ -36,8 +36,11 @@ class AddressBook:
 
 def channel(db, code):
     # A channel must be isolated per schema as well as room (including test schemas).
-    with db.read() as conn:
-        schema = conn.execute("SELECT current_schema()").fetchone()[0]
+    # The schema is read once per Database (db.schema_name caches it).
+    schema = db._schema
+    if schema is None:
+        with db.read() as conn:
+            schema = db.schema_name(conn)
     return "jc_" + hashlib.sha256((schema + ":" + code).encode()).hexdigest()[:40]
 
 

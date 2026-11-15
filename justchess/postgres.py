@@ -73,6 +73,13 @@ class Connection:
     def close(self) -> None:
         self.raw.close()
 
+    def reusable(self) -> bool:
+        """True when the connection is open and idle: no transaction left open or failed."""
+        try:
+            return not self.raw.closed and self.raw.info.transaction_status == self.driver.pq.TransactionStatus.IDLE
+        except Exception:  # a broken connection is simply not reused
+            return False
+
 
 def connect(url: str) -> Connection:
     try:

@@ -44,6 +44,8 @@ import logging
 import os
 import sqlite3
 import re
+import threading
+import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -212,19 +214,72 @@ def transaction(conn: sqlite3.Connection) -> Iterator[sqlite3.Connection]:
     conn.execute("COMMIT")
 
 
+POOL_MAX_IDLE = 4  # idle PostgreSQL connections kept per Database (per server instance)
+POOL_MAX_IDLE_SECONDS = 30.0  # older idle connections are closed: Neon may suspend and drop them
+
+
 class Database:
-    """Opens short-lived connections to the selected backend."""
+    """Opens connections to the selected backend.
+
+    SQLite connections are short-lived. PostgreSQL connections are reused: a
+    finished transaction or read hands its connection back to a small idle
+    list, and the next one takes it if it is healthy, idle (no transaction left
+    open) and was used within ``POOL_MAX_IDLE_SECONDS``. Opening a connection
+    costs a TLS handshake and login, which made every request seconds slower
+    on Vercel. Sessions carry no state between uses: transactions end, advisory
+    locks are transaction-scoped and LISTEN runs on its own connection.
+    """
 
     def __init__(self, path: Path | None = None, *, database_url: str | None = None) -> None:
         self.path = Path(path) if path is not None else None
         self._database_url = database_url
         self.backend = "postgresql" if database_url is not None else "sqlite"
+        self._idle: list[tuple[float, postgres.Connection]] = []
+        self._idle_lock = threading.Lock()
+        self._schema: str | None = None
 
     def connect(self) -> sqlite3.Connection:
         """Open a new connection; the caller closes it."""
         if self._database_url is not None:
             return postgres.connect(self._database_url)
         return open_connection(self.path)
+
+    def _checkout(self):
+        if self._database_url is None:
+            return open_connection(self.path)
+        now = time.monotonic()
+        while True:
+            with self._idle_lock:
+                if not self._idle:
+                    break
+                used_at, conn = self._idle.pop()
+            if now - used_at <= POOL_MAX_IDLE_SECONDS and conn.reusable():
+                return conn
+            conn.close()
+        return postgres.connect(self._database_url)
+
+    def _checkin(self, conn) -> None:
+        if self._database_url is None or not conn.reusable():
+            conn.close()
+            return
+        with self._idle_lock:
+            if len(self._idle) < POOL_MAX_IDLE:
+                self._idle.append((time.monotonic(), conn))
+                return
+        conn.close()
+
+    def close(self) -> None:
+        """Close the idle PostgreSQL connections (app shutdown, tests)."""
+        with self._idle_lock:
+            idle, self._idle = self._idle, []
+        for _used_at, conn in idle:
+            conn.close()
+
+    def schema_name(self, conn) -> str:
+        """The PostgreSQL schema of this database, read once (notification channels are per schema)."""
+        if self._schema is None:
+            self._schema = conn.execute("SELECT current_schema()").fetchone()[0]
+        return self._schema
 
     def lock_room(self, conn, code: str) -> None:
         """Serialize a room across PostgreSQL instances until this transaction ends."""
@@ -235,28 +290,28 @@ class Database:
         """Queue the safe room invalidation in the same transaction as its state."""
         if self.backend == "postgresql":
             import hashlib
-            schema = conn.execute("SELECT current_schema()").fetchone()[0]
+            schema = self.schema_name(conn)
             channel = "jc_" + hashlib.sha256((schema + ":" + code).encode()).hexdigest()[:40]
             conn.execute("SELECT pg_notify(?, ?)", (channel, code))
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
-        """Open a connection and run the block in one ``BEGIN IMMEDIATE`` transaction."""
-        conn = self.connect()
+        """Run the block in one ``BEGIN IMMEDIATE`` transaction on a fresh or reused connection."""
+        conn = self._checkout()
         try:
             with transaction(conn):
                 yield conn
         finally:
-            conn.close()
+            self._checkin(conn)
 
     @contextmanager
     def read(self) -> Iterator[sqlite3.Connection]:
-        """Open a connection for reads only."""
-        conn = self.connect()
+        """A connection for reads only (reused for PostgreSQL)."""
+        conn = self._checkout()
         try:
             yield conn
         finally:
-            conn.close()
+            self._checkin(conn)
 
 
 def read_schema_version(path: Path) -> int | None:

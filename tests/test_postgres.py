@@ -118,9 +118,11 @@ def pg_database():
     query = dict(parse_qsl(parts.query))
     query["options"] = f"-c search_path={schema}"
     scoped_url = urlunsplit(parts._replace(query=urlencode(query, quote_via=quote)))
+    db = database.prepare_configured_database(database_url=scoped_url)
     try:
-        yield database.prepare_configured_database(database_url=scoped_url), scoped_url
+        yield db, scoped_url
     finally:
+        db.close()
         with psycopg.connect(url, autocommit=True) as admin:
             admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
 
@@ -309,3 +311,33 @@ def test_postgres_stand_in_matches_sqlite(pg_database, tmp_path):
     pg, _ = pg_database
     sqlite = database.prepare_database(tmp_path / "stand-in.sqlite3")
     assert _stand_in_scenario(pg) == _stand_in_scenario(sqlite) == ((True, "B", "online", False), ("waiting", False, False))
+
+
+def test_postgres_connections_are_reused_only_when_healthy_idle_and_recent(pg_database, monkeypatch):
+    """Reusing connections keeps Vercel requests from paying a TLS handshake and login per database step."""
+    db, _ = pg_database
+    with db.read() as first:
+        assert first.execute("SELECT 1").fetchone()[0] == 1
+    with db.read() as again:
+        assert again is first, "an idle healthy connection is reused"
+    with pytest.raises(RuntimeError):
+        with db.transaction() as inside:
+            inside.execute("SELECT 1")
+            raise RuntimeError("refused inside the transaction")
+    with db.transaction() as after_rollback:
+        assert after_rollback is first, "a rolled-back transaction leaves the connection idle and reusable"
+    with db.read() as reading:
+        reading.execute("BEGIN")  # a read that leaves its transaction open is not handed out again
+    with db.read() as fresh:
+        assert fresh is not reading
+    first.close()
+    with db.read() as replacement:
+        assert replacement is not first and replacement.execute("SELECT 1").fetchone()[0] == 1
+    monkeypatch.setattr(database, "POOL_MAX_IDLE_SECONDS", -1.0)
+    with db.read() as stale_check:
+        pass
+    with db.read() as newer:
+        assert newer is not stale_check, "connections idle for too long are closed, not reused"
+    assert db.schema_name(newer) == db.schema_name(newer) and db._schema.startswith("justchess_test_")
+    db.close()
+    assert db._idle == []

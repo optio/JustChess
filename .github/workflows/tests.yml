@@ -1,0 +1,63 @@
+# CI test gate (Deployment Pipeline, 2026-11-15): every push and pull request
+# runs the full Python suite (with real PostgreSQL 17 and headless Chrome) and
+# the JavaScript suite. Vercel's Deployment Checks hold a Production deployment
+# until the job named "tests" passes; keep that job name stable, because
+# GitHub matches checks by job name.
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        # Disposable test database only: each PostgreSQL test creates and drops its own schema.
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: justchess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d justchess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      JUSTCHESS_TEST_DATABASE_URL: postgresql://postgres@127.0.0.1:5432/justchess_test
+      STOCKFISH_AUTO_INSTALL: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies (frozen lock)
+        run: uv sync --frozen
+
+      - name: Use the runner's Chrome for the browser tests
+        run: echo "JUSTCHESS_CHROMIUM=$(command -v google-chrome || command -v chromium)" >> "$GITHUB_ENV"
+
+      - name: JavaScript tests
+        run: node --test tests/js/
+
+      - name: Python tests
+        run: uv run --frozen pytest -q tests

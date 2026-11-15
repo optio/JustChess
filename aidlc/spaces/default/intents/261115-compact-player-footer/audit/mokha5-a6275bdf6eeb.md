@@ -2452,3 +2452,239 @@
 **Message Id**: e5cfdfc4
 
 ---
+
+## Human Turn
+**Timestamp**: 2026-11-15T18:55:17Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: typed
+**Reply**: command
+**Message Id**: 05732624
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T19:46:57Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["Add CI test gate","Separate Neon branch (Recommended)"]
+**Message Id**: ea5c001c
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/deployment-pipeline-questions.md","entries":{"Evidence":"165802c21bac385a","Q1":"7229aa4e1388b6af","Q2":"529aa4dc800fd2b9"}}
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T19:46:58Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Right now, any push to main deploys to Production on Vercel straight away. Tests only run when someone runs them locally, and the repo has no CI. Should tests have to pass before a Production deploy?
+**Reply**: Add CI test gate
+**Options**: ["Keep as is (Recommended)","Add CI test gate","Manual promotion"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T19:46:58Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Preview and Production deployments currently share the same Neon database and push key, so any Preview test touches real data. Should Preview get its own database?
+**Reply**: Separate Neon branch (Recommended)
+**Options**: ["Separate Neon branch (Recommended)","Keep shared"]
+
+---
+
+## Subagent Dispatched
+**Timestamp**: 2026-11-15T19:47:30Z
+**Event**: SUBAGENT_DISPATCHED
+**Agent Type**: web-fetch
+
+---
+
+## Host Turn
+**Timestamp**: 2026-11-15T19:47:52Z
+**Event**: HOST_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: host
+**Reason**: claude agent message
+**Source**: template
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-15T19:48:44Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/cd-config.md
+**Context**: operation > deployment-pipeline > cd-config.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-15T19:48:55Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/deployment-strategy.md
+**Context**: operation > deployment-pipeline > deployment-strategy.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-15T19:49:04Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/rollback-runbook.md
+**Context**: operation > deployment-pipeline > rollback-runbook.md
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-15T19:49:13Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: deployment-pipeline
+**Next Stage**: deployment-execution
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/cd-config.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/deployment-strategy.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/rollback-runbook.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/deployment-pipeline-questions.md=not-run; upstream-coverage@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/cd-config.md=not-run
+**Open Decisions**: 0
+**Question Id**: 5031b075
+**Question Type**: gate
+**Question Chat**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question Shows**: sha256:f6ee029149bbcc960112cd2eb9d232c10d1f026648626028719ef00306057a3c
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T19:50:27Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["Approve"]
+**Message Id**: fb5f692c
+**Open Questions**: 5031b075
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-pipeline/deployment-pipeline-questions.md","entries":{"Evidence":"165802c21bac385a","Q1":"7229aa4e1388b6af","Q2":"529aa4dc800fd2b9","Q3":"627163ed9f265479","Q4":"42367533d0e68436"}}
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T19:50:27Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Deployment Pipeline is done: a CI test gate, Vercel Deployment Checks (with a CLI fallback if your plan lacks them), a separate Neon branch for Preview, and a rollback runbook. Approve it so the workflow moves on to Deployment Execution?
+**Reply**: Approve
+**Options**: ["Approve","Request Changes"]
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-11-15T19:50:34Z
+**Event**: GATE_APPROVED
+**Stage**: deployment-pipeline
+**User Input**: Approve
+**Person Reply**: Approve
+**Message Id**: fb5f692c
+**Brief Digest**: none
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-11-15T19:50:34Z
+**Event**: STAGE_COMPLETED
+**Stage**: deployment-pipeline
+**Validation Basis**: {"graphContract":"sha256:df6962deab365ec2f79f186c672b0f382b3fff1ebf396ae0771425695c8f11eb","inputs":[{"artifact":"ci-config","contentHash":"sha256:f46a49178353247b71cb104065ba77788788c3b1c98fec399c700f76d7afbc21","instanceCount":1,"presentCount":0,"producer":"ci-pipeline","required":true,"structureHash":"sha256:f86e1209f90d638b5c97a0a96d21427d15132aff74de15481c1acc927b5929b3"},{"artifact":"cicd-pipeline","contentHash":"sha256:03cf5f03dd37821bff8fdb6aad854fb0287016e91e51e2c822daf6c1dd6a26c4","instanceCount":1,"presentCount":0,"producer":"infrastructure-design","required":true,"structureHash":"sha256:30611c53fad60b94b74d32b01fd82b2628cffed2687ae349e485ebae6e0ea070"},{"artifact":"infrastructure-specification","contentHash":"sha256:83ac2452fd5fff9fc1fe1aa74de8506800f3f206f5835ada255cefe733a63747","instanceCount":1,"presentCount":0,"producer":"infrastructure-design","required":true,"structureHash":"sha256:bdb59134afdc07fa80a8c839afeddcdf7261547a67f49c8da2ff20baf842f666"},{"artifact":"quality-gates","contentHash":"sha256:6d6851b1f42eba1557ca975a49a9359a984c9fe875fd21fa966da2fcde7f5e65","instanceCount":1,"presentCount":0,"producer":"ci-pipeline","required":true,"structureHash":"sha256:f75444097aefe19b0f12d3fe0326910c4c8ee701e20e2daef5738aa8567aa386"}],"outputs":[{"artifact":"cd-config","contentHash":"sha256:dc6a85858d5a2a605a3ed8ccd20305ddc5267ac59fc0df1fb52c0380c14143ac","instanceCount":1,"presentCount":1,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:e820247772c214279f932d4677d7d4f3474aeb4b8860de7b3b7111ea6eacf87d"},{"artifact":"deployment-pipeline-questions","contentHash":"sha256:aa47fe575b7e29497f63d834b312e3db79a2590ed449b36ca01c921c3015ea2a","instanceCount":1,"presentCount":1,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:edfe625896645228b05efd5b3c6ac2433391ed2301c575f3e292d7d4bcbb9b0e"},{"artifact":"deployment-strategy","contentHash":"sha256:646017c1aa9ebdcfafff0c00544e03e763fec0eca3f0c19853b7d20bb3f55e25","instanceCount":1,"presentCount":1,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:f987873dfbf6af6d3917a54f2c53b1cf4b2c784c0d406ffdb2b239189dc6b3b9"},{"artifact":"rollback-runbook","contentHash":"sha256:ae015e3c7310e2f80fe598b8078ced6751494f2d7fda1a154199a0faf96d1f6e","instanceCount":1,"presentCount":1,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:d82df7b7e45561785da86f7c81ebd7cbb020ff4376a79f0cc011c0867a208923"}],"projectType":"brownfield","schema":3}
+**Details**: Stage Deployment Pipeline approved by gate
+**Tokens In**: 306
+**Tokens Out**: 115395
+**Cache Read**: 34833203
+**Cache Write**: 312864
+**Cost USD**: 11.46
+**By Model**: opus-5-5=11.46; claude-haiku-5-5=null
+**By Agent**: main=11.46
+**Tokens By Model**: opus-5-5=298/110.3k/34.8M/286.2k; claude-haiku-5-5=8/5.1k/28.4k/26.7k
+**Tokens By Agent**: main=298/110.3k/34.8M/286.2k; web-fetch=8/5.1k/28.4k/26.7k
+
+---
+
+## Stage Start
+**Timestamp**: 2026-11-15T19:50:34Z
+**Event**: STAGE_STARTED
+**Stage**: deployment-execution
+**Agent**: aidlc-pipeline-deploy-agent
+**Answer Mode**: guide (reused from deployment-pipeline)
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T19:52:58Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["Yes, run it","Yes, push it","You do it, I guide"]
+**Message Id**: 0f73dfc4
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T19:52:59Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: May I run a live browser check on Production? It would play one move each in a two-player game, then switch a waiting room to the computer and have a second browser take over. That creates two short test rooms in the real database, which the daily cleanup removes later.
+**Reply**: Yes, run it
+**Options**: ["Yes, run it","No"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T19:52:59Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: May I commit and push the new CI workflow (.github/workflows/tests.yml) to main? That starts the first GitHub test run and redeploys Production with the same app code.
+**Reply**: Yes, push it
+**Options**: ["Yes, push it","Not yet"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T19:52:59Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: The Preview database needs a Neon branch, and Neon's CLI isn't installed here. How should we set it up? Either way, the connection URL must never pass through this chat.
+**Reply**: You do it, I guide
+**Options**: ["You do it, I guide","Later"]
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T20:00:33Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["Fix it now (Recommended)","Extract region only"]
+**Message Id**: 91587ab6
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/deployment-execution-questions.md","entries":{"Evidence":"00e3c7beb29992cb","Q1":"5f8b952b42ca1f1b","Q2":"6568ad8d55ce93c0","Q3":"e06091485b07a8a1"}}
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:00:33Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Production works but is slow: moves take 5–14 s to reach the other player, because every database step opens a new connection from Washington (iad1) to Neon. How should I handle it?
+**Reply**: Fix it now (Recommended)
+**Options**: ["Fix it now (Recommended)","Region only","Record for later"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:00:33Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: To pick the right Vercel region I need Neon's region. It's part of the database host name in your local .env (for example ...eu-central-1.aws.neon.tech), which I've been told not to open. How do I get it?
+**Reply**: Extract region only
+**Options**: ["Extract region only","I'll tell you"]
+
+---

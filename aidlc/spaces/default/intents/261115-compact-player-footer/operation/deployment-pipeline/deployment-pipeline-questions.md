@@ -28,3 +28,24 @@ X. Other (please specify)
 [Answer]: B. Owner installed/authenticated CLI (dfde4adc); verified Vercel CLI65.16.0, signed-in user and exact project. Per authorized secret-sync request, DATABASE_URL and JUSTCHESS_VAPID_PRIVATE_KEY from ignored .env were saved as Secret variables for Preview and Production through stdin without printing values. No deployment performed. Integration is unnecessary for this access path. Both scopes currently use same values as requested; isolate preview DB during deployment preparation if desired.
 
 Neon credentials must be configured privately in Vercel for the chosen Preview/Production environments. Never paste secrets into chat. A separate Neon preview branch/database is needed to isolate preview from production; determine setup after architecture/access choice. Initial deployment should be Preview with smoke checks before Production promotion. Do not reset Neon without explicit scoped authorization.
+
+## Q3 — Test gate before Production
+
+Context (2026-11-15): Vercel `productionBranch` is `main`; every push to `main` deploys Production at once. Tests run only locally; the repository has no CI.
+
+A. Keep as is: push to main deploys at once; tests stay a manual step before pushing.
+B. Add a CI test gate: a GitHub Actions workflow runs the Python and JavaScript tests, and Production is deployed only after they pass.
+C. Manual promotion: every push makes a Preview; the owner promotes to Production by hand.
+X. Other (please specify)
+
+[Answer]: B. Add CI test gate (message ea5c001c).
+
+## Q4 — Preview database isolation
+
+Context: Preview and Production share the same Neon DATABASE_URL and VAPID key, so Preview checks touch Production data.
+
+A. Separate Neon branch for Preview, with Preview's DATABASE_URL pointing at it.
+B. Keep shared; only non-destructive checks on Preview.
+X. Other (please specify)
+
+[Answer]: A. Separate Neon branch (message ea5c001c).

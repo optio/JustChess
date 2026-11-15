@@ -995,6 +995,7 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
             await asyncio.gather(*tasks, return_exceptions=True)
             await svc.coordinator.cancel_all()  # BR1.5: reply tasks first, then the engine process
             await chess_engine.stop()
+            db.close()  # idle PostgreSQL connections
 
     app = FastAPI(title="JustChess", lifespan=lifespan)
 
