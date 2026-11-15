@@ -476,8 +476,8 @@ def test_two_player_browser_game(live_server: str, browser: Cdp) -> None:
     for page in (white, black):
         page.wait(f"{STATUS} === 'Game over — Checkmate'", what="checkmate in the status")
         page.wait("!document.querySelector('[data-testid=overlay]').hidden", timeout=20, what="the overlay")
-        assert page.js("document.querySelector('[data-testid=overlay-title]').textContent") == "Checkmate"
-        assert page.js("document.querySelector('[data-testid=overlay-subtitle]').textContent") == "Black wins with Qh4#"
+        assert page.js("document.querySelector('[data-testid=overlay-title]').textContent") == ("You won!" if page is black else "You lost")
+        assert "Black wins with Qh4#" in page.js("document.querySelector('[data-testid=overlay-subtitle]').textContent")
         assert page.js("document.querySelector('[data-testid=result]').textContent") == "0–1"
         assert page.js("document.activeElement?.dataset.testid") == "play-again", "focus moves to Play again"
     assert white.js("document.querySelector('[data-testid=score]').textContent") == "Room score: You 0 · Opponent 1 · Draws 0"

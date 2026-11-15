@@ -2,21 +2,60 @@
 
 ## Run Record
 
-- Date: 2026-11-14
-- Commit: e6b8274f317f40420804aaac30b142439a5424a8
-- Source snapshot: git:2ec937281d09e51a4da301de9b31b56ec5a9c86c
-- Store generation reviewed: sha256:58db062a5924e6b45ab9a59a1d1526f8ebb9da52e8d2132bb66ed63c453dc65c
+- Date: 2026-11-15
+- Commit: 7f067bce9170c0ed6c11814c9d220a5a6a9e7844
+- Source snapshot: git:6ae78113d92a97a36fbd60e54bf7d76864102847
+- Store generation reviewed: sha256:73420b1b3a34b105078f9c53829ed0ee2bc1d1049355351515fef94509e71b1e
 
-Application-wide runtime rescan replaces prior historical prose with current verified findings. All backend modules, frontend ES modules, authored styles, template, lesson/endgame content, installer, curator and listed configuration were read. Database and environment tests were deeply read; remaining tests, generated puzzle rows, binary assets and demo files received inventory/selected-reference coverage only. Selected dependency records and README operational sections were inspected. Consequently coverage is explicitly partial rather than claiming every root file was deeply analyzed. No application edits, tests, builds, database access, installation or publication occurred. Secrets, local database files, dependencies, caches and AI-DLC framework/workspace are excluded.
+Focused Minimal scan for player identity and presentation. Existing STALE store prose outside focus is preserved as historical context; conflicting persistence statements were corrected from current source. Deep coverage below names only complete files read during this run. API continue routes, game snapshot, frontend wiring/private-link row, README and selected tests were skimmed. Prior directory coverage is demoted to shallow; overlaps indicate historical broader coverage rather than rescanning every descendant. No app edits, tests, builds, database connections, installations or publication occurred. Secrets, real DBs/backups, dependencies, generated outputs/caches and AI-DLC installation/workspace are excluded from application analysis.
 
 ## Scope of Analysis
 
 ```yaml
 scope_version: 1
 kind: partial
-intent: postgresql-support
-fingerprint: 171b70a6d100c9743a33e3ff7945ab17d8f06c6e
+intent: player-identity-polish
+fingerprint: a66ecfdba8056522eab488785d2d3114a3abe776
 analyzed:
+  paths:
+    - justchess/db.py
+    - justchess/postgres.py
+    - justchess/rooms.py
+    - static/js/seat-store.js
+    - static/js/settings.js
+    - static/js/settings-panel.js
+    - static/js/boot.js
+    - static/js/share.js
+    - static/js/view-model.js
+    - static/js/board/board.js
+    - static/js/board/interaction.js
+    - static/js/layout.js
+    - static/js/screens/overlay.js
+    - static/js/screens/win-sequence.js
+    - static/css/board.css
+    - static/css/tokens.css
+    - templates/index.html
+    - app.py
+    - pyproject.toml
+    - .env.example
+    - tests/js/settings.test.mjs
+    - tests/js/seat-store.test.mjs
+  components:
+    - Rooms Module
+    - Page Template
+    - View Model
+    - Seat Store
+    - Share Helpers
+    - Board Component
+    - Settings
+    - Persistence Backend
+    - Database Configuration
+    - PostgreSQL Adapter
+    - Account-free Identity Seam
+    - Result Presentation and Motion
+    - Selection and Board Theme Settings
+    - Focused Browser Storage Tests
+shallow:
   paths:
     - justchess/
     - static/js/
@@ -34,73 +73,11 @@ analyzed:
     - tests/core/test_db.py
     - tests/core/conftest.py
     - tests/test_envfile.py
-  components:
-    - Env File Loader
-    - App Entry Point
-    - App Factory and Services
-    - Game API
-    - Lesson API
-    - Push API
-    - Engine Status API
-    - Rooms Module
-    - Games Module
-    - Live Hub
-    - Persistence (SQLite)
-    - Housekeeping
-    - Security Middleware
-    - Blunder Analysis
-    - Lesson Store
-    - Lesson Files
-    - Notifications Service
-    - VAPID Keys
-    - Stockfish Installer
-    - Page Template
-    - App Shell and Router
-    - HTTP Client
-    - Live Client
-    - Room Flow
-    - Screen State
-    - View Model
-    - Seat Store
-    - Share Helpers
-    - Hooks
-    - Board Component
-    - Lobby Screen
-    - Game Screen
-    - Blunder Warnings UI
-    - Settings
-    - Notifications Client
-    - Service Worker
-    - Opening Trainer
-    - Contrast Audit
-    - Stylesheets
-    - Persistence Backend
-    - Database Configuration
-    - Room Persistence Rules
-    - Game Persistence Rules
-    - Room Summaries
-    - Persistence Regression Tests
-    - Engine
-    - Computer Coordination
-    - Gameplay Settings
-    - Rate Limiter
-    - Puzzle Store
-    - Puzzle Trainer
-    - Endgame Store
-    - Endgame Trainer
-    - Trainer Hub
-    - Trainer Progress
-    - Share Dialog and QR
-    - Curation Tool
-shallow:
-  paths:
     - tests/
     - README.md
     - uv.lock
     - puzzles/
     - static/demo/
     - static/ASSETS.md
-    - static/fonts/
-    - static/pieces/
 ```
 

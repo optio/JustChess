@@ -62,6 +62,20 @@
     <noscript><p>JustChess needs JavaScript to play.</p></noscript>
   </main>
   <div id="announcer" class="visually-hidden" role="status" aria-live="polite" data-testid="announcer"></div>
+  <footer id="player-footer" class="player-footer" data-testid="player-footer" aria-label="Your player">
+    <form>
+      <label for="player-nickname">Your nickname</label>
+      <input id="player-nickname" data-testid="player-nickname" maxlength="24" autocomplete="nickname" placeholder="Optional nickname">
+      <button class="btn btn-secondary" type="submit" data-testid="player-save">Save nickname</button>
+    </form>
+    <div class="player-links">
+      <a href="#" data-testid="player-link" hidden>Save my player</a>
+      <button class="btn btn-secondary" type="button" data-testid="player-copy">Copy private link</button>
+      <button class="btn btn-secondary" type="button" data-testid="player-regenerate">Generate new link</button>
+    </div>
+    <p>Bookmark “Save my player” or copy its link to use your nickname and games on another device. Keep it private: anyone with this link can use your player.</p>
+    <p data-testid="player-message" role="status"></p>
+  </footer>
   <!-- P2 U4: the page's gameplay settings from gameplay.yaml, read by static/js/gameplay.js -->
   <script type="application/json" id="gameplay-config">{{ gameplay | tojson }}</script>
   <script type="module" src="/static/js/app.js"></script>

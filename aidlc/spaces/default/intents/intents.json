@@ -30,5 +30,13 @@
     "scope": "express",
     "status": "complete",
     "request": "59290f1e"
+  },
+  {
+    "uuid": "01a1de34-25bd-77f8-a457-d529d2283b44",
+    "slug": "player-identity-polish",
+    "dirName": "261115-player-identity-polish",
+    "scope": "express",
+    "status": "complete",
+    "request": "e7fe1843"
   }
 ]

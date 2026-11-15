@@ -1,4 +1,4 @@
-"""SQLite/PostgreSQL connections and schema-version-4 startup checks.
+"""SQLite/PostgreSQL connections and schema-version-5 startup checks.
 
 ``prepare_configured_database`` selects PostgreSQL for a nonempty DATABASE_URL,
 otherwise the SQLite policy below remains unchanged. PostgreSQL initializes an
@@ -12,16 +12,17 @@ success and rolls back on any error.
 
 At startup ``prepare_database()``:
 
-- keeps a file that carries schema version 4;
+- keeps a file that carries schema version 5;
 - refuses to start on a file with a newer version (a newer app wrote it); the
   file is left where it is;
-- moves any other file (versions 1-3, unmarked or not SQLite) aside to
+- moves any older file (versions 1-4, unmarked or not SQLite) aside to
   ``<name>.old`` (replacing an earlier ``.old``) and creates a fresh schema.
   No data is migrated (NFR7: no backward compatibility). A failed rename stops
   start-up with ``DatabaseStartupError``;
 - creates the schema when there is no file.
 
-Schema version 4 (entities.md) adds, over version 3:
+Schema version 5 adds anonymous profiles, hashed sessions/recovery and seat
+ownership. Version 4 previously added, over version 3:
 
 - ``rooms.mode`` (waiting, pass_along, online, computer) and
   ``rooms.computer_level``, set if and only if the mode is computer;
@@ -51,11 +52,11 @@ from justchess import postgres
 
 logger = logging.getLogger("justchess.db")
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 DEFAULT_DB_NAME = "justchess.sqlite3"
 BUSY_TIMEOUT_SECONDS = 5.0
 
-# The whole version-4 schema in one script. No statement may contain a
+# The whole version-5 schema in one script. No statement may contain a
 # semicolon inside it (``_statements`` splits on them).
 # Push subscriptions and alert records keep their version-3 shape. Housekeeping
 # deletes them by room first; ON DELETE CASCADE is the safety net so a room
@@ -63,6 +64,18 @@ BUSY_TIMEOUT_SECONDS = 5.0
 SCHEMA = """
 CREATE TABLE schema_version (
     version INTEGER NOT NULL
+);
+
+CREATE TABLE players (
+    player_id TEXT PRIMARY KEY,
+    nickname TEXT NOT NULL DEFAULT '',
+    recovery_hash TEXT NOT NULL UNIQUE,
+    created_at REAL NOT NULL
+);
+CREATE TABLE player_sessions (
+    token_hash TEXT PRIMARY KEY,
+    player_id TEXT NOT NULL REFERENCES players (player_id) ON DELETE CASCADE,
+    created_at REAL NOT NULL
 );
 
 CREATE TABLE rooms (
@@ -90,6 +103,7 @@ CREATE TABLE seats (
     continue_expires_at REAL,
     last_seen_at        REAL NOT NULL,
     is_computer         INTEGER NOT NULL DEFAULT 0 CHECK (is_computer IN (0, 1)),
+    player_id           TEXT REFERENCES players (player_id),
     UNIQUE (room_code, slot),
     CHECK ((is_computer = 1) = (token_hash IS NULL)),
     CHECK (is_computer = 0 OR slot = 'B')
@@ -289,8 +303,8 @@ def _statements(script: str) -> list[str]:
 def prepare_database(path: Path) -> Database:
     """Apply BR1.1 to ``path`` and return a ready ``Database``.
 
-    Version 4 is kept; a newer version refuses to start; anything else is moved
-    to ``<name>.old`` and a fresh version-4 schema is created. Raises
+    Version 5 is kept; a newer version refuses to start; anything else is moved
+    to ``<name>.old`` and a fresh version-5 schema is created. Raises
     ``DatabaseStartupError`` with the file name when the file cannot be opened,
     moved aside or created, so startup fails with a clear message.
     """

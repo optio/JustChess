@@ -60,11 +60,11 @@ DEFAULTS: dict = {
     },
     "engine": {"queue_cap": 32, "hint_refusal_queue": 16, "overrun_grace_seconds": 5, "restarts": 1,
                "retry_backoff_seconds": 5},
-    "rate_limits": {"computer_create": 10, "hint": 20, "computer_move": 30, "join_request": 5},
+    "rate_limits": {"computer_create": 10, "hint": 20, "computer_move": 30, "join_request": 5, "player": 60},
     "join_requests": {"lifetime_minutes": 10, "declined_block_minutes": 10, "address_book_cap": 10000},
     "rooms": {"claim_win_away_hours": 24, "idle_room_delete_days": 30},
     "blunder_check": {"time_budget_ms": 250},
-    "client": {"capture_animation_ms": 260, "your_games_refresh_seconds": 60, "computer_retry_limit": 3,
+    "client": {"selected_piece_percent": 110, "confetti_ms": 1800, "capture_animation_ms": 260, "your_games_refresh_seconds": 60, "computer_retry_limit": 3,
                "computer_retry_delay_seconds": 5, "join_poll_seconds": 3},
     "endgames": {"defender_skill": 20, "defender_think_seconds": 1.0, "hold_moves": 30, "max_plies": 300,
                  "play_per_minute": 30, "refusal_queue": 16, "wait_limit_seconds": 30},
@@ -114,12 +114,12 @@ SPEC: dict = {
     "engine": {"queue_cap": _integer(1, 1000), "hint_refusal_queue": _integer(0, 1000),
                "overrun_grace_seconds": _number(0.1, 60), "restarts": _integer(0, 10),
                "retry_backoff_seconds": _number(0, 600)},
-    "rate_limits": {key: _integer(1, 10000) for key in ("computer_create", "hint", "computer_move", "join_request")},
+    "rate_limits": {key: _integer(1, 10000) for key in ("computer_create", "hint", "computer_move", "join_request", "player")},
     "join_requests": {"lifetime_minutes": _number(0.5, 1440), "declined_block_minutes": _number(0, 1440),
                       "address_book_cap": _integer(100, 1_000_000)},
     "rooms": {"claim_win_away_hours": _number(0.01, 8760), "idle_room_delete_days": _number(1, 3650)},
     "blunder_check": {"time_budget_ms": _integer(10, 10000)},
-    "client": {"capture_animation_ms": _integer(0, 2000), "your_games_refresh_seconds": _number(10, 3600),
+    "client": {"selected_piece_percent": _integer(100, 120), "confetti_ms": _integer(0, 5000), "capture_animation_ms": _integer(0, 2000), "your_games_refresh_seconds": _number(10, 3600),
                "computer_retry_limit": _integer(0, 20), "computer_retry_delay_seconds": _number(1, 300),
                "join_poll_seconds": _number(1, 60)},
     "endgames": {"defender_skill": _integer(0, 20), "defender_think_seconds": _number(0.05, 10),
@@ -200,6 +200,7 @@ class Gameplay:
     idle_room_retention: float
     blunder_budget_ms: int
     client: dict[str, int] = field(default_factory=dict)
+    player_per_minute: int = 60
     endgames: EndgameSettings = field(default_factory=EndgameSettings)
     source: str = BUILT_IN
 
@@ -234,6 +235,7 @@ def _build(values: dict, source: str) -> Gameplay:
         hint_per_minute=limits["hint"],
         computer_move_per_minute=limits["computer_move"],
         join_requests_per_minute=limits["join_request"],
+        player_per_minute=limits["player"],
         join_request_ttl=requests["lifetime_minutes"] * 60.0,
         decline_memory=requests["declined_block_minutes"] * 60.0,
         address_book_cap=requests["address_book_cap"],
@@ -241,6 +243,8 @@ def _build(values: dict, source: str) -> Gameplay:
         idle_room_retention=values["rooms"]["idle_room_delete_days"] * 24 * 3600.0,
         blunder_budget_ms=values["blunder_check"]["time_budget_ms"],
         client={
+            "selectedPiecePercent": client["selected_piece_percent"],
+            "confettiMs": client["confetti_ms"],
             "captureAnimationMs": client["capture_animation_ms"],
             "yourGamesRefreshMs": round(client["your_games_refresh_seconds"] * 1000),
             "computerRetryLimit": client["computer_retry_limit"],

@@ -174,7 +174,7 @@ def build_summaries(db: Database, pairs: Iterable[tuple[str, str]], now: float) 
                 if code not in loaded:
                     loaded[code] = _load_room(conn, code, now)
                 facts = loaded[code]
-                seat = _seat_for(facts, token) if facts is not None else None
+                seat = rooms.find_seat(conn, code, token) if facts is not None else None
                 answers.append(summarize(facts, seat) if seat is not None else {"code": code, "found": False})
         finally:
             conn.execute("ROLLBACK")  # read-only: there is never anything to commit

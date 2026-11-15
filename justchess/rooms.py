@@ -220,6 +220,11 @@ def find_seat(conn: sqlite3.Connection, code: str, token: str | None) -> Seat | 
     for seat in get_seats(conn, code).values():
         if token_matches(token, seat.token_hash):
             found = seat
+    if found is None and token:
+        from justchess import players
+        linked = players.seat_id(conn, code, token)
+        if linked is not None:
+            found = next((seat for seat in get_seats(conn, code).values() if seat.seat_id == linked), None)
     return found
 
 
@@ -329,7 +334,7 @@ def redeem_continue_token(conn: sqlite3.Connection, code: str, continue_token: s
     token = issue_token()
     conn.execute(
         "UPDATE seats SET token_hash = ?, continue_token_hash = NULL, continue_expires_at = NULL, "
-        "last_seen_at = ? WHERE seat_id = ?",
+        "player_id = NULL, last_seen_at = ? WHERE seat_id = ?",
         (hash_token(token), now, target.seat_id),
     )
     moved = get_seats(conn, code)[target.slot]

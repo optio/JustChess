@@ -150,11 +150,11 @@ test("every end reason has its title, an unknown reason falls back, and the subt
 
   const mate = viewModel(snap({ status: "finished", endReason: "checkmate", result: "0-1", turn: "white", legalMoves: [],
     moveList: [{ number: 1, white: "f3", black: "e5" }, { number: 2, white: "g4", black: "Qh4#" }] }));
-  assert.deepEqual([mate.overlay.title, mate.overlay.subtitle], ["Checkmate", "Black wins with Qh4#"]);
+  assert.deepEqual([mate.overlay.title, mate.overlay.subtitle], ["You lost", "Your opponent won. Black wins with Qh4#. Checkmate."]);
   assert.equal(mate.overlay.shareText, "I lost by checkmate on JustChess");
   assert.equal(viewModel(snap({ status: "finished", endReason: "stalemate", result: "1/2-1/2" })).overlay.subtitle, "Draw");
   assert.equal(viewModel(snap({ status: "finished", endReason: "abandoned", result: "1-0",
-    moveList: [{ number: 1, white: "e4", black: null }] })).overlay.subtitle, "White wins");
+    moveList: [{ number: 1, white: "e4", black: null }] })).overlay.subtitle, "You beat Your opponent. White wins. Opponent left.");
   assert.equal(viewModel(snap()).overlay, null, "no overlay while playing");
 });
 

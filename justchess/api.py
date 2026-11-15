@@ -176,7 +176,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 import stockfish_install
-from justchess import DomainError, analysis, computer, endgames, games, housekeeping, lessons, notifications, puzzles, ratelimit, rooms, summaries
+from justchess import DomainError, analysis, computer, endgames, games, housekeeping, lessons, notifications, players, puzzles, ratelimit, rooms, summaries
 from justchess import engine as engine_module
 from justchess import gameplay as gameplay_module
 from justchess import vapid as vapid_keys
@@ -374,6 +374,7 @@ class Services:
         self.move_chooser = move_chooser if move_chooser is not None else random.SystemRandom()
         # P2 U3: in-memory join-request state (reset by a restart, by design).
         self.join_limiter = ratelimit.RateLimiter(limit=settings.join_requests_per_minute)
+        self.player_limiter = ratelimit.RateLimiter(limit=settings.player_per_minute)
         self.request_addresses = rooms.RequestAddressBook(memory=settings.decline_memory,
                                                           limit=settings.address_book_cap)
         self.trusted_proxies = tuple(trusted_proxies)
@@ -429,10 +430,13 @@ class Services:
                                    mode=room.mode, computer_level=room.computer_level, join_request=join_request,
                                    computer=computer_view)
         cache: dict[str | None, dict] = {}
+        nicknames = players.names(conn, code)
 
         def snapshot_for(slot: str | None) -> dict:
             if slot not in cache:
                 cache[slot] = view.snapshot(room_view, slot)
+                for key, seat_view in cache[slot]["seats"].items():
+                    seat_view["nickname"] = nicknames.get(key, "")
             return cache[slot]
 
         return snapshot_for
@@ -926,6 +930,7 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
     _add_puzzle_routes(app, puzzle_store)
     _add_endgame_routes(app, endgame_store, settings)
     _add_room_routes(app)
+    _add_player_routes(app)
     _add_join_request_routes(app)
     _add_game_routes(app)
     _add_push_routes(app)
@@ -1190,6 +1195,44 @@ def _add_endgame_routes(app: FastAPI, store: endgames.EndgameStore, settings: ga
         return {"status": verdict.status, "reason": verdict.reason, "reply": reply, "playerMoves": count,
                 "movesLeft": verdict.moves_left, **after_player, "fen": board.fen(), "check": board.is_check(),
                 "legalMoves": sorted(m.uci() for m in board.legal_moves) if playing else []}
+
+
+def _add_player_routes(app: FastAPI) -> None:
+    @app.post("/api/player/{action}")
+    async def player_action(request: Request, action: str):
+        svc = services(request)
+        _limit(svc, svc.player_limiter, request)
+        if action not in {"create", "restore", "profile", "nickname", "regenerate", "seats"}:
+            raise DomainError(404, "Player action not found")
+        try:
+            body = await request.json()
+        except (ValueError, TypeError):
+            raise DomainError(400, "Invalid player request") from None
+        if not isinstance(body, dict):
+            raise DomainError(400, "Invalid player request")
+        token = request.headers.get("X-Player-Token")
+
+        def change(conn, now):
+            if action == "create":
+                return players.create(conn, now)
+            if action == "restore":
+                return players.restore(conn, body.get("recovery"), now)
+            player = players.authenticate(conn, token)
+            if action == "nickname":
+                name = players.nickname(body.get("nickname"))
+                conn.execute("UPDATE players SET nickname = ? WHERE player_id = ?", (name, player["player_id"]))
+            if action == "regenerate":
+                return {"recovery": players.regenerate(conn, token)}
+            if action == "seats":
+                code = rooms.normalize_code(body.get("code"))
+                players.attach(conn, token, code, body.get("token"))
+            return players.profile(conn, token)
+
+        answer = await svc.mutate(None, change)
+        if action in {"nickname", "seats"}:
+            for seat in answer["seats"]:
+                await svc.hub.broadcast(seat["code"])
+        return JSONResponse(answer, headers={"Cache-Control": "no-store"})
 
 
 def _add_room_routes(app: FastAPI) -> None:

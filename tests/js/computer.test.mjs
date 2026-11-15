@@ -132,7 +132,7 @@ test("the view model of a computer room: label, statuses, no claims, no share, n
   assert.equal(down.board.interactive, false);
   assert.match(down.status.text, /^The computer can't move right now: No chess engine is installed\./);
   const over = viewModel(snap({ status: "finished", endReason: "resigned", result: "0-1" }));
-  assert.equal(over.overlay.title, "Resigned");
+  assert.equal(over.overlay.title, "You lost");
   assert.equal(over.overlay.share, false);
   assert.equal(over.overlay.rematch, "offer", "the result card offers Play again");
   const hinted = viewModel(snap(), { hint: { from: "d2", to: "d4", san: "d4", version: 2 } });

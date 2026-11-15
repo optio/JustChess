@@ -92,7 +92,7 @@ def test_a_short_game_against_the_computer(computer_server: str, browser: Cdp) -
     page.wait(VISIBLE.format(testid="resign-confirm"), what="the resign confirm")
     page.click("resign-confirm-yes")
     page.wait(VISIBLE.format(testid="overlay"), timeout=20, what="the result card")
-    assert page.js(TEXT.format(testid="overlay-title")) == "Resigned"
+    assert page.js(TEXT.format(testid="overlay-title")) == "You lost"
     assert page.js(VISIBLE.format(testid="play-again")), "Play again on the result card"
     assert page.js("document.querySelector('[data-testid=share-result]').hidden"), "no share controls"
     assert page.js(TEXT.format(testid="score")) == "This level: You 0 · Computer 1 · Draws 0"

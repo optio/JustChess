@@ -18,6 +18,8 @@
  * animation is cancelled, so later board redraws cannot undo it.
  */
 
+import { clientGameplay } from "../gameplay.js";
+
 export const TIP_MS = 700;
 export const DIM_MS = 600;
 export const INK_MS_PER_CHAR = 250;
@@ -42,7 +44,7 @@ function king(boardRoot, colour) {
   return boardRoot.querySelector(`img.piece:not(.piece-ghost)[data-shown="${colour === "white" ? "K" : "k"}"]`);
 }
 
-export function playWinSequence({ boardRoot, resultCell, resultText = "", winner = null, onReveal = () => {}, instant = false, timers = globalThis } = {}) {
+export function playWinSequence({ boardRoot, resultCell, resultText = "", winner = null, celebrate = false, onReveal = () => {}, instant = false, timers = globalThis } = {}) {
   if (!(boardRoot instanceof Element)) throw new TypeError("playWinSequence needs the board element");
   const grid = boardRoot.querySelector(".board-grid") || boardRoot;
   const loser = winner === "white" ? "black" : winner === "black" ? "white" : null;
@@ -51,10 +53,32 @@ export function playWinSequence({ boardRoot, resultCell, resultText = "", winner
   let cancelled = false;
   let tipped = null;
   let revealed = false;
+  let confetti = null;
+
+  function clearConfetti() { confetti?.remove(); confetti = null; }
+
+  function celebrateWin() {
+    if (!celebrate || !winner || instant || prefersReducedMotion() || !clientGameplay().confettiMs) return;
+    confetti = boardRoot.ownerDocument.createElement("div");
+    confetti.className = "winner-confetti";
+    confetti.setAttribute("aria-hidden", "true");
+    confetti.setAttribute("data-testid", "winner-confetti");
+    for (let i = 0; i < 40; i += 1) {
+      const bit = boardRoot.ownerDocument.createElement("i");
+      bit.style.setProperty("--x", `${(i * 37) % 100}%`);
+      bit.style.setProperty("--spin", `${i % 2 ? 540 : -540}deg`);
+      bit.style.setProperty("--confetti-ms", `${clientGameplay().confettiMs}ms`);
+      bit.style.background = ["#ba923e", "#27785b", "#d7c8a6", "#b44e42"][i % 4];
+      confetti.append(bit);
+    }
+    boardRoot.append(confetti);
+    wait(clientGameplay().confettiMs).then(clearConfetti);
+  }
 
   function reveal() {
     if (revealed || cancelled) return;
     revealed = true;
+    celebrateWin();
     try {
       onReveal();
     } catch (error) {
@@ -132,6 +156,7 @@ export function playWinSequence({ boardRoot, resultCell, resultText = "", winner
 
   function cancel() {
     cancelled = true;
+    clearConfetti();
     for (const animation of running) {
       try {
         animation.cancel();

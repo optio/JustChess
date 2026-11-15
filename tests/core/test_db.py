@@ -51,7 +51,7 @@ def test_fresh_database_gets_schema_version_4(tmp_path, caplog):
     with caplog.at_level(logging.INFO, logger="justchess.db"):
         db = prepare_database(path)
 
-    assert read_schema_version(path) == SCHEMA_VERSION == 4
+    assert read_schema_version(path) == SCHEMA_VERSION == 5
     assert V4_TABLES <= table_names(db)
     with db.read() as conn:
         room_columns = {row["name"] for row in conn.execute("PRAGMA table_info(rooms)")}
@@ -89,7 +89,7 @@ def test_older_versions_are_moved_aside_replacing_an_earlier_old(tmp_path, caplo
     kept = sqlite3.connect(old)
     assert kept.execute("SELECT note FROM marker").fetchone()[0] == f"version {version} data"
     kept.close()
-    assert read_schema_version(path) == 4
+    assert read_schema_version(path) == SCHEMA_VERSION
     assert V4_TABLES <= table_names(db)
     with db.read() as conn:
         assert conn.execute("SELECT count(*) FROM rooms").fetchone()[0] == 0
@@ -113,7 +113,7 @@ def test_old_format_file_is_moved_to_old_and_replaced(tmp_path, caplog):
     kept = sqlite3.connect(old)
     assert kept.execute("SELECT code FROM games").fetchone()[0] == "OLD001"  # earlier .old replaced
     kept.close()
-    assert read_schema_version(path) == 4
+    assert read_schema_version(path) == SCHEMA_VERSION
     with db.read() as conn:
         assert conn.execute("SELECT count(*) FROM games").fetchone()[0] == 0
     assert any(str(path) in record.getMessage() for record in caplog.records)
@@ -126,17 +126,17 @@ def test_non_sqlite_file_is_treated_as_unmarked(tmp_path):
     prepare_database(path)
 
     assert (tmp_path / "justchess.sqlite3.old").read_bytes().startswith(b"this is not")
-    assert read_schema_version(path) == 4
+    assert read_schema_version(path) == SCHEMA_VERSION
 
 
 def test_newer_version_refuses_to_start_and_is_not_moved(tmp_path):
     path = tmp_path / "justchess.sqlite3"
-    make_versioned_file(path, 5)
+    make_versioned_file(path, SCHEMA_VERSION + 1)
 
     with pytest.raises(DatabaseStartupError, match="newer than this app"):
         prepare_database(path)
 
-    assert read_schema_version(path) == 5, "the newer file is left where it is"
+    assert read_schema_version(path) == SCHEMA_VERSION + 1, "the newer file is left where it is"
     assert not (tmp_path / "justchess.sqlite3.old").exists()
 
 

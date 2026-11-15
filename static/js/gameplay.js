@@ -15,6 +15,8 @@
  */
 
 export const CLIENT_DEFAULTS = Object.freeze({
+  selectedPiecePercent: 110,
+  confettiMs: 1800,
   captureAnimationMs: 260,
   yourGamesRefreshMs: 60_000,
   computerRetryLimit: 3,
@@ -23,6 +25,8 @@ export const CLIENT_DEFAULTS = Object.freeze({
 });
 
 const RANGES = Object.freeze({
+  selectedPiecePercent: [100, 120],
+  confettiMs: [0, 5000],
   captureAnimationMs: [0, 2_000],
   yourGamesRefreshMs: [10_000, 3_600_000],
   computerRetryLimit: [0, 20],

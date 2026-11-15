@@ -71,7 +71,7 @@ async function readJson(response) {
   }
 }
 
-export function createApi(fetchImpl = globalThis.fetch, { base = "" } = {}) {
+export function createApi(fetchImpl = globalThis.fetch, { base = "", player = null } = {}) {
   if (typeof fetchImpl !== "function") throw new TypeError("createApi needs a fetch function");
 
   async function request(method, path, { body, token, signal } = {}) {
@@ -99,6 +99,10 @@ export function createApi(fetchImpl = globalThis.fetch, { base = "" } = {}) {
     const data = await readJson(response);
     if (response.ok) {
       if (data === null) return { ok: false, status: response.status, message: SERVER_MESSAGE };
+      if (player && data.code && data.token) await player.attach(data.code, data.token);
+      else if (player && body?.token && /^\/api\/rooms\/[A-Z0-9]{6}\//.test(path)) {
+        await player.attach(path.split("/")[3], body.token);
+      }
       return { ok: true, status: response.status, data };
     }
     const failure = { ok: false, status: response.status, message: messageFrom(response.status, data) };

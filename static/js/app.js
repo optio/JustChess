@@ -124,6 +124,7 @@ import { registerTab, sharedRegistry } from "./training/hub-tabs.js";
 import { createTrainerProgress } from "./training/trainer-progress.js";
 import { applyToDocument, createSettings } from "./settings.js";
 import { chooseShareMethod, continueUrl, copyText, inviteUrl, shareLink } from "./share.js";
+import { createPlayerIdentity, mountPlayerFooter, recoveryFragment } from "./player-identity.js";
 import { createShareDialog } from "./share-dialog.js";
 import { announcement, viewModel, winnerOf } from "./view-model.js";
 import { createBlunderDialog } from "./screens/blunder-dialog.js";
@@ -162,11 +163,15 @@ export function startApp({
   if (!appRoot || !roomBar || !shareButton || !announcer || !shareDialogElement) throw new Error("JustChess: the page shell is incomplete");
 
   loadFromDocument(doc); // gameplay.yaml's page settings, before anything that reads them is built
+  doc.documentElement.style.setProperty("--selected-piece-scale", clientGameplay().selectedPiecePercent / 100);
   const settings = createSettings();
   applyToDocument(settings, doc.documentElement);
   const seats = createSeatStore();
   const requests = createRequestStore(); // P2 U3: pending join-request tokens, this tab only
-  const api = createApi(fetchImpl);
+  let playerFooter;
+  const player = createPlayerIdentity({ fetchImpl, seats, onChange: () => playerFooter?.render() });
+  playerFooter = mountPlayerFooter(doc, win, player);
+  const api = createApi(fetchImpl, { player });
   const lessonsApi = createLessonsApi(fetchImpl);
   const progress = createTrainerProgress(); // P2 U5: per-device trainer progress
   const endgamesApi = createEndgamesApi(fetchImpl); // P2 U6
@@ -391,6 +396,7 @@ export function startApp({
       resultCell: game.resultCell,
       resultText: view.scoresheet.result || "",
       winner: winnerOf(state.snapshot.result),
+      celebrate: state.snapshot.mode !== "pass_along" && !state.watching && viewerColour() === winnerOf(state.snapshot.result),
       instant,
       onReveal: () => {
         endPhase = "shown";
@@ -480,7 +486,7 @@ export function startApp({
         poller.stop();
         if (seat) {
           stopJoiner();
-          openRoom(code);
+          player.attach(code, seat.token).finally(() => openRoom(code));
           return;
         }
         showJoiner(JOINER_TEXT[phase] || JOINER_TEXT.unknown, false);
@@ -964,7 +970,9 @@ export function startApp({
     if (key === "labels" && screen && screen.kind === "lobby") screen.ui.setLabels(value);
   });
 
-  route();
+  const recovery = recoveryFragment(win.location.hash) || (win.location.hash.startsWith("#player=") ? "invalid" : null);
+  if (win.location.hash.startsWith("#player=")) win.history.replaceState(null, "", win.location.pathname + win.location.search);
+  player.init(recovery).finally(() => { playerFooter.render(); route(); });
 
   return {
     get state() {

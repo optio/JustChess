@@ -11,6 +11,7 @@ function fakeDocument(text) {
 
 test("the built-in values match the shipped gameplay.yaml", () => {
   assert.deepEqual({ ...CLIENT_DEFAULTS }, {
+    selectedPiecePercent: 110, confettiMs: 1800,
     captureAnimationMs: 260, yourGamesRefreshMs: 60000, computerRetryLimit: 3, computerRetryDelayMs: 5000, joinPollMs: 3000,
   });
   assert.deepEqual(readGameplay(null), { ...CLIENT_DEFAULTS });

@@ -162,6 +162,7 @@
 .piece.is-black { filter: var(--piece-edge); }
 
 .piece.is-moving { z-index: 4; }
+.sq.is-selected .piece:not(.is-moving):not(.piece-ghost) { scale: var(--selected-piece-scale, 1.1); z-index: 3; }
 
 /* P2 U1, BR1.3/BR1.5: the taken piece's copy shrinks about its centre and never takes a tap */
 .piece-ghost { z-index: 1; transform-origin: 50% 50%; pointer-events: none; }

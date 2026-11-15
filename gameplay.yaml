@@ -47,6 +47,7 @@ engine:
   retry_backoff_seconds: 5     # after a failed reply, wait this long before asking the engine again for that room (0 to 600)
 
 rate_limits:
+  player: 60                  # player profile/recovery actions per minute per address (1 to 10000)
   # Most requests per minute from one client address (see JUSTCHESS_TRUSTED_PROXIES behind a proxy).
   computer_create: 10          # new computer rooms (1 to 10000)
   hint: 20                     # hints (1 to 10000)
@@ -66,6 +67,8 @@ blunder_check:
   time_budget_ms: 250          # most time the "Warn me before blunders" check may spend on one move (10 to 10000)
 
 client:
+  selected_piece_percent: 110        # selected piece size relative to normal (100 to 120)
+  confetti_ms: 1800                  # winner's finite confetti burst (0 to 5000; disabled under reduced motion)
   # Sent to the page with the app shell; the page keeps its built-in values if these are missing.
   capture_animation_ms: 260          # how long a captured piece takes to shrink and fade (0 to 2000; 0 under reduced motion anyway)
   your_games_refresh_seconds: 60     # how often the lobby's "Your games" list refreshes while visible (10 to 3600)

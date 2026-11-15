@@ -5,7 +5,7 @@ Last updated: 2026-11-15. This file lets a new, empty session pick up where the 
 ## How to resume in a new session
 
 1. Open your coding assistant in this folder and read this file.
-2. The PostgreSQL intent `261114-postgresql-support` is complete; do not repeat it. Build and Test is approved. No deployment target was selected, so deployment and monitoring setup did not apply. Start a new intent only for new work requested by the owner.
+2. Player identity/game polish (`261115-player-identity-polish`) and PostgreSQL support are complete; do not repeat either. Build and Test is approved. No deployment target was selected, so deployment and monitoring stages did not apply. Start new work only when requested.
 3. Keep this file limited to outstanding work: remove completed items as they finish and update the active checkpoint.
 
 ## Remaining tasks
@@ -38,9 +38,10 @@ The cburnett pieces in `pieces/cburnett/` come from the Lichess repo, which carr
 - Never write VAPID keys inside the project.
 - Commit or push only when the owner asks.
 - Gameplay numbers (computer levels, limits, timings) live in `gameplay.yaml`, so tune them there rather than in code.
-- Preserve both real database files. Read-only metadata showed `justchess.sqlite3` changing at 22:26 and 22:29 UTC on 2026-11-14, including after tests stopped. A concurrent writer is indicated but unidentified; do not restore or replace it based on a workflow file-change warning.
+- Do not restore database files merely because of a workflow file-change warning. The owner explicitly permits database recreation for the player-identity change (2026-11-15); tests still use isolated databases.
 
 ## Useful pointers
+- **Completed player identity/polish record:** `aidlc/spaces/default/intents/261115-player-identity-polish/`; final tests: 429 Python passed, 1 existing push E2E skip; 224 JavaScript passed; real PostgreSQL/Chromium checks passed. Owner requested commit and push on 2026-11-15; no deployment was requested. Schema 5: SQLite archives older files; PostgreSQL needs an empty/recreated application schema. Owner permits recreation because the app is not live; no backward compatibility is required.
 - **Completed PostgreSQL record:** `aidlc/spaces/default/intents/261114-postgresql-support/`; final tests: 405 Python passed, 1 existing push E2E skip; 221 JavaScript passed; real PostgreSQL checks passed. The owner requested commit and push on 2026-11-15. No deployment was requested.
 - **Current code knowledge:** `aidlc/spaces/default/codekb/JustChess/`.
 - **Unit designs and code summaries:** `aidlc/spaces/default/intents/261113-p2-features/construction/<unit>/`.

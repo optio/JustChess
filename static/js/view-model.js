@@ -318,12 +318,21 @@ function shareTextOf(snapshot, seat, title) {
 /** BR4.2: the overlay names the reason, the winner and the decisive move. */
 function overlayOf(snapshot, seat) {
   if (snapshot.status !== "finished") return null;
-  const title = endTitle(snapshot.endReason);
+  let title = endTitle(snapshot.endReason);
   const winner = winnerOf(snapshot.result);
   const san = lastSan(snapshot.moveList);
   let subtitle = "Draw";
   if (winner) {
     subtitle = snapshot.endReason === "abandoned" || !san ? `${colourName(winner)} wins` : `${colourName(winner)} wins with ${san}`;
+    const winningSlot = slotOfColour(snapshot, winner);
+    const losingSlot = winningSlot === "A" ? "B" : "A";
+    const nameOf = slot => snapshot.mode === "computer" && slot === "B" ? "Computer" : snapshot.seats?.[slot]?.nickname || "Your opponent";
+    if (seat && snapshot.mode !== "pass_along") {
+      const won = snapshot.colour === winner;
+      title = won ? "You won!" : "You lost";
+      subtitle = won ? `You beat ${nameOf(losingSlot)}. ${subtitle}. ${endTitle(snapshot.endReason)}.`
+        : `${nameOf(winningSlot)} won. ${subtitle}. ${endTitle(snapshot.endReason)}.`;
+    }
   }
   return {
     title,

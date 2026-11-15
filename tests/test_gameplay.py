@@ -46,7 +46,7 @@ def test_the_module_fallbacks_equal_the_defaults() -> None:
     assert ratelimit.MAX_ATTEMPTS == settings.join_requests_per_minute
     assert housekeeping.RETENTION == settings.idle_room_retention
     assert analysis.DEFAULT_BUDGET_MS == settings.blunder_budget_ms
-    assert settings.client_json() == {"captureAnimationMs": 260, "yourGamesRefreshMs": 60000, "computerRetryLimit": 3,
+    assert settings.client_json() == {"selectedPiecePercent": 110, "confettiMs": 1800, "captureAnimationMs": 260, "yourGamesRefreshMs": 60000, "computerRetryLimit": 3,
                                       "computerRetryDelayMs": 5000, "joinPollMs": 3000}
 
 

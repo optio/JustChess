@@ -132,7 +132,7 @@ def test_postgres_schema_is_idempotent_and_rejects_versions(pg_database):
     again = database._prepare_postgres(url)
     with again.read() as conn:
         assert conn.execute("SELECT code FROM rooms").fetchone()[0] == "KEEP01"
-    for version in (3, 5):
+    for version in (3, database.SCHEMA_VERSION + 1):
         with db.transaction() as conn:
             conn.execute("UPDATE schema_version SET version = ?", (version,))
         with pytest.raises(database.DatabaseStartupError, match="Unsupported"):
@@ -227,6 +227,24 @@ def test_postgres_domain_matches_sqlite(pg_database, tmp_path):
     pg, _ = pg_database
     sqlite = database.prepare_database(tmp_path / "parity.sqlite3")
     assert _domain_scenario(pg) == _domain_scenario(sqlite)
+
+
+def test_postgres_identity_recovery_and_profile_parity(pg_database):
+    from justchess import players
+    db, _ = pg_database
+    with db.transaction() as conn:
+        first = players.create(conn, 1)
+        room, _, token = rooms.create_room(conn, 1, lambda: "IDP001")
+        games.create_first_game(conn, room.code, 1)
+        players.attach(conn, first["token"], room.code, token)
+        second = players.restore(conn, first["recovery"], 2)
+        assert second["seats"][0]["code"] == room.code
+        assert rooms.authorize_seat(conn, room.code, second["token"]).slot == "A"
+        recovery = players.regenerate(conn, first["token"])
+        with pytest.raises(DomainError):
+            players.restore(conn, first["recovery"], 3)
+        assert players.restore(conn, recovery, 3)["playerId"] == first["playerId"]
+    assert summaries.build_summaries(db, [(room.code, second["token"])], 4)[0]["found"]
 
 
 def test_explicit_app_path_ignores_ambient_url(tmp_path, monkeypatch):

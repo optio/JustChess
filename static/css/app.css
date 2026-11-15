@@ -663,3 +663,12 @@ body { padding-bottom: 40px; }
 @media (max-width: 420px) {
   .share-app-links .btn { flex: 1 1 calc(50% - 4px); }
 }
+.player-footer { max-width: 72rem; margin: 2rem auto 0; padding: 1rem; font-size: .875rem; color: var(--ink); }
+.player-footer form, .player-links { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: .6rem; }
+.player-links a:not([hidden]) { display: inline-flex; align-items: center; min-height: 44px; padding: .5rem; }
+.player-footer input { max-width: 15rem; min-height: 44px; padding: .5rem; font: inherit; }
+.player-footer p { max-width: 65ch; margin: .5rem 0; }
+.winner-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 8; }
+.winner-confetti i { position: absolute; left: var(--x); top: -1rem; width: .45rem; height: .8rem; animation: winner-fall var(--confetti-ms) ease-out forwards; }
+@keyframes winner-fall { to { top: 105%; rotate: var(--spin); } }
+@media (prefers-reduced-motion: reduce) { .winner-confetti { display: none; } }

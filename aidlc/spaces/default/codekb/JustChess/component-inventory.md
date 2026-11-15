@@ -1,12 +1,14 @@
 # Component Inventory
 
+> Focused merge, 2026-11-15: current findings cover player identity/presentation and persistence seams. Outside-focus descriptions are retained prior-store context and are not newly verified; see the timestamp for exact coverage.
+
 ## Env File Loader
 
 justchess/envfile.py loads optional .env without overriding process environment; secrets are not logged.
 
 ## App Entry Point
 
-app.py loads environment before resolving SQLite path and constructs the ASGI application.
+app.py loads environment before resolving the SQLite fallback path; DATABASE_URL is resolved at startup and constructs the ASGI application.
 
 ## App Factory and Services
 
@@ -42,7 +44,7 @@ live.py broadcasts viewer-specific snapshots and tracks visibility, pings and se
 
 ## Persistence (SQLite)
 
-db.py owns eight-table schema version 4, short connections and explicit transactions.
+db.py owns schema version 4, short connections and explicit transactions for SQLite and PostgreSQL.
 
 ## Housekeeping
 
@@ -158,11 +160,11 @@ five authored CSS files implement theme tokens, layout, board and responsive tra
 
 ## Persistence Backend
 
-Database.read/transaction provide the existing connection seam; all runtime SQL is currently SQLite.
+Database.read/transaction provide the existing connection seam; domain SQL uses qmark parameters through SQLite or the PostgreSQL compatibility adapter.
 
 ## Database Configuration
 
-JUSTCHESS_DB selects a local path; DATABASE_URL and PostgreSQL drivers are absent.
+JUSTCHESS_DB selects the SQLite fallback path; nonempty DATABASE_URL selects PostgreSQL, with fail-fast credential-safe errors.
 
 ## Room Persistence Rules
 
@@ -227,4 +229,29 @@ share-dialog and authored QR modules render local invitation QR codes and access
 ## Curation Tool
 
 scripts/curate_puzzles.py performs deterministic offline sampling and validates all output before writing.
+
+
+## PostgreSQL Adapter
+
+postgres.py translates qmarks/transactions, supports named and positional rows and sanitizes driver exceptions into the existing sqlite3 hierarchy.
+
+## Account-free Identity Seam
+
+No durable player principal exists. Room Seat is a hashed capability, not a global identity; a future player-to-seat association must preserve authorization.
+
+## Private Continue Link
+
+rooms.py issues one active ten-minute token per seat; redemption rotates authority and clears the link. share.js encodes it in a fragment; game settings exposes it. It is not reusable recovery.
+
+## Result Presentation and Motion
+
+view-model.js maps viewer slot/colour, scores, result and reason to labels. overlay.js renders text with textContent; win-sequence.js tips the loser, dims the board, inks the result and glows the winner, with cancel/clear/reduced-motion handling. No confetti is implemented.
+
+## Selection and Board Theme Settings
+
+interaction.js owns selection and board.js toggles square classes. board.css currently adds only a selected ring. settings/boot/panel/tokens contain three duplicated board allowlists and styles that must agree when adding themes.
+
+## Focused Browser Storage Tests
+
+tests/js/settings.test.mjs and seat-store.test.mjs cover malformed/blocked storage, defaults, cross-tab settings, boot consistency, legacy seats and continue-fragment validation.
 
