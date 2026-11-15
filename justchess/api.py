@@ -1098,6 +1098,29 @@ def _add_page_routes(app: FastAPI, templates: Jinja2Templates, settings: gamepla
         return {"available": bool(status["available"]), "path_source": result.source if found else None,
                 "version": result.version if found else None, "reason": status["reason"]}
 
+    @app.get("/api/health")
+    async def health(request: Request):
+        """Monitoring signal (Observability Setup): 200 when the database answers and the engine is available.
+
+        Read-only: one ``SELECT 1``, no writes, no secrets, no error details;
+        503 with the failing part named (``database`` or ``engine``) otherwise.
+        """
+        svc = getattr(request.app.state, "services", None)
+        database_ok = False
+        if svc is not None:
+            def ping() -> bool:
+                with svc.db.read() as conn:
+                    return conn.execute("SELECT 1").fetchone()[0] == 1
+            try:
+                database_ok = await asyncio.to_thread(ping)
+            except Exception:  # sanitized: never echo driver errors or connection details
+                logger.warning("Health check: the database did not answer")
+        engine_ok = bool(svc is not None and svc.engine.status()["available"])
+        body = {"status": "ok" if database_ok and engine_ok else "degraded",
+                "database": "ok" if database_ok else "down", "engine": "available" if engine_ok else "unavailable"}
+        return JSONResponse(body, status_code=200 if database_ok and engine_ok else 503,
+                            headers={"Cache-Control": "no-store"})
+
 
 def _add_lesson_routes(app: FastAPI, store: lessons.LessonStore) -> None:
     def current_catalog() -> lessons.LessonCatalog:

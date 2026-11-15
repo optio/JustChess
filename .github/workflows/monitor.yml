@@ -1,0 +1,52 @@
+# Production monitor (Observability Setup, 2026-11-15). Every 30 minutes, and
+# on demand, this checks the live site. A failed run makes GitHub email the
+# repository owner (Settings → Notifications → Actions). Thresholds follow the
+# SLO: 99% availability per 30 days and 2 s for a move to reach the opponent,
+# so a single request slower than 2 s fails the check.
+# GitHub disables scheduled workflows after 60 days without repository
+# activity; re-enable it under Actions → monitor if that happens.
+name: monitor
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production:
+    name: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE: https://justchess.mijnesite.be
+      MAX_SECONDS: "2"
+    steps:
+      - name: Health (database and engine)
+        run: |
+          # One retry absorbs a cold start; a second failure is an outage.
+          for attempt in 1 2; do
+            out=$(curl -sS -m 30 -o body.json -w "%{http_code} %{time_total}" "$SITE/api/health") || out="000 0"
+            code=${out% *}; secs=${out#* }
+            echo "attempt $attempt: HTTP $code in ${secs}s: $(cat body.json 2>/dev/null)"
+            [ "$code" = 200 ] && break
+            sleep 20
+          done
+          [ "$code" = 200 ] || { echo "::error::/api/health answered $code"; exit 1; }
+
+      - name: Latency (warm request under the SLO threshold)
+        run: |
+          secs=$(curl -sS -m 30 -o /dev/null -w "%{time_total}" "$SITE/api/health")
+          echo "warm /api/health: ${secs}s (limit ${MAX_SECONDS}s)"
+          awk -v s="$secs" -v m="$MAX_SECONDS" 'BEGIN { exit (s <= m) ? 0 : 1 }' \
+            || { echo "::error::/api/health took ${secs}s"; exit 1; }
+
+      - name: Homepage and cron protection
+        run: |
+          home=$(curl -sS -m 30 -o page.html -w "%{http_code}" "$SITE/")
+          grep -q "Loading JustChess" page.html || { echo "::error::homepage content missing (HTTP $home)"; exit 1; }
+          cron=$(curl -sS -m 30 -o /dev/null -w "%{http_code}" "$SITE/api/cron/maintenance")
+          echo "homepage $home, cron without secret $cron"
+          [ "$home" = 200 ] && [ "$cron" = 401 ] || { echo "::error::homepage $home / cron $cron"; exit 1; }

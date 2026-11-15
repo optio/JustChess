@@ -299,6 +299,10 @@ Credits. All assets are self-hosted and listed with their pinned source and sha2
 - Pieces: cburnett, CC BY-SA 3.0. The chess pieces are by Colin M.L. Burnett, taken unchanged from the Lichess repository (which lists its copy as GPLv2+); see `static/pieces/cburnett/LICENSE.md`.
 - Fonts: Libre Caslon Display and Libre Caslon Text (Pablo Impallari and contributors) and Atkinson Hyperlegible (Braille Institute of America), all under the SIL Open Font License 1.1, from the `@fontsource` packages, version 5.3.0. The licence texts are in `static/fonts/`.
 
+## Monitoring
+
+`GET /api/health` answers 200 `{"status":"ok","database":"ok","engine":"available"}` when the database answers and the engine is available, else 503 naming the failing part (no error details). `.github/workflows/monitor.yml` checks Production every 30 minutes (health, a 2 s response limit, homepage content, cron protection) and GitHub emails the owner when a run fails. `.github/workflows/tests.yml` runs the full test suite on every push. Targets: 99% availability per 30 days, 95% of moves delivered within 2 s.
+
 ## Current limitations
 
 SQLite requires one Uvicorn worker; PostgreSQL supports shared room coordination. Vercel Production deploys from `main`; Preview runtime verification remains a release prerequisite. Web Push for closed tabs needs VAPID keys and HTTPS beyond localhost. Lessons are curated linear lines; no opponent-branching decision tree, arbitrary-move evaluation or Monaco lesson yet. Preserve the private player bookmark before clearing browser data.

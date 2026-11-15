@@ -2688,3 +2688,230 @@
 **Options**: ["Extract region only","I'll tell you"]
 
 ---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-15T20:20:11Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: deployment-execution
+**Next Stage**: observability-setup
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/deployment-log.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/smoke-test-results.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/health-check-report.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/deployment-execution-questions.md=not-run; upstream-coverage@aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/deployment-log.md=not-run
+**Open Decisions**: 0
+**Question Id**: 0f62d9fc
+**Question Type**: gate
+**Question Chat**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question Shows**: sha256:a079fd30cccd94b8ce9cb6a1f326f6de6330d0b0e599e8f6e2400a967f37bacc
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T20:22:50Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["Approve"]
+**Message Id**: d0e3db28
+**Open Questions**: 0f62d9fc
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261115-compact-player-footer/operation/deployment-execution/deployment-execution-questions.md","entries":{"Evidence":"00e3c7beb29992cb","Q1":"5f8b952b42ca1f1b","Q2":"6568ad8d55ce93c0","Q3":"e06091485b07a8a1"}}
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:22:51Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Production is deployed and verified (fast after the Frankfurt and connection fix), and CI is green. Your two steps, Vercel Deployment Checks and the Neon preview branch, are still open. Approve Deployment Execution so the workflow moves on to the last stage, Observability Setup?
+**Reply**: Approve
+**Options**: ["Approve","Request Changes"]
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-11-15T20:22:58Z
+**Event**: GATE_APPROVED
+**Stage**: deployment-execution
+**User Input**: Approve
+**Person Reply**: Approve
+**Message Id**: d0e3db28
+**Brief Digest**: none
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-11-15T20:22:58Z
+**Event**: STAGE_COMPLETED
+**Stage**: deployment-execution
+**Validation Basis**: {"graphContract":"sha256:9324fac9ed5362e892b6f0c448c7cd3701eec134e2e24178d842efc36efe955a","inputs":[{"artifact":"build-test-results","contentHash":"sha256:4280cac10f9f84210044739b97732f73adf341ad17dc4a5a8e78e799eec4389c","instanceCount":1,"presentCount":1,"producer":"build-and-test","required":true,"structureHash":"sha256:99fe1649d0536b144ee4725fbfe0576fe1dce2645867248026266c84f94b368f"},{"artifact":"cd-config","contentHash":"sha256:dc6a85858d5a2a605a3ed8ccd20305ddc5267ac59fc0df1fb52c0380c14143ac","instanceCount":1,"presentCount":1,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:e820247772c214279f932d4677d7d4f3474aeb4b8860de7b3b7111ea6eacf87d"},{"artifact":"deployment-strategy","contentHash":"sha256:646017c1aa9ebdcfafff0c00544e03e763fec0eca3f0c19853b7d20bb3f55e25","instanceCount":1,"presentCount":1,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:f987873dfbf6af6d3917a54f2c53b1cf4b2c784c0d406ffdb2b239189dc6b3b9"},{"artifact":"environment-inventory","contentHash":"sha256:d85aa1c0f677f1d7fdb3016e12759c6e69aab3c0e736b15c8bcf39e7418e450e","instanceCount":1,"presentCount":0,"producer":"environment-provisioning","required":true,"structureHash":"sha256:111528a9e7579eec061de5053172cec29c39e81eba218ba81b4382daf9f6e3b8"}],"outputs":[{"artifact":"deployment-execution-questions","contentHash":"sha256:99a24ed0998192fd5da33ec8b1947c0b395703da29b6140cb5097acfaf977aaa","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:021b0eb14e6d2497e7b7f17be2305653738558d017f7b00be6a102ec04d80e4c"},{"artifact":"deployment-log","contentHash":"sha256:b290eecfe77de55cc134f12ed313a2571fb400e205d63b3a1b04f0a155a6e2fd","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:50940ef94c0821479c0aeb73e94d616603fd17bb3e9032c025924d40670b0669"},{"artifact":"health-check-report","contentHash":"sha256:1afd3123bfd5bee388adb17fe8078c0db7f1850eb90cee66e4f9d8d24665ae34","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:65d60aece4a060e0c0e5963fcc64d9e7050d900bb75d5bcc137563a45917aaae"},{"artifact":"smoke-test-results","contentHash":"sha256:67e73e470f3da3ea584475ad6ab5593056b78ae0c3821907369bbbbde6c816ff","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:e93361f3eae550395878039427cc245f12001d7e5b54c5a14226630ed1e04800"}],"projectType":"brownfield","schema":3}
+**Details**: Stage Deployment Execution approved by gate
+**Tokens In**: 94
+**Tokens Out**: 38879
+**Cache Read**: 18824904
+**Cache Write**: 58539
+**Cost USD**: 5.01
+**By Model**: opus-5-5=5.01
+**By Agent**: main=5.01
+**Tokens By Model**: opus-5-5=94/38.9k/18.8M/58.5k
+**Tokens By Agent**: main=94/38.9k/18.8M/58.5k
+
+---
+
+## Stage Start
+**Timestamp**: 2026-11-15T20:22:58Z
+**Event**: STAGE_STARTED
+**Stage**: observability-setup
+**Agent**: aidlc-operations-agent
+**Answer Mode**: guide (reused from deployment-pipeline)
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T20:24:44Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["99% / 2 s","GitHub scheduled check (Recommended)","Add /api/health (Recommended)"]
+**Message Id**: 082d61ed
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:24:45Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: What service targets should JustChess aim for? Measured today: room reads ~0.11 s, moves reach the opponent in ~0.1 s, computer replies ~0.2 s.
+**Reply**: 99% / 2 s
+**Options**: ["99.5% / 1 s (Recommended)","99% / 2 s","No formal targets"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:24:45Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: How should you hear about it when Production breaks? Vercel's Hobby plan keeps runtime logs only briefly and has no built-in alerts.
+**Reply**: GitHub scheduled check (Recommended)
+**Options**: ["GitHub scheduled check (Recommended)","External uptime service","No alerts"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:24:45Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Should the app get a dedicated health endpoint for monitoring?
+**Reply**: Add /api/health (Recommended)
+**Options**: ["Add /api/health (Recommended)","Use existing URLs"]
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-15T20:27:16Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: observability-setup
+**Next Stage**: none
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/dashboards.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/alarms.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/slo-config.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/log-queries.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/tracing-config.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/anomaly-config.md=not-run; required-sections@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/observability-setup-questions.md=not-run; upstream-coverage@aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/dashboards.md=not-run
+**Open Decisions**: 0
+**Question Id**: 90b56dc5
+**Question Type**: gate
+**Question Chat**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question Shows**: sha256:91fb3d7ad8f6e55d07b4d266df61bae87295fac3fedbf1ead18f38eb0f2037d5
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-15T20:35:00Z
+**Event**: HUMAN_TURN
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Origin**: person
+**Source**: picker
+**Picked**: ["Approve","Yes, push and verify"]
+**Message Id**: 87ab02ca
+**Open Questions**: 90b56dc5
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261115-compact-player-footer/operation/observability-setup/observability-setup-questions.md","entries":{"Evidence":"9fe3f1bc64ac318a","Q1":"da926c9fe8b86904","Q2":"8c6f90fff1336da2","Q3":"239c2faaab8b8e69"}}
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:35:00Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: Observability Setup is done: a health endpoint, a GitHub check of Production every 30 minutes that emails you on failure, and targets of 99% / 2 s. Approve it? This is the last stage of this workflow.
+**Reply**: Approve
+**Options**: ["Approve","Request Changes"]
+
+---
+
+## Question Replied
+**Timestamp**: 2026-11-15T20:35:00Z
+**Event**: QUESTION_REPLIED
+**Session**: 7e69f4a4-9e4a-410c-8927-30955fb1445f
+**Question**: The health endpoint and the monitor only work once they're on main. May I commit and push them? That also redeploys Production.
+**Reply**: Yes, push and verify
+**Options**: ["Yes, push and verify","Not yet"]
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-11-15T20:35:08Z
+**Event**: GATE_APPROVED
+**Stage**: observability-setup
+**User Input**: Approve
+**Person Reply**: Approve\nYes, push and verify
+**Message Id**: 87ab02ca
+**Brief Digest**: none
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-11-15T20:35:08Z
+**Event**: STAGE_COMPLETED
+**Stage**: observability-setup
+**Validation Basis**: {"graphContract":"sha256:5439ba71ee89e8bb05c69469d09f20904292c89988f3f19da2740a7389b1381e","inputs":[{"artifact":"infrastructure-specification","contentHash":"sha256:83ac2452fd5fff9fc1fe1aa74de8506800f3f206f5835ada255cefe733a63747","instanceCount":1,"presentCount":0,"producer":"infrastructure-design","required":true,"structureHash":"sha256:bdb59134afdc07fa80a8c839afeddcdf7261547a67f49c8da2ff20baf842f666"},{"artifact":"monitoring-design","contentHash":"sha256:124c0372a18dc308991edca0388546cda5f66cec038ed056a40aaaf67a8912e8","instanceCount":1,"presentCount":0,"producer":"infrastructure-design","required":true,"structureHash":"sha256:f59cb9bf9e5ee444545ee262b8108584c1d85e7d8117917a91e17b8015b06720"},{"artifact":"performance-design","contentHash":"sha256:1e11789019b58c8800075bb45cec8f074c34c3c7f1466360bbf074c98a56006d","instanceCount":1,"presentCount":0,"producer":"nfr-design","required":true,"structureHash":"sha256:12489cc9251971e9050348775f4819f7941869eb21dcb620f97d30064f905973"},{"artifact":"reliability-design","contentHash":"sha256:348ea3d495925a6b1e45f72ee360053a3783ffa8f8706c9c550ed7c80c64552c","instanceCount":1,"presentCount":0,"producer":"nfr-design","required":true,"structureHash":"sha256:452cecdb406aa1998afcd30dfd02c6a5499e38b0ddb00e8ce06bd30ec6cac2e1"},{"artifact":"security-design","contentHash":"sha256:3eb970b00f603de3a2189d48e32858e18c67ae79ba9c7db89c2f425543ed7ceb","instanceCount":1,"presentCount":0,"producer":"nfr-design","required":true,"structureHash":"sha256:cf4fa35b669f401ac716417b66d45bd3c0d3809c640390745584d79b2b69ba57"}],"outputs":[{"artifact":"alarms","contentHash":"sha256:389b56e9b4091ee7a45ea9be80257ea6cea5234a038467c5b360fe5d30d67020","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:03d9472d89e825cd48e11f901ce613cbeb71a1def164ca7936a42ec81bd86073"},{"artifact":"anomaly-config","contentHash":"sha256:447baaa02d6d18555d6d8ae96f7edb19813193810661154a59b8006b5bbcc183","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:a9f40cef4330152d4cc9e69976a9b26e9f33f9babe8a4b4ae8c9b0ede3ceaa0b"},{"artifact":"dashboards","contentHash":"sha256:76c9c1e5531267653a73c905d658333e5657867b2b7a2d01c28725b4edd45fe5","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:0a29b080b02c99d29a088909116110a066038617c2f3a71be75393f464429a78"},{"artifact":"log-queries","contentHash":"sha256:d27a6e831348333a4840ed653ed4398c38fec0a3cec77c2ab4bcec482a29234d","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:e2ce967689ccd9b17363447248612b116e769fd13cb8a7697236ca550ea7982f"},{"artifact":"observability-setup-questions","contentHash":"sha256:b73bf23da50d3bffc0418ff9926d6ea5531c9beb3664657307b85297886526e0","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:dacd3b3280653ed22eb6580a75f20d8e047917ce6d4ec876e68428bca5e78487"},{"artifact":"slo-config","contentHash":"sha256:ad87b2c3e198041418801be90420c1cb413b646cd22376f607fac4b97ddc9c81","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:dfa3d7697063c34bcdade9f982b0edd09f2d13ea483091dd8fbb17bcaa9b0bf7"},{"artifact":"tracing-config","contentHash":"sha256:87b29868290ab77b36a0186f3a611dad71590e9ef0a9477e5d4ca26cd4f2a85d","instanceCount":1,"presentCount":1,"producer":"observability-setup","required":true,"structureHash":"sha256:e06bec08d199df65599e2c92670e4b220600d8ca1b02f758640306ed4c06e25d"}],"projectType":"brownfield","schema":3}
+**Details**: Stage Observability Setup approved by gate
+**Tokens In**: 18
+**Tokens Out**: 10663
+**Cache Read**: 3939448
+**Cache Write**: 14224
+**Cost USD**: 1.12
+**By Model**: opus-5-5=1.12
+**By Agent**: main=1.12
+**Tokens By Model**: opus-5-5=18/10.7k/3.9M/14.2k
+**Tokens By Agent**: main=18/10.7k/3.9M/14.2k
+
+---
+
+## Phase Completion
+**Timestamp**: 2026-11-15T20:35:08Z
+**Event**: PHASE_COMPLETED
+**From phase**: operation
+**To phase**: (end)
+**Stages completed**: 10
+
+---
+
+## Phase Verification
+**Timestamp**: 2026-11-15T20:35:08Z
+**Event**: PHASE_VERIFIED
+**Phase boundary**: operation → end
+
+---
+
+## Workflow Completion
+**Timestamp**: 2026-11-15T20:35:08Z
+**Event**: WORKFLOW_COMPLETED
+**Scope**: express
+**Details**: Scope: express, 10 stages completed
+**Tokens In**: 438
+**Tokens Out**: 167487
+**Cache Read**: 58341758
+**Cache Write**: 447263
+**Cost USD**: 18.28
+**By Model**: opus-5-5=18.28; claude-haiku-5-5=null
+**By Agent**: main=18.28
+**Tokens By Model**: opus-5-5=430/162.4k/58.3M/420.6k; claude-haiku-5-5=8/5.1k/28.4k/26.7k
+**Tokens By Agent**: main=430/162.4k/58.3M/420.6k; web-fetch=8/5.1k/28.4k/26.7k
+
+---
