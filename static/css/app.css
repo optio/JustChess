@@ -680,6 +680,7 @@ body { padding-bottom: 40px; }
 .nickname-save { position: absolute; right: 0; top: 0; color: var(--accent-text); }
 .footer-help span { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid currentColor; border-radius: 50%; font-weight: 700; font-size: 12px; }
 .player-footer-note, .player-footer-message { margin: 2px 0 0; }
+.player-loading { max-width: 72rem; margin: 1.5rem auto 0; padding: 12px 16px 18px; border-top: 1px solid var(--rule); color: var(--text); font: 400 20px/1.2 var(--f-display); }
 .player-footer-message:empty, .player-dialog-message:empty { display: none; }
 .player-footer-message { color: var(--text); }
 .player-help-copy p, .player-dialog p { margin: 0; }

@@ -62,10 +62,11 @@
     <noscript><p>JustChess needs JavaScript to play.</p></noscript>
   </main>
   <div id="announcer" class="visually-hidden" role="status" aria-live="polite" data-testid="announcer"></div>
-  <footer id="player-footer" class="player-footer" data-testid="player-footer" aria-label="Your player">
+  <p class="player-loading" data-testid="player-loading" role="status" aria-live="polite">Loading your player…</p>
+  <footer id="player-footer" class="player-footer" data-testid="player-footer" aria-label="Your player" hidden>
     <div class="player-footer-inner">
-      <form class="player-name-form" aria-label="Your nickname">
-        <div class="nickname-editor" data-testid="player-editor">
+      <form class="player-name-form" aria-label="Your nickname" aria-busy="true">
+        <div class="nickname-editor" data-testid="player-editor" hidden>
           <label class="visually-hidden" for="player-nickname">Your nickname</label>
           <input id="player-nickname" data-testid="player-nickname" maxlength="24" autocomplete="nickname" placeholder="Your nickname" aria-describedby="player-message">
           <button class="footer-icon nickname-save" type="submit" data-testid="player-save" aria-label="Save nickname" title="Save nickname">
@@ -80,8 +81,8 @@
         </div>
       </form>
       <div class="player-links" role="group" aria-label="Your private player link">
-        <button class="footer-action" type="button" data-testid="player-copy">Copy player link</button>
-        <button class="footer-action" type="button" data-testid="player-regenerate" title="Replace old saved player links">New link</button>
+        <button class="footer-action" type="button" data-testid="player-copy" disabled>Copy player link</button>
+        <button class="footer-action" type="button" data-testid="player-regenerate" title="Replace old saved player links" disabled>New link</button>
         <button class="footer-icon footer-help" type="button" data-testid="player-help" aria-label="About your player link" title="About your player link"><span aria-hidden="true">?</span></button>
       </div>
     </div>

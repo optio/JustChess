@@ -14,6 +14,7 @@ export function createPlayerIdentity({ fetchImpl = (...args) => globalThis.fetch
   try { saved = JSON.parse(storage?.getItem(PLAYER_KEY) || "{}"); } catch { saved = {}; }
   if (!saved || !TOKEN.test(saved.token || "")) saved = {};
   let profile = null;
+  let initialized = false;
 
   function keep(value) {
     saved = value;
@@ -48,28 +49,33 @@ export function createPlayerIdentity({ fetchImpl = (...args) => globalThis.fetch
 
   return {
     async init(recovery) {
-      if (recovery) {
-        const answer = await call("restore", { recovery });
-        if (answer.ok) {
-          keep({ token: answer.data.token, recovery });
-          apply(answer.data, true);
-          return;
+      try {
+        if (recovery) {
+          const answer = await call("restore", { recovery });
+          if (answer.ok) {
+            keep({ token: answer.data.token, recovery });
+            apply(answer.data, true);
+            return;
+          }
+          error = answer.message;
         }
-        error = answer.message;
+        let answer = saved.token ? await call("profile") : null;
+        if (answer && !answer.ok && !answer.message.includes("session is invalid")) {
+          error ||= answer.message; onChange(); return;
+        }
+        if (!answer?.ok) {
+          answer = await call("create");
+          if (answer.ok) keep({ token: answer.data.token, recovery: answer.data.recovery });
+        }
+        if (answer.ok) {
+          apply(answer.data);
+          for (const seat of seats?.validSeats() || []) await attach(seat.code, seat.token);
+        } else error ||= answer.message;
+        onChange();
+      } finally {
+        initialized = true;
+        onChange();
       }
-      let answer = saved.token ? await call("profile") : null;
-      if (answer && !answer.ok && !answer.message.includes("session is invalid")) {
-        error ||= answer.message; onChange(); return;
-      }
-      if (!answer?.ok) {
-        answer = await call("create");
-        if (answer.ok) keep({ token: answer.data.token, recovery: answer.data.recovery });
-      }
-      if (answer.ok) {
-        apply(answer.data);
-        for (const seat of seats?.validSeats() || []) await attach(seat.code, seat.token);
-      } else error ||= answer.message;
-      onChange();
     },
     attach,
     async refresh() { const answer = await call("profile"); if (answer.ok) apply(answer.data); },
@@ -84,6 +90,7 @@ export function createPlayerIdentity({ fetchImpl = (...args) => globalThis.fetch
       return answer;
     },
     get token() { return saved.token || null; },
+    get initialized() { return initialized; },
     get nicknameValue() { return profile?.nickname || ""; },
     get error() { return error; },
     get persistent() { return persistent; },
@@ -150,6 +157,7 @@ export function mountPlayerFooter(doc, win, player) {
   if (!root) return { render() {} };
   const part = id => doc.querySelector(`[data-testid="${id}"]`);
   const name = part("player-nickname"), display = part("player-display"), field = part("player-editor");
+  const loading = part("player-loading"), nameForm = root.querySelector("form");
   const save = part("player-save"), edit = part("player-edit"), message = part("player-message");
   const copy = part("player-copy"), regenerate = part("player-regenerate"), help = part("player-help");
   const link = part("player-link"), linkField = part("player-link-field");
@@ -162,6 +170,11 @@ export function mountPlayerFooter(doc, win, player) {
   const regenerateDialog = footerDialog(regenerateElement, { canClose: () => !regenerating });
 
   function render() {
+    const isLoading = !player.initialized;
+    root.hidden = isLoading;
+    loading.hidden = !isLoading;
+    if (isLoading) return;
+
     editor.sync();
     const state = editor.state;
     field.hidden = !state.editing;
@@ -172,7 +185,7 @@ export function mountPlayerFooter(doc, win, player) {
     save.disabled = state.pending;
     edit.disabled = state.pending;
     save.setAttribute("aria-label", state.pending ? "Saving nickname" : "Save nickname");
-    root.querySelector("form").setAttribute("aria-busy", String(state.pending));
+    nameForm.setAttribute("aria-busy", String(isLoading || state.pending));
     const url = player.link(win.location.origin);
     link.href = url || "#";
     link.hidden = !url;
