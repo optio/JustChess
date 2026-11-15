@@ -6,11 +6,12 @@ with Stockfish discovery patched and the fake UCI engine injected through
 ``create_app(engine_factory=...)`` (each reply takes 0.8 s, so the thinking
 status can be seen). Skipped, with the reason, when Chromium is missing.
 
-From the lobby's "Play the computer" panel the player picks White and
-Beginner and presses Play, plays e4 (the blunder check runs first, as for any
-move), sees "Computer is thinking…" and then the reply, takes back, asks for a
-hint and sees its arrow, resigns through the in-page confirm, and sees the
-result card with "Play again", no share controls and the level's score line.
+Since 2026-11-15 the lobby has no "Play the computer" panel: the player starts
+a game, presses "Play the computer" on the waiting screen and picks the level
+in the difficulty dialog. The player then plays e4 (the blunder check is off),
+sees "Computer is thinking…" and the reply, takes back, asks for a hint and
+sees its arrow, resigns through the in-page confirm and sees the result card.
+Switching sides with the computer and the friend takeover have their own runs.
 """
 
 from __future__ import annotations
@@ -56,22 +57,31 @@ def computer_server(tmp_path):
             server.kill()
 
 
+def _start_against_computer(page: Page, server: str, level: str = "beginner") -> str:
+    """Start a game, press "Play the computer" and pick ``level`` in the difficulty dialog."""
+    page.go(server + "/")
+    page.wait("!!document.querySelector('[data-testid=start-game]')", what="the lobby")
+    assert not page.js("!!document.querySelector('[data-testid=computer-panel]')"), "the lobby panel is gone"
+    page.click("start-game")
+    code = page.wait("(location.pathname.match(/^\\/r\\/([A-Z0-9]{6})$/) || [])[1]", what="the room address")
+    page.wait(f"{STATUS}.startsWith('Waiting for your opponent')", what="the waiting state")
+    page.js("(() => { const s = document.querySelector('[data-testid=settings-blunderWarnings]'); if (s.checked) s.click(); return true; })()")
+    assert page.js(TEXT.format(testid="pass-along-start")) == "Play pass-along"
+    assert page.js(TEXT.format(testid="stand-in-start")) == "Play the computer"
+    page.click("stand-in-start")
+    page.wait("document.querySelector('[data-testid=level-dialog]').open", what="the difficulty dialog")
+    assert page.js("document.querySelector('[data-testid=level-choice-casual]').checked"), "Casual by default"
+    page.click(f"level-choice-{level}")
+    page.click("level-play")
+    page.wait("!document.querySelector('[data-testid=level-dialog]').open", what="the dialog closes")
+    return code
+
+
 def test_a_short_game_against_the_computer(computer_server: str, browser: Cdp) -> None:
     page = Page(browser, "player (phone 390 px)", viewport=(390, 844, True))  # NFR6 touch targets are checked at phone width
-    page.go(computer_server + "/")
-    page.wait("!!document.querySelector('[data-testid=computer-panel]')", what="the Play the computer panel")
-    page.wait("!document.querySelector('[data-testid=computer-play]').disabled", what="Play enabled once the engine is up")
-    assert page.js(SMALL_TARGETS) == [], "the panel's radios and Play are at least 44 x 44 px (NFR6)"
-    assert page.js("document.querySelector('[data-testid=computer-colour-random]').checked"), "Random by default"
-    assert page.js("document.querySelector('[data-testid=computer-level-casual]').checked"), "Casual by default"
-    page.click("computer-colour-white")
-    page.click("computer-level-beginner")
-    page.click("computer-play")
-
-    page.wait("/^\\/r\\/[A-Z0-9]{6}$/.test(location.pathname)", what="the room address")
+    _start_against_computer(page, computer_server)
     page.wait(f"{STATUS} === 'Your move'", what="the player's first move as White")
     assert page.js(TEXT.format(testid="players")) == "You play White · Computer · Beginner plays Black"
-    assert page.js("document.getElementById('share').hidden"), "no invite against the computer"
     assert "token" not in page.js("location.href").lower()
     assert page.js(SMALL_TARGETS) == [], "every control of the computer game is at least 44 x 44 px (NFR6)"
 
@@ -94,10 +104,23 @@ def test_a_short_game_against_the_computer(computer_server: str, browser: Cdp) -
     page.wait(VISIBLE.format(testid="overlay"), timeout=20, what="the result card")
     assert page.js(TEXT.format(testid="overlay-title")) == "You lost"
     assert page.js(VISIBLE.format(testid="play-again")), "Play again on the result card"
-    assert page.js("document.querySelector('[data-testid=share-result]').hidden"), "no share controls"
-    assert page.js(TEXT.format(testid="score")) == "This level: You 0 · Computer 1 · Draws 0"
     assert page.js("document.querySelectorAll('[data-testid=hint-arrow] g').length") == 0, "the arrow left with the game"
     assert page.problems() == [], f"the page logged errors: {page.problems()}"
+
+
+def test_switch_sides_with_the_computer_any_time(computer_server: str, browser: Cdp) -> None:
+    page = Page(browser, "switcher")
+    _start_against_computer(page, computer_server)
+    page.wait(f"{STATUS} === 'Your move'", what="White to move")
+    assert page.js(TEXT.format(testid="switch-side")) == "Switch colour"
+    page.move("e2e4")
+    page.wait(f"{STATUS} === 'Your move' && {PIECE_ON.format(square='a5')} === 'p'", what="the computer's reply")
+    page.click("switch-side")
+    page.wait(f"{TEXT.format(testid='players')}.includes('You play Black')", what="the player now plays Black")
+    page.wait(f"document.querySelectorAll('[data-testid=scoresheet-rows] tr').length === 2 && {STATUS} === 'Your move'",
+              timeout=20, what="the computer moved White's pieces, then Black to move")
+    assert page.js(TEXT.format(testid="switch-side")) == "Switch colour"
+    assert page.problems() == [], page.problems()
 
 
 def test_waiting_room_plays_the_computer_until_a_friend_takes_over(computer_server: str, browser: Cdp) -> None:
@@ -111,6 +134,8 @@ def test_waiting_room_plays_the_computer_until_a_friend_takes_over(computer_serv
     creator.js("(() => { const s = document.querySelector('[data-testid=settings-blunderWarnings]'); if (s.checked) s.click(); return true; })()")
     creator.wait(VISIBLE.format(testid="stand-in-start"), what="Play the computer while waiting")
     creator.click("stand-in-start")
+    creator.wait("document.querySelector('[data-testid=level-dialog]').open", what="the difficulty dialog")
+    creator.click("level-play")
     creator.wait(f"{STATUS} === 'Your move'", what="the creator's first move against the computer")
     assert not creator.js("document.getElementById('share').hidden"), "the invite stays available"
     assert "joined" not in creator.js(TEXT.format(testid="notify-banner")), "the computer is no friend joining"
@@ -123,7 +148,7 @@ def test_waiting_room_plays_the_computer_until_a_friend_takes_over(computer_serv
 
     friend = Page(browser, "friend (desktop)")
     friend.go(f"{computer_server}/r/{code}")
-    friend.wait(f"{STATUS} === 'Waiting for White'", what="the friend took over Black")
+    friend.wait(f"{STATUS} === 'Waiting for White to move'", what="the friend took over Black")
     assert friend.js(PIECE_ON.format(square="a5")) == "p", "the friend continues from the same position"
     creator.wait("!document.querySelector('[data-testid=computer-controls]') || document.querySelector('[data-testid=computer-controls]').hidden",
                  what="the computer controls left")

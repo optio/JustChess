@@ -83,10 +83,11 @@
  * opened again, now seated. Declined, lapsed, busy, declined_recently and too
  * many requests show their text with "Back to your games".
  *
- * Play the computer (P2 U4, W1-W7, BR3.5, BR5.4, BR8.1-BR8.3): the lobby's
- * "Play the computer" panel reads GET /api/engine (again every 2 s while the
- * engine is starting) and its Play runs room-flow's playComputer (reopen,
- * rematch or create) and opens the room. In a computer room the top bar's
+ * Play the computer (P2 U4, W1-W7, BR5.4, BR8.2-BR8.3; 2026-11-15): a player
+ * starts a game and presses "Play the computer" on the waiting screen; the
+ * difficulty dialog's level is remembered (computer.js writeChoice) and posted
+ * with /mode. "Play as White/Black" posts /side while the snapshot's
+ * canSwitchSides allows it. In a lobby-made computer room (older rooms) the top bar's
  * Share is hidden; Take back, Hint and Resign post their seat actions with the
  * snapshot's version; a hint is drawn as an arrow (and named on the flash line)
  * until the version changes. When the page shows the computer to move with
@@ -108,8 +109,8 @@ import { callSafely, hooks, setHook } from "./hooks.js";
 import { createLive, socketUrl } from "./live.js";
 import { createBlunderHook } from "./blunder.js";
 import { createNotifications } from "./notifications.js";
-import { actionAnswer, applyRefusal, enterRoom, playComputer, settleRequest, submitMove } from "./room-flow.js";
-import { nextRetry, readChoice, shouldResume } from "./computer.js";
+import { actionAnswer, applyRefusal, enterRoom, settleRequest, submitMove } from "./room-flow.js";
+import { nextRetry, readChoice, shouldResume, writeChoice } from "./computer.js";
 import { clientGameplay, loadFromDocument } from "./gameplay.js";
 import { JOINER_TEXT, createJoinerPoller, waitingText } from "./pass-along.js";
 import { initialState, reduce } from "./screen-state.js";
@@ -142,9 +143,6 @@ const ENDGAMES_TITLE = "Endgames — JustChess";
 const LEARN_PATH = /^\/learn(?:\/([^/]*))?\/?$/;
 const TACTICS_PATH = /^\/learn\/tactics\/([^/]+)\/?$/;
 const ENDGAME_PATH = /^\/learn\/endgames\/([^/]+)\/?$/;
-const ENGINE_STARTING = "The computer is starting";
-const ENGINE_POLL_MS = 2000;
-const ENGINE_POLL_LIMIT = 30;
 
 export function startApp({
   doc = document,
@@ -316,7 +314,6 @@ export function startApp({
         onOpenGame: joinByCode,
         games: { api, seats, win, doc, memory: yourGamesMemory },
         labels: settings.get("labels"),
-        computer: { storage: choiceStorage, loadEngine: loadEngineStatus, onPlay: playTheComputer },
       });
     } else ui = createGameScreen(appRoot, {
         settings,
@@ -327,8 +324,13 @@ export function startApp({
         onPlayAgain: () => seatAction((code, token) => api.rematch(code, token)),
         onEnterPassAlong: () => seatAction((code, token) => api.setMode(code, token, "pass_along")),
         onLeavePassAlong: () => seatAction((code, token) => api.setMode(code, token, "waiting")),
-        // The computer plays seat B until a friend opens the link; the lobby panel's remembered level is used.
-        onPlayComputerWhileWaiting: () => seatAction((code, token) => api.setMode(code, token, "computer", readChoice(choiceStorage).level)),
+        // "Play the computer": the difficulty comes from the dialog and is remembered for next time.
+        getComputerLevel: () => readChoice(choiceStorage).level,
+        onPlayComputerWhileWaiting: (level) => {
+          writeChoice(choiceStorage, { ...readChoice(choiceStorage), level });
+          return seatAction((code, token) => api.setMode(code, token, "computer", level));
+        },
+        onSwitchSide: (colour) => seatAction((code, token) => api.switchSide(code, token, colour)),
         onAnswerRequest: (accept) => seatAction((code, token) => api.answerRequest(code, token, accept)),
         onTakeback: () => versionedAction((code, token, version) => api.takeback(code, token, version)),
         onResign: () => versionedAction((code, token, version) => api.resign(code, token, version)),
@@ -723,38 +725,7 @@ export function startApp({
     openRoom(code);
   }
 
-  // --- play the computer (P2 U4) -------------------------------------------------
-
-  const sleep = (ms) => new Promise((resolve) => win.setTimeout(resolve, ms));
-
-  /** BR8.1: GET /api/engine for the panel; asks again every 2 s while the engine is still starting. */
-  async function loadEngineStatus() {
-    for (let attempt = 0; attempt < ENGINE_POLL_LIMIT; attempt += 1) {
-      const answer = await api.engine();
-      const status = answer.ok && answer.data ? answer.data : { available: false, reason: null };
-      if (status.available || status.reason !== ENGINE_STARTING) return status;
-      await sleep(ENGINE_POLL_MS);
-    }
-    return { available: false, reason: ENGINE_STARTING };
-  }
-
-  /** W1, BR3.5: reopen this level's room (rematch when finished) or create one, then open it. */
-  async function playTheComputer({ colour, level }) {
-    const lobby = screen && screen.kind === "lobby" ? screen.ui : null;
-    if (lobby) lobby.setComputerBusy(true);
-    let result;
-    try {
-      result = await playComputer({ api, seats, level, colour });
-    } finally {
-      if (lobby) lobby.setComputerBusy(false);
-    }
-    if (result.kind !== "open") {
-      if (lobby) lobby.showComputerError(result.message);
-      return;
-    }
-    win.history.pushState(null, "", `/r/${result.code}`);
-    await openRoom(result.code, result.created || null);
-  }
+  // --- play the computer (P2 U4; started from the waiting screen since 2026-11-15) ---
 
   /** New snapshot: drop a hint for an older version, and start counting resume calls afresh for a new position. */
   function noteComputerSnapshot(snapshot) {

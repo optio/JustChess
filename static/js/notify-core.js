@@ -116,7 +116,10 @@ export function eventFor(prev, next, slot) {
     return make("joined", code, "joined", TITLE_JOINED, "Your friend took over from the computer.", TITLE_JOINED);
   }
   if (slot === "A" && before === "empty" && after && after !== "empty" && after !== "computer" && next.game === 1 && next.status === "playing") {
-    return make("joined", code, "joined", TITLE_JOINED, "The game has started. You play White: your move.", TITLE_JOINED);
+    const mine = next.colour === "black" ? "black" : "white";
+    const name = mine === "black" ? "Black" : "White";
+    const body = next.turn === mine ? `The game has started. You play ${name}: your move.` : `The game has started. You play ${name}.`;
+    return make("joined", code, "joined", TITLE_JOINED, body, TITLE_JOINED);
   }
 
   const ply = plyCount(next);

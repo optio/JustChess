@@ -24,6 +24,7 @@ direct calls (tests and tools); the app passes the loaded values in.
 from __future__ import annotations
 
 import copy
+import dataclasses
 import logging
 import math
 import os
@@ -36,6 +37,7 @@ import yaml
 logger = logging.getLogger("justchess.gameplay")
 
 ENV_VAR = "JUSTCHESS_GAMEPLAY_FILE"
+CREATOR_COLOUR_ENV = "JUSTCHESS_CREATOR_COLOUR"
 DEFAULT_FILE = Path(__file__).resolve().parent.parent / "gameplay.yaml"
 LEVEL_IDS = ("beginner", "casual", "club", "strong", "maximum")
 LEVEL_NAMES = {"beginner": "Beginner", "casual": "Casual", "club": "Club", "strong": "Strong", "maximum": "Maximum"}
@@ -62,7 +64,7 @@ DEFAULTS: dict = {
                "retry_backoff_seconds": 5},
     "rate_limits": {"computer_create": 10, "hint": 20, "computer_move": 30, "join_request": 5, "player": 60},
     "join_requests": {"lifetime_minutes": 10, "declined_block_minutes": 10, "address_book_cap": 10000},
-    "rooms": {"claim_win_away_hours": 24, "idle_room_delete_days": 30},
+    "rooms": {"claim_win_away_hours": 24, "idle_room_delete_days": 30, "creator_colour": "random"},
     "blunder_check": {"time_budget_ms": 250},
     "client": {"selected_piece_percent": 110, "confetti_ms": 1800, "capture_animation_ms": 260, "your_games_refresh_seconds": 60, "computer_retry_limit": 3,
                "computer_retry_delay_seconds": 5, "join_poll_seconds": 3},
@@ -97,6 +99,12 @@ def _number(low: float, high: float) -> Check:
     return check
 
 
+def _choice(*allowed: str) -> Check:
+    def check(value: object) -> str | None:
+        return None if value in allowed else "must be one of " + ", ".join(allowed)
+    return check
+
+
 def _optional(inner: Check, words: str) -> Check:
     def check(value: object) -> str | None:
         return None if value is None else (f"{inner(value)} {words}" if inner(value) else None)
@@ -117,7 +125,8 @@ SPEC: dict = {
     "rate_limits": {key: _integer(1, 10000) for key in ("computer_create", "hint", "computer_move", "join_request", "player")},
     "join_requests": {"lifetime_minutes": _number(0.5, 1440), "declined_block_minutes": _number(0, 1440),
                       "address_book_cap": _integer(100, 1_000_000)},
-    "rooms": {"claim_win_away_hours": _number(0.01, 8760), "idle_room_delete_days": _number(1, 3650)},
+    "rooms": {"claim_win_away_hours": _number(0.01, 8760), "idle_room_delete_days": _number(1, 3650),
+              "creator_colour": _choice("random", "white", "black")},
     "blunder_check": {"time_budget_ms": _integer(10, 10000)},
     "client": {"selected_piece_percent": _integer(100, 120), "confetti_ms": _integer(0, 5000), "capture_animation_ms": _integer(0, 2000), "your_games_refresh_seconds": _number(10, 3600),
                "computer_retry_limit": _integer(0, 20), "computer_retry_delay_seconds": _number(1, 300),
@@ -201,6 +210,7 @@ class Gameplay:
     blunder_budget_ms: int
     client: dict[str, int] = field(default_factory=dict)
     player_per_minute: int = 60
+    creator_colour: str = "random"  # the colour a friend room's creator plays in game 1
     endgames: EndgameSettings = field(default_factory=EndgameSettings)
     source: str = BUILT_IN
 
@@ -241,6 +251,7 @@ def _build(values: dict, source: str) -> Gameplay:
         address_book_cap=requests["address_book_cap"],
         abandon_after=values["rooms"]["claim_win_away_hours"] * 3600.0,
         idle_room_retention=values["rooms"]["idle_room_delete_days"] * 24 * 3600.0,
+        creator_colour=values["rooms"]["creator_colour"],
         blunder_budget_ms=values["blunder_check"]["time_budget_ms"],
         client={
             "selectedPiecePercent": client["selected_piece_percent"],
@@ -285,7 +296,7 @@ def load_gameplay(path: Path | str | None = None, env: Mapping[str, str] | None 
         if named:
             raise GameplayError(f"{target}: the gameplay file asked for (argument or {ENV_VAR}) does not exist")
         logger.warning("No gameplay file at %s; using the built-in defaults", target)
-        return DEFAULT_GAMEPLAY
+        return with_env_overrides(DEFAULT_GAMEPLAY, env)
     try:
         given = yaml.safe_load(target.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError) as exc:
@@ -294,4 +305,14 @@ def load_gameplay(path: Path | str | None = None, env: Mapping[str, str] | None 
         raise GameplayError(f"{target}: is not valid YAML ({exc})") from exc
     settings = from_mapping(given, str(target))
     logger.info("Gameplay settings loaded from %s", target)
-    return settings
+    return with_env_overrides(settings, env)
+
+
+def with_env_overrides(settings: Gameplay, env: Mapping[str, str]) -> Gameplay:
+    """``JUSTCHESS_CREATOR_COLOUR`` (random, white or black) wins over rooms.creator_colour."""
+    value = (env.get(CREATOR_COLOUR_ENV) or "").strip().lower()
+    if not value:
+        return settings
+    if value not in ("random", "white", "black"):
+        raise GameplayError(f"{CREATOR_COLOUR_ENV} must be random, white or black (got {value!r})")
+    return dataclasses.replace(settings, creator_colour=value)

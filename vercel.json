@@ -1,14 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "fastapi",
-  "regions": ["fra1"],
-  "installCommand": "uv sync --frozen --no-dev && uv run --frozen python prepare_vercel_stockfish.py",
+  "regions": [
+    "fra1"
+  ],
+  "installCommand": "uv sync --frozen --no-dev && uv run --frozen python prepare_vercel_stockfish.py && uv run --frozen python -m justchess.version --write build-version.txt",
   "functions": {
     "app.py": {
       "maxDuration": 300,
-      "includeFiles": "{templates/**,static/**,lessons/**,puzzles/**,endgames/**,gameplay.yaml,.vercel-stockfish/linux-x86_64/**}",
+      "includeFiles": "{templates/**,static/**,lessons/**,puzzles/**,endgames/**,gameplay.yaml,build-version.txt,.vercel-stockfish/linux-x86_64/**}",
       "excludeFiles": "{.env*,*.sqlite3*,**/*.pem,**/*.key,.mcp.json,.vercel/**,.engines/**,prepare_vercel_stockfish.py,.git/**,.codex/**,.agents/**,.claude/**,aidlc/**,tests/**,scripts/**,data/**,docs/**,node_modules/**,.pytest_cache/**,__pycache__/**}"
     }
   },
-  "crons": [{"path": "/api/cron/maintenance", "schedule": "17 3 * * *"}]
+  "crons": [
+    {
+      "path": "/api/cron/maintenance",
+      "schedule": "17 3 * * *"
+    }
+  ]
 }

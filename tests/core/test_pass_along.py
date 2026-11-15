@@ -88,8 +88,10 @@ def test_counted_turns_true_when_seat_b_is_taken_but_a_finished_practice_game_st
     enter_pass_along(db, code, seat_a, clock())
     with db.transaction() as conn:
         rooms.set_mode(conn, code, seat_a, rooms.MODE_WAITING, clock())
+        # With no move made, going back to waiting makes the game wait again, counted (2026-11-15 fix).
+        assert games.current_game(conn, code).status == "waiting"
         rooms.join_room(conn, code, None, clock())
-        assert games.mark_counted(conn, games.current_game(conn, code)) is True
+        assert games.mark_counted(conn, games.current_game(conn, code)) is False, "already counted"
     assert current(db, code)[1].counted is True
 
     finished, seat_f, _ = new_room(db, clock())
@@ -124,7 +126,7 @@ def test_leaving_pass_along_keeps_the_position_and_declines_the_pending_request(
     room, game = current(db, code)
     assert (change.changed, change.declined_request) == (True, True)
     assert status["status"] == "declined"
-    assert (room.mode, game.status, game.version) == ("waiting", "playing", 2)
+    assert (room.mode, game.status, game.version) == ("waiting", "playing", 3), "position kept; version bumped on the way back"
 
 
 def test_play_again_in_pass_along_needs_no_second_seat_and_stays_uncounted(db, clock):

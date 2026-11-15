@@ -60,7 +60,7 @@ import { busyClick, isBusy, runBusy } from "../busy.js";
 import { parseUci } from "../board/geometry.js";
 import { createHintArrow } from "../board/hint-arrow.js";
 import { captureLabel, capturedPieces } from "../captures.js";
-import { NO_ANSWER_TEXT, RESIGN_QUESTION } from "../computer.js";
+import { LEVELS, LEVEL_NAMES, NO_ANSWER_TEXT, RESIGN_QUESTION } from "../computer.js";
 import { BANNER_REFRESH_MS, PRACTICE_NOTE, bannerText, requestDeadline } from "../pass-along.js";
 import { renderSettingsPanel } from "../settings-panel.js";
 import { STATUS_TEXT } from "../view-model.js";
@@ -88,7 +88,7 @@ function sameList(a, b) {
 }
 
 function playsLine(name, colour) {
-  return `${name} ${name === "You" ? "play" : "plays"} ${colour}`;
+  return `${name} ${name === "You" || name.startsWith("You (") ? "play" : "plays"} ${colour}`;
 }
 
 const PIECE_PATH = "/static/pieces/cburnett/";
@@ -176,22 +176,93 @@ function buildCapturedRow() {
   };
 }
 
-/** P2 U3: the pass-along buttons and practice note (BR4.1, Screen 5). */
-function buildPassAlongRow(call) {
+export const LEVEL_DIALOG_TEXT = "The computer plays until your friend opens the invite link, then they take over from the current position.";
+
+/**
+ * "Play the computer": a modal asking for the computer's difficulty first.
+ * open(trigger) resolves with the chosen level, or null when cancelled
+ * (Cancel, Escape or a click on the backdrop). The last choice comes from
+ * deps.getComputerLevel and is preselected.
+ */
+function buildLevelDialog(getLevel) {
+  const dialog = make("dialog", { className: "share-dialog level-dialog", "aria-labelledby": "level-title", "data-testid": "level-dialog" });
+  const body = make("div", { className: "share-body" });
+  const title = make("h2", { className: "share-title", id: "level-title" }, "Play the computer");
+  const text = make("p", { className: "share-line" }, LEVEL_DIALOG_TEXT);
+  const group = make("fieldset", { className: "computer-group", "data-testid": "level-choices" });
+  group.append(make("legend", { className: "computer-legend" }, "Difficulty"));
+  const options = make("div", { className: "computer-options" });
+  for (const level of LEVELS) {
+    const id = `level-choice-${level}`;
+    const input = make("input", { type: "radio", name: "level-choice", id, value: level, "data-testid": id });
+    const label = make("label", { className: "computer-option", for: id });
+    label.append(input, make("span", {}, LEVEL_NAMES[level]));
+    options.append(label);
+  }
+  group.append(options);
+  const actions = make("div", { className: "share-actions level-actions" });
+  const cancel = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "level-cancel" }, "Cancel");
+  const play = make("button", { className: "btn btn-primary", type: "button", "data-testid": "level-play" }, "Play");
+  actions.append(cancel, play);
+  body.append(title, text, group, actions);
+  dialog.append(body);
+  let settle = null;
+  let trigger = null;
+
+  function finish(value) {
+    if (dialog.open) dialog.close();
+    if (trigger && trigger.isConnected) trigger.focus({ preventScroll: true });
+    const done = settle;
+    settle = null;
+    if (done) done(value);
+  }
+
+  cancel.addEventListener("click", () => finish(null));
+  play.addEventListener("click", () => finish(group.querySelector("input:checked")?.value || null));
+  dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
+  dialog.addEventListener("click", (event) => { if (event.target === dialog) finish(null); });
+
+  return {
+    element: dialog,
+    open(from) {
+      if (settle) return Promise.resolve(null);
+      trigger = from;
+      const wanted = LEVELS.includes(getLevel()) ? getLevel() : "casual";
+      const checked = group.querySelector(`input[value="${wanted}"]`);
+      checked.checked = true;
+      if (!dialog.open) dialog.showModal();
+      checked.focus({ preventScroll: true });
+      return new Promise((resolve) => { settle = resolve; });
+    },
+    close() { finish(null); },
+  };
+}
+
+/**
+ * P2 U3: the waiting-room buttons under "Or instead:" and the practice note
+ * (BR4.1, Screen 5), with "Play the computer" going through the difficulty
+ * dialog. Switching colour is a link after the players line (see below).
+ */
+function buildPassAlongRow(call, levelDialog) {
   const row = make("div", { className: "pass-along", "data-testid": "pass-along" });
-  const start = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "pass-along-start" }, "Play here while waiting");
-  const computer = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "stand-in-start" }, "Play the computer while waiting");
+  const instead = make("p", { className: "pass-along-instead", "data-testid": "pass-along-instead" }, "Or instead:");
+  const start = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "pass-along-start" }, "Play pass-along");
+  const computer = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "stand-in-start" }, "Play the computer");
   const stop = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "pass-along-stop" }, "Wait for a friend instead");
   const note = make("p", { className: "t-small t-muted pass-along-note", "data-testid": "pass-along-note" }, PRACTICE_NOTE);
-  row.append(start, computer, stop, note);
+  row.append(instead, start, computer, stop, note);
   busyClick(start, () => call("onEnterPassAlong"));
-  busyClick(computer, () => call("onPlayComputerWhileWaiting"));
+  busyClick(computer, async () => {
+    const level = await levelDialog.open(computer);
+    if (level) await call("onPlayComputerWhileWaiting", level);
+  });
   busyClick(stop, () => call("onLeavePassAlong"));
   return {
     row,
     render(controls) {
       start.hidden = !controls.playHere;
       computer.hidden = !controls.playComputer;
+      instead.hidden = start.hidden && computer.hidden; // "Or instead:" above the alternatives to waiting
       stop.hidden = !controls.waitForFriend;
       note.hidden = !controls.practiceNote;
       note.textContent = controls.note || PRACTICE_NOTE;
@@ -413,7 +484,14 @@ export function createGameScreen(container, deps = {}) {
   // --- board column -------------------------------------------------------
   const boardCol = make("div", { className: "game-board-col" });
   const boardRoot = make("div", { className: "game-board", "data-testid": "game-board" });
-  const players = make("p", { className: "players", "data-testid": "players" });
+  // The players line, then a small "Switch colour" link while seat A may take the other colour.
+  const playersRow = make("p", { className: "players" });
+  const players = make("span", { "data-testid": "players" });
+  const switchSide = make("button", { className: "btn btn-quiet players-switch", type: "button", "data-testid": "switch-side" }, "Switch colour");
+  switchSide.hidden = true;
+  playersRow.append(players, switchSide);
+  let switchTo = null;
+  busyClick(switchSide, () => (switchTo ? call("onSwitchSide", switchTo) : undefined));
   boardCol.append(boardRoot);
 
   // --- side column --------------------------------------------------------
@@ -482,7 +560,8 @@ export function createGameScreen(container, deps = {}) {
   drawer.append(summary, lessonsMount);
 
   const captured = buildCapturedRow();
-  const passAlong = buildPassAlongRow(call); // P2 U3
+  const levelDialog = buildLevelDialog(() => (typeof deps.getComputerLevel === "function" ? deps.getComputerLevel() : "casual"));
+  const passAlong = buildPassAlongRow(call, levelDialog); // P2 U3
   const requestBanner = buildRequestBanner(call); // P2 U3: above the status (Screen 6)
   const computerRow = buildComputerRow(call); // P2 U4
   const backToGames = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "joiner-back" }, "Back to your games");
@@ -493,7 +572,7 @@ export function createGameScreen(container, deps = {}) {
     sheetPanel, sheet, score, drawer);
   const banner = make("button", { className: "btn btn-primary lessons-banner", type: "button", "data-testid": "lessons-banner" }, BANNER_TEXT);
   banner.hidden = true;
-  root.append(boardCol, side, banner);
+  root.append(boardCol, side, banner, levelDialog.element);
   container.append(root);
 
   const overlay = createOverlay(boardCol, {
@@ -501,7 +580,7 @@ export function createGameScreen(container, deps = {}) {
     onShareResult: () => call("onShareResult"),
     onShareLink: () => call("onShareLink"),
   });
-  boardCol.append(players);
+  boardCol.append(playersRow);
 
   // P2 U1, BR1.6: what the captured row was last drawn from, and the player's move awaiting the server.
   const capturedInput = { rows: [], pending: null, seat: false, colour: "white" };
@@ -712,10 +791,13 @@ export function createGameScreen(container, deps = {}) {
     const savingMove = capturedInput.pending !== null && !fenChanged && board.mode === "pending";
     renderCaptured(view, reconnecting, fenChanged);
     players.textContent = `${playsLine(view.players.white, "White")} · ${playsLine(view.players.black, "Black")}`;
+    switchTo = view.passAlong && view.passAlong.switchTo ? view.passAlong.switchTo : null;
+    switchSide.hidden = !switchTo;
+    switchSide.setAttribute("aria-label", switchTo ? `Switch colour: play ${switchTo === "white" ? "White" : "Black"}` : "Switch colour");
     if (savingMove) lastStatus = view.status; // the move is still on its way: keep "Saving your move…"
     else renderStatus(view.status);
     renderClaims(view);
-    passAlong.render(view.passAlong || { playHere: false, playComputer: false, waitForFriend: false, practiceNote: false });
+    passAlong.render(view.passAlong || { playHere: false, playComputer: false, switchTo: null, waitForFriend: false, practiceNote: false });
     requestBanner.render(view.joinRequest || null);
     computerRow.render(view.computer || null);
     hintArrow.show(view.computer ? view.computer.hint : null, view.board.orientation);
@@ -731,12 +813,14 @@ export function createGameScreen(container, deps = {}) {
   function renderJoining(code) {
     renderStatus({ text: STATUS_TEXT.joining, sub: code ? `Room ${code}` : null, tone: "surface", dot: null });
     players.textContent = "";
+    switchSide.hidden = true;
+    switchTo = null;
     captured.reset();
     capturedInput.pending = null;
     capturedKey = null;
     lastPlies = null;
     renderClaims({ claims: { draw: null, win: false, winLabel: "" } });
-    passAlong.render({ playHere: false, playComputer: false, waitForFriend: false, practiceNote: false });
+    passAlong.render({ playHere: false, playComputer: false, switchTo: null, waitForFriend: false, practiceNote: false });
     requestBanner.render(null);
     computerRow.render(null);
     hintArrow.clear();

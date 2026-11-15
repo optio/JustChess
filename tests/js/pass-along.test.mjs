@@ -45,7 +45,7 @@ function fakeTimers() {
 }
 
 test("controls: Play here for seat A while waiting alone; Wait for a friend and the note in pass-along; nothing otherwise", () => {
-  const none = { playHere: false, playComputer: false, waitForFriend: false, practiceNote: false, note: null };
+  const none = { playHere: false, playComputer: false, switchTo: null, waitForFriend: false, practiceNote: false, note: null };
   assert.deepEqual(controlsFor({ ...BASE, mode: "waiting" }), { ...none, playHere: true, playComputer: true });
   assert.deepEqual(controlsFor(BASE), { ...none, waitForFriend: true, practiceNote: true, note: PRACTICE_NOTE });
   const standIn = { ...BASE, mode: "computer", standIn: true, seats: { ...BASE.seats, B: { presence: "computer", colour: "black" } } };
@@ -53,6 +53,11 @@ test("controls: Play here for seat A while waiting alone; Wait for a friend and 
   assert.deepEqual(controlsFor({ ...standIn, standIn: false }), none, "a lobby computer room has no friend to wait for");
   const joined = { ...BASE, mode: "online", seats: { ...BASE.seats, B: { presence: "connected", colour: "black" } } };
   assert.deepEqual(controlsFor(joined), none);
+  // Switching sides follows the server's canSwitchSides flag.
+  assert.equal(controlsFor({ ...BASE, mode: "waiting", canSwitchSides: true }).switchTo, "black");
+  assert.equal(controlsFor({ ...standIn, colour: "black", canSwitchSides: true }).switchTo, "white");
+  assert.equal(controlsFor({ ...standIn, standIn: false, canSwitchSides: true }).switchTo, "black", "a lobby computer room too");
+  assert.equal(controlsFor({ ...BASE, mode: "waiting", canSwitchSides: false }).switchTo, null);
   assert.equal(controlsFor({ ...BASE, slot: "B" }).waitForFriend, false, "only the creator");
   assert.equal(controlsFor({ ...BASE, mode: "waiting" }, { watching: true }).playHere, false, "never a watcher");
   assert.equal(controlsFor(null).playHere, false);

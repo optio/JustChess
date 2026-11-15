@@ -57,6 +57,14 @@ second player can let the computer play seat B until a friend arrives.
   mark goes and the game version is bumped, so an engine reply still in flight
   is discarded. The caller counts the current game (``games.mark_counted``).
 - Plain computer rooms (made from the lobby) still refuse every other token.
+
+Switching sides (2026-11-15 follow-up, ``switch_side``): seat A may take the
+other colour of the current game. Before a friend has joined (mode waiting or
+pass-along) only while no move has been made; against the computer (stand-in
+or lobby room) at any time while the game is playing, taking over the
+computer's pieces in the current position. A computer game switched after its
+first move stops counting toward the score. The version is bumped, so an
+engine reply still in flight is discarded.
 """
 
 from __future__ import annotations
@@ -576,16 +584,31 @@ def set_mode(conn: sqlite3.Connection, code: str, seat: Seat, mode: str, now: fl
         conn.execute("DELETE FROM seats WHERE room_code = ? AND slot = 'B' AND is_computer = 1", (code,))
         conn.execute("UPDATE rooms SET mode = ?, computer_level = NULL WHERE code = ?", (MODE_WAITING, code))
         conn.execute("DELETE FROM room_stand_ins WHERE room_code = ?", (code,))
-        games.bump_version(conn, games.current_game(conn, code))
+        _back_to_waiting(conn, code)
         return ModeChange(MODE_WAITING, changed=True)
     conn.execute("UPDATE rooms SET mode = ? WHERE code = ?", (mode, code))
     if mode == MODE_PASS_ALONG:
         games.start_pass_along(conn, games.current_game(conn, code), now)
         return ModeChange(mode, changed=True)
+    _back_to_waiting(conn, code)
     pending = pending_request(conn, code, now).request
     if pending is not None:
         _set_request_status(conn, pending.request_id, DECLINED, now)
     return ModeChange(mode, changed=True, declined_request=pending is not None)
+
+
+def _back_to_waiting(conn: sqlite3.Connection, code: str) -> None:
+    """Back to waiting for a friend: a game with no moves waits again (status waiting, counted).
+
+    A game with moves keeps its position; moves stay refused until a friend
+    takes seat B (``games.require_opponent``), who continues from there.
+    """
+    game = games.current_game(conn, code)
+    if game.status == games.PLAYING and not games.load_moves(conn, game.game_id):
+        conn.execute("UPDATE games SET status = ?, started_at = NULL, counted = 1, version = version + 1 "
+                     "WHERE game_id = ?", (games.WAITING, game.game_id))
+    else:
+        games.bump_version(conn, game)
 
 
 def _start_stand_in(conn: sqlite3.Connection, code: str, room: Room, level: str, now: float) -> ModeChange:
@@ -602,6 +625,41 @@ def _start_stand_in(conn: sqlite3.Connection, code: str, room: Room, level: str,
     if not games.start_pass_along(conn, game, now):  # a waiting game starts, uncounted; else keep the position
         games.bump_version(conn, game)
     return ModeChange(MODE_COMPUTER, changed=True)
+
+
+CANNOT_SWITCH = "You can't switch sides now"
+UNKNOWN_COLOUR = "Unknown colour"
+
+
+def can_switch_side(conn: sqlite3.Connection, code: str, room: Room, game: games.Game) -> bool:
+    """True when seat A may take the other colour in the current game (see the module docstring)."""
+    if game.status == games.FINISHED:
+        return False
+    if room.mode == MODE_COMPUTER:
+        return game.status == games.PLAYING
+    if room.mode not in (MODE_WAITING, MODE_PASS_ALONG) or "B" in get_seats(conn, code):
+        return False
+    return not games.load_moves(conn, game.game_id)
+
+
+def switch_side(conn: sqlite3.Connection, code: str, seat: Seat, colour: str) -> bool:
+    """Seat A takes ``colour`` in the current game; return True when anything changed."""
+    if colour not in games.COLOURS:
+        raise DomainError(400, UNKNOWN_COLOUR)
+    if seat.slot != "A":
+        raise DomainError(403, CREATOR_ONLY)
+    room, game = get_room(conn, code), games.current_game(conn, code)
+    if game.colour_of("A") == colour:
+        return False
+    if not can_switch_side(conn, code, room, game):
+        raise DomainError(409, CANNOT_SWITCH)
+    flipped = "B" if game.white_slot == "A" else "A"
+    played = bool(games.load_moves(conn, game.game_id))
+    # A computer game switched after its first move no longer counts toward the score.
+    counted = 0 if (room.mode == MODE_COMPUTER and played) else int(game.counted)
+    conn.execute("UPDATE games SET white_slot = ?, counted = ?, version = version + 1 WHERE game_id = ?",
+                 (flipped, counted, game.game_id))
+    return True
 
 
 # --- P2 U3: join requests (BR2.1-BR2.4) -----------------------------------

@@ -53,7 +53,7 @@ def test_creator_plays_both_colours_then_accepts_a_join_request(live_server: str
     assert creator.js("document.querySelector('[data-testid=join-request-banner]').getAttribute('role')") == "alert"
     creator.click("join-request-accept")
 
-    joiner.wait(f"{STATUS} === 'Waiting for White'", timeout=20, what="the joiner seated as Black")
+    joiner.wait(f"{STATUS} === 'Waiting for White to move'", timeout=20, what="the joiner seated as Black")
     creator.wait(f"{STATUS} === 'Your move'", what="the creator back to plain play as White")
     creator.wait("document.querySelector('[data-testid=join-request-banner]').hidden", what="the banner gone")
     assert joiner.js("document.querySelector('.board-row .sq').dataset.square") == "h1", "the joiner's board is Black's"

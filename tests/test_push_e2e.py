@@ -69,7 +69,7 @@ def test_real_web_push_reaches_a_closed_room_page(push_server: str, browser: Cdp
     code = white.wait("(location.pathname.match(/^\\/r\\/([A-Z0-9]{6})$/) || [])[1]", what="the room address")
     black.go(f"{push_server}/r/{code}")
     white.wait(f"{STATUS} === 'Your move'", what="white's turn")
-    black.wait(f"{STATUS} === 'Waiting for White'", what="black seated")
+    black.wait(f"{STATUS} === 'Waiting for White to move'", what="black seated")
 
     black.click("settings-notifications")
     black.wait("navigator.serviceWorker.getRegistration('/').then(r => !!(r && r.active))", what="the active worker")

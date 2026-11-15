@@ -45,18 +45,9 @@
  *     U4: what app.js does with a "refused" result: board.reject(), apply the
  *     snapshot when there is one, and flash the message when there is one.
  *
- *   playComputer({ api, seats, level, colour })   P2 U4 BR3.5, W1: "Play" in the lobby panel.
- *     The saved computer seat for the level is reopened: its game is resumed
- *     when unfinished (the colour choice is ignored), or a rematch in the chosen
- *     colour starts when it is finished. A saved seat the server answers 404 for
- *     is dropped. Without one, a computer room is created and its seat saved
- *     with kind "computer" and the level. Resolves with:
- *       { kind: "open", code, plan: "reopen" | "rematch" | "create", created? }   created: the create answer
- *       { kind: "failed", message }
  */
 
 import { NETWORK_MESSAGE } from "./api.js";
-import { findComputerSeat } from "./computer.js";
 import { runBeforeMove } from "./hooks.js";
 import { refusalKind } from "./pass-along.js";
 
@@ -182,37 +173,6 @@ export function applyRefusal(result, { board, flash = () => {}, applySnapshot = 
   board.reject();
   if (result.snapshot) applySnapshot(result.snapshot);
   if (result.message) flash(result.message);
-}
-
-async function reopenComputerSeat({ api, seats, saved, colour }) {
-  const read = await api.state(saved.code, saved.token);
-  if (read.status === 404) {
-    seats.remove(saved.code, saved.token);
-    return null; // the room is gone (30 days idle): create a new one
-  }
-  if (!read.ok) return { kind: "failed", message: read.message || NETWORK_MESSAGE };
-  if (read.data.status !== "finished" || read.data.slot !== "A") return { kind: "open", code: saved.code, plan: "reopen" };
-  const again = await api.rematch(saved.code, saved.token, colour);
-  if (!again.ok && again.status !== 409) return { kind: "failed", message: again.message || NETWORK_MESSAGE };
-  return { kind: "open", code: saved.code, plan: "rematch" }; // 409: another tab already started it
-}
-
-export async function playComputer({ api, seats, level, colour }) {
-  const saved = findComputerSeat(seats, level);
-  if (saved) {
-    const reopened = await reopenComputerSeat({ api, seats, saved, colour });
-    if (reopened) return reopened;
-  }
-  const created = await api.createComputerRoom(level, colour);
-  if (!created.ok) return { kind: "failed", message: created.message || NETWORK_MESSAGE };
-  const { code, token, slot } = created.data;
-  try {
-    seats.set(code, { token, slot, kind: "computer", computerLevel: level });
-  } catch (error) {
-    console.error("JustChess: the computer room answer was not valid", error && error.name);
-    return { kind: "failed", message: "Something went wrong. Try again." };
-  }
-  return { kind: "open", code, plan: "create", created: created.data };
 }
 
 export async function submitMove({ api, code, token, uci, snapshot, check = runBeforeMove, isCurrent = () => true }) {

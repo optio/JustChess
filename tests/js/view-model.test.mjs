@@ -9,6 +9,7 @@ import {
   STATUS_TEXT,
   announcement,
   endTitle,
+  lastSeenPhrase,
   resultText,
   viewModel,
 } from "../../static/js/view-model.js";
@@ -59,13 +60,15 @@ test("the status line follows the BR3.4 order: game over, reconnecting, waiting,
   assert.deepEqual([check.status.text, check.status.tone, check.status.dot], ["Check — your move", "baize", "red"]);
 
   const theirs = viewModel(snap(AFTER_D4));
-  assert.deepEqual([theirs.status.text, theirs.status.tone, theirs.status.sub], ["Waiting for Black", "surface", null]);
+  assert.deepEqual([theirs.status.text, theirs.status.tone, theirs.status.sub], ["Waiting for Black to move", "surface", null]);
   assert.equal(theirs.status.dot, "hourglass", "an hourglass while the opponent has to answer");
+  const named = viewModel(snap({ ...AFTER_D4, seats: { A: { presence: "connected", colour: "white" }, B: { presence: "connected", colour: "black", nickname: "Bob" } } }));
+  assert.equal(named.status.text, "Waiting for Bob (Black) to move", "the opponent's nickname when known");
   assert.equal(theirs.board.interactive, false);
   assert.deepEqual(theirs.board.legalMoves, []);
 
   const away = viewModel(snap({ ...AFTER_D4, seats: { A: { presence: "connected", colour: "white" }, B: { presence: "away", colour: "black" } } }));
-  assert.deepEqual([away.status.text, away.status.sub, away.status.dot], ["Waiting for Black", "Black is away", "hollow"]);
+  assert.deepEqual([away.status.text, away.status.sub, away.status.dot], ["Waiting for Black to move", "Black is away", "hollow"]);
 
   const unknownEnd = viewModel(snap({ status: "finished", endReason: "meteor", result: "1-0" }));
   assert.equal(unknownEnd.status.text, "Game over");
@@ -195,4 +198,37 @@ test("the announcement names the move and whose turn it is; notices map to their
   assert.equal(vm.notices[2].action, "startNew");
   assert.throws(() => viewModel(null), TypeError);
   assert.throws(() => viewModel({ fen: START }), /missing/);
+});
+
+test("players line names both sides when known; a room left back to waiting says it waits; joins are announced only for people", () => {
+  const named = viewModel(snap({ seats: { A: { presence: "connected", colour: "white", nickname: "Alice" }, B: { presence: "connected", colour: "black", nickname: "Bob" } } }));
+  assert.deepEqual(named.players, { white: "You (Alice)", black: "Opponent (Bob)" });
+  const plain = viewModel(snap());
+  assert.deepEqual(plain.players, { white: "You", black: "Opponent" });
+
+  const left = viewModel(snap({ ...AFTER_D4, mode: "waiting", status: "playing", seats: { A: { presence: "connected", colour: "white" }, B: { presence: "empty", colour: "black" } } }));
+  assert.equal(left.status.text, STATUS_TEXT.waiting, "nobody joined: still waiting, even with a game under way");
+  assert.equal(left.status.sub, "They continue from this position.");
+
+  const waiting = snap({ status: "waiting", mode: "waiting", seats: { A: { presence: "connected", colour: "white" }, B: { presence: "empty", colour: "black" } } });
+  const passAlong = { ...waiting, status: "playing", mode: "pass_along", version: 1 };
+  assert.equal(announcement(waiting, passAlong, "white"), null, "pass-along is no opponent joining");
+  const joined = { ...waiting, status: "playing", mode: "online", version: 1, seats: { ...waiting.seats, B: { presence: "connected", colour: "black" } } };
+  assert.equal(announcement(waiting, joined, "white"), "Your opponent joined.");
+});
+
+test("last seen is relative and vague, shown while the opponent to move is away", () => {
+  const cases = [[0, "a few minutes ago"], [14 * 60, "a few minutes ago"], [15 * 60, "more than 15 minutes ago"],
+    [45 * 60, "more than 30 minutes ago"], [90 * 60, "about an hour ago"], [5 * 3600, "hours ago"],
+    [30 * 3600, "a day ago"], [5 * 86400, "days ago"]];
+  for (const [seconds, phrase] of cases) assert.equal(lastSeenPhrase(seconds), phrase, `${seconds} s`);
+  assert.equal(lastSeenPhrase(null), null);
+  assert.equal(lastSeenPhrase(undefined), null);
+  const away = viewModel(snap({ ...AFTER_D4, seats: { A: { presence: "connected", colour: "white" },
+    B: { presence: "away", colour: "black", nickname: "Bob", lastSeenSeconds: 3 * 3600 } } }));
+  assert.equal(away.status.text, "Waiting for Bob (Black) to move");
+  assert.equal(away.status.sub, "Bob was last seen hours ago");
+  const awayNoName = viewModel(snap({ ...AFTER_D4, seats: { A: { presence: "connected", colour: "white" },
+    B: { presence: "away", colour: "black", lastSeenSeconds: 20 * 60 } } }));
+  assert.equal(awayNoName.status.sub, "Black was last seen more than 15 minutes ago");
 });

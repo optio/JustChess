@@ -71,6 +71,9 @@ test("join requests sort first, then unfinished by newest activity, then finishe
 
 test("labels and meta lines for a joined friend, a waiting friend, a computer room and a finished game", () => {
   assert.equal(rowModel(summary(), NOW).label, "Friend · ABC123");
+  assert.equal(rowModel(summary({ opponentNickname: "Bob" }), NOW).label, "Bob · ABC123", "the friend's nickname when known");
+  assert.equal(rowModel(summary({ opponentNickname: "  " }), NOW).label, "Friend · ABC123");
+  assert.equal(rowModel(summary({ passAlong: true, opponent: "waiting" }), NOW).label, "Pass-along · ABC123");
   assert.equal(rowModel(summary(), NOW).meta, "You play White · last move 4 min ago");
   const waiting = rowModel(summary({ opponent: "waiting", status: "waiting", yourTurn: false }), NOW);
   assert.equal(waiting.label, "Waiting for a friend · ABC123");

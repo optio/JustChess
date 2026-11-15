@@ -19,7 +19,7 @@ def test_move_shows_saving_then_hourglass_until_the_opponent_answers(live_server
     assert white.js("document.querySelector('[data-testid=status]').getAttribute('aria-busy')") == "true"
     assert white.js("window.__moveCalls") == 1
     white.js("window.__releaseMove()")
-    white.wait(f"{STATUS} === 'Waiting for Black'", what="waiting status")
+    white.wait(f"{STATUS} === 'Waiting for Black to move'", what="waiting status")
     assert white.js(DOT) == "hourglass"
     assert white.js("document.querySelector('[data-testid=status]').getAttribute('aria-busy')") == "false"
     black.wait(f"{STATUS} === 'Your move'", what="black to move")
@@ -86,4 +86,57 @@ def test_battery_lesson_is_listed_and_plays_to_mate(live_server, browser):
         page.wait(YOUR_MOVE, what=f"the learner's turn after {reply}")
     page.move("d3h7")
     page.wait(f"{TRAINER_MESSAGE}.startsWith('Line complete')", what="the mate completes the line")
+    assert page.problems() == []
+
+
+def test_switch_sides_before_a_friend_joins_and_version_in_footer(live_server, browser):
+    page = Page(browser, "creator")
+    code = _start_room(page, live_server)
+    assert page.js("document.querySelector('[data-testid=app-version]').textContent").startswith("Version ")
+    page.wait("!document.querySelector('[data-testid=switch-side]').hidden", what="the switch button")
+    assert page.js("document.querySelector('[data-testid=switch-side]').textContent") == "Switch colour"
+    page.click("switch-side")
+    page.wait("document.querySelector('[data-testid=players]').textContent.includes('You play Black')", what="now Black")
+    assert page.js("document.querySelector('[data-testid=switch-side]').textContent") == "Switch colour"
+    # Cancelling the difficulty dialog leaves the room waiting.
+    page.click("stand-in-start")
+    page.wait("document.querySelector('[data-testid=level-dialog]').open", what="the difficulty dialog")
+    page.click("level-cancel")
+    page.wait("!document.querySelector('[data-testid=level-dialog]').open", what="dialog closed")
+    assert page.js(f"{STATUS}").startswith("Waiting for your opponent")
+    friend = Page(browser, "friend")
+    friend.go(f"{live_server}/r/{code}")
+    friend.wait(f"{STATUS} === 'Your move'", what="the friend plays White and moves first")
+    page.wait("document.querySelector('[data-testid=switch-side]').hidden", what="no switching once a friend joined")
+    for p in (page, friend):
+        assert p.problems() == []
+
+
+def test_your_games_names_pass_along_games(live_server, browser):
+    page = Page(browser, "pass-along list")
+    code = _start_room(page, live_server)
+    page.click("pass-along-start")
+    page.wait("!document.querySelector('[data-testid=pass-along-stop]').hidden", what="pass-along on")
+    page.click("home-link")
+    page.wait(f"(document.querySelector('[data-testid=your-games] a[href=\"/r/{code}\"]')?.textContent || '').includes('Pass-along')",
+              what="the pass-along row label")
+    assert page.problems() == []
+
+
+def test_back_to_waiting_after_pass_along_still_waits_and_labels(live_server, browser):
+    page = Page(browser, "creator")
+    _start_room(page, live_server)
+    assert page.js("document.querySelector('[data-testid=pass-along-instead]').textContent") == "Or instead:"
+    assert not page.js("document.querySelector('[data-testid=pass-along-instead]').hidden")
+    # "Switch colour" is a small link right after the players line.
+    assert page.js("document.querySelector('[data-testid=switch-side]').closest('.players') !== null")
+    assert page.js("document.querySelector('[data-testid=player-copy]').textContent") == "Copy my unique player link"
+    assert page.js("document.querySelector('[data-testid=player-nickname]').placeholder") == "Your nickname"
+    page.click("pass-along-start")
+    page.wait("!document.querySelector('[data-testid=pass-along-stop]').hidden", what="pass-along on")
+    assert page.js("document.querySelector('[data-testid=pass-along-instead]').hidden")
+    page.click("pass-along-stop")
+    page.wait(f"{STATUS}.startsWith('Waiting for your opponent')", what="still waiting for a friend (the bug)")
+    assert page.js("document.querySelector('[data-testid=notify-banner]').hidden"), "no 'opponent joined' banner"
+    assert not page.js("document.querySelector('[data-testid=pass-along-instead]').hidden")
     assert page.problems() == []

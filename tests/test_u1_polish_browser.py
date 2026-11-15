@@ -76,7 +76,7 @@ def _two_players(browser: Cdp, live: str, black_viewport=(390, 844, True)) -> tu
     black = Page(browser, "player B (phone 390 px)", viewport=black_viewport)
     code = _start_room(white, live)
     black.go(f"{live}/r/{code}")
-    black.wait(f"{STATUS} === 'Waiting for White'", what="black's first status")
+    black.wait(f"{STATUS} === 'Waiting for White to move'", what="black's first status")
     white.wait(f"{STATUS} === 'Your move'", what="white's turn")
     for page in (white, black):  # no blunder dialog in the way of these short lines
         page.js("(() => { const s = document.querySelector('[data-testid=settings-blunderWarnings]');"

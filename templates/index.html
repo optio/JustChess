@@ -34,7 +34,7 @@
       <form class="player-name-form" aria-label="Your nickname" aria-busy="true">
         <div class="nickname-editor" data-testid="player-editor" hidden>
           <label class="visually-hidden" for="player-nickname">Your nickname</label>
-          <input id="player-nickname" data-testid="player-nickname" maxlength="24" autocomplete="nickname" placeholder="Nickname" aria-describedby="player-name-message">
+          <input id="player-nickname" data-testid="player-nickname" maxlength="24" autocomplete="nickname" placeholder="Your nickname" aria-describedby="player-name-message">
           <button class="footer-icon nickname-save" type="submit" data-testid="player-save" aria-label="Save nickname" title="Save nickname" hidden>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M8 3v5h7V3"/><path d="M7 21v-7h10v7"/></svg>
           </button>
@@ -85,12 +85,13 @@
   <footer id="player-footer" class="player-footer" data-testid="player-footer" aria-label="Your player" hidden>
     <div class="player-footer-inner">
       <div class="player-links" role="group" aria-label="Your private player link">
-        <button class="footer-action" type="button" data-testid="player-copy" disabled>Copy player link</button>
+        <button class="footer-action" type="button" data-testid="player-copy" disabled>Copy my unique player link</button>
         <button class="footer-action" type="button" data-testid="player-regenerate" title="Replace old saved player links" disabled>New link</button>
         <button class="footer-icon footer-help" type="button" data-testid="player-help" aria-label="About your player link" title="About your player link"><span aria-hidden="true">?</span></button>
       </div>
     </div>
     <p class="player-footer-note">Your nickname and games, on any device. Keep your player link private.</p>
+    <p class="player-footer-version" data-testid="app-version">Version <span class="t-code">{{ version }}</span></p>
     <p id="player-message" class="player-footer-message" data-testid="player-message" role="status"></p>
   </footer>
   <dialog class="share-dialog player-dialog" id="player-help-dialog" aria-labelledby="player-help-title" aria-describedby="player-help-description" data-testid="player-help-dialog">
@@ -98,7 +99,7 @@
       <h2 class="share-title" id="player-help-title">Your player, without an account</h2>
       <div id="player-help-description" class="player-help-copy">
         <p>Your private player link restores your nickname and saved games on another device. Both devices stay signed in.</p>
-        <p>Use <strong>Copy player link</strong>, or copy the field below. To bookmark it, save the <strong>Bookmark my player</strong> link itself. Open that private link on your other device.</p>
+        <p>Use <strong>Copy my unique player link</strong>, or copy the field below. To bookmark it, save the <strong>Bookmark my player</strong> link itself. Open that private link on your other device.</p>
         <p>Keep it private: anyone holding it can use your identity and games.</p>
         <p><strong>New link</strong> replaces old saved links and bookmarks. Devices already signed in stay usable.</p>
         <p>The private link is cleared from the address bar after recovery. Bookmarking the ordinary page afterwards will not save your player.</p>

@@ -58,7 +58,23 @@ def test_a_found_summary_has_every_field(client, clock):
         "colour": "white", "status": "playing", "yourTurn": True, "result": None, "endReason": None,
         "lastActivityAt": clock(), "endedAt": None,
         "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "pendingJoinRequest": False,
+        "opponentNickname": None, "passAlong": False,
     }
+
+
+def test_summary_names_the_friend_and_marks_pass_along(client):
+    a, b = two_player_room(client)
+    player = client.post("/api/player/create", json={}).json()
+    headers = {"X-Player-Token": player["token"]}
+    assert client.post("/api/player/seats", json={"code": a["code"], "token": b["token"]}, headers=headers).status_code == 200
+    assert client.post("/api/player/nickname", json={"nickname": "Bob"}, headers=headers).status_code == 200
+    [mine] = summaries_for(client, (a["code"], a["token"]))
+    assert (mine["opponentNickname"], mine["passAlong"]) == ("Bob", False)
+
+    solo = client.post("/api/rooms").json()
+    assert client.post(f"/api/rooms/{solo['code']}/mode", json={"token": solo["token"], "mode": "pass_along"}).status_code == 200
+    [practice] = summaries_for(client, (solo["code"], solo["token"]))
+    assert (practice["passAlong"], practice["opponentNickname"]) == (True, None)
 
 
 def test_unknown_room_and_wrong_token_answer_the_same_not_found_shape(client):

@@ -185,6 +185,7 @@ from justchess import outbox, work
 from justchess import engine as engine_module
 from justchess import gameplay as gameplay_module
 from justchess import vapid as vapid_keys
+from justchess.version import resolve_version
 from justchess.db import Database, prepare_configured_database
 from justchess.live import CLOSE_POLICY, CLOSE_SERVER_ERROR, RECEIVE_TIMEOUT, LiveHub, SnapshotFor
 from justchess.security import MAX_BODY_BYTES, BodyLimitMiddleware, OriginGuardMiddleware
@@ -247,6 +248,12 @@ class SeatRequest(BaseModel):
     """Body of a seat action: the seat token."""
 
     token: str = Field(min_length=1, max_length=TOKEN_MAX)
+
+
+class SideRequest(SeatRequest):
+    """Switch sides: seat A's token and the colour to play (checked by ``rooms.switch_side``)."""
+
+    colour: str = Field(min_length=1, max_length=8)
 
 
 class MoveRequest(SeatRequest):
@@ -447,7 +454,11 @@ class Services:
         room_view = games.RoomView(code, {"A": room.wins_a, "B": room.wins_b, "draws": room.draws},
                                    presence, rooms.rematch_state(room, presence),
                                    mode=room.mode, computer_level=room.computer_level, join_request=join_request,
-                                   computer=computer_view, stand_in=stand_in)
+                                   computer=computer_view, stand_in=stand_in,
+                                   can_switch_side=rooms.can_switch_side(conn, code, room, game),
+                                   # whole minutes since each person's seat was last seen (coarse on the page)
+                                   last_seen={slot: int(max(0.0, now - seat.last_seen_at) // 60) * 60
+                                              for slot, seat in seats.items() if not seat.is_computer})
         cache: dict[str | None, dict] = {}
         nicknames = players.names(conn, code)
 
@@ -766,6 +777,11 @@ def _finish_score(conn: sqlite3.Connection, code: str, game: games.Game) -> None
         rooms.record_result(conn, code, game.result, game.white_slot, counted=game.counted)
 
 
+def _side_to_move(game: games.Game) -> str:
+    """``white`` or ``black``: whose turn it is in the game's stored position."""
+    return "black" if game.fen.split()[1] == "b" else "white"
+
+
 def _is_pass_along(conn: sqlite3.Connection, code: str) -> bool:
     return rooms.get_room(conn, code).mode == rooms.MODE_PASS_ALONG
 
@@ -954,7 +970,8 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
     (default ``random.SystemRandom()``). The page's keys are put in the app shell.
     P2 U6: ``endgames_dir`` is the endgame folder (default ``endgames/`` at the project root).
     """
-    settings = gameplay if gameplay is not None else gameplay_module.load_gameplay()
+    settings = gameplay_module.with_env_overrides(
+        gameplay if gameplay is not None else gameplay_module.load_gameplay(), os.environ)
     lesson_store = lessons.LessonStore(_resolve_path(lessons_dir, lambda: lessons.default_lessons_dir(ROOT)), clock)
     puzzle_store = puzzles.PuzzleStore(_resolve_path(puzzles_dir, lambda: puzzles.default_puzzles_dir(ROOT)))
     endgame_store = endgames.EndgameStore(_resolve_path(endgames_dir, lambda: endgames.default_endgames_dir(ROOT)))
@@ -1049,10 +1066,12 @@ def create_app(*, db_path: PathSetting = None, clock: Callable[[], float] = time
 
 def _add_page_routes(app: FastAPI, templates: Jinja2Templates, settings: gameplay_module.Gameplay) -> None:
     client_gameplay = settings.client_json()
+    version = resolve_version()  # read once: the short commit this build runs (footer)
+    app.state.version = version
 
     def page(request: Request):
-        """The app shell, with gameplay.yaml's page settings (static/js/gameplay.js reads them)."""
-        return templates.TemplateResponse(request, "index.html", {"gameplay": client_gameplay})
+        """The app shell, with gameplay.yaml's page settings (static/js/gameplay.js reads them) and the version."""
+        return templates.TemplateResponse(request, "index.html", {"gameplay": client_gameplay, "version": version})
 
     @app.get("/", response_class=HTMLResponse)
     def home(request: Request):
@@ -1117,7 +1136,8 @@ def _add_page_routes(app: FastAPI, templates: Jinja2Templates, settings: gamepla
                 logger.warning("Health check: the database did not answer")
         engine_ok = bool(svc is not None and svc.engine.status()["available"])
         body = {"status": "ok" if database_ok and engine_ok else "degraded",
-                "database": "ok" if database_ok else "down", "engine": "available" if engine_ok else "unavailable"}
+                "database": "ok" if database_ok else "down", "engine": "available" if engine_ok else "unavailable",
+                "version": getattr(request.app.state, "version", None)}
         return JSONResponse(body, status_code=200 if database_ok and engine_ok else 503,
                             headers={"Cache-Control": "no-store"})
 
@@ -1396,14 +1416,18 @@ def _add_room_routes(app: FastAPI) -> None:
         if kind not in (None, "friend"):
             raise DomainError(400, UNKNOWN_ROOM_KIND)
 
+        svc = services(request)
+        setting = svc.gameplay.creator_colour  # random by default: the creator plays either colour
+        colour = svc.colour_chooser(games.COLOURS) if setting == "random" else setting
+
         def action(conn: sqlite3.Connection, now: float) -> tuple[str, str]:
             room, _seat, token = rooms.create_room(conn, now)
-            games.create_first_game(conn, room.code, now)
+            games.create_first_game(conn, room.code, now, white_slot="A" if colour == "white" else "B")
             return room.code, token
 
-        code, token = await services(request).mutate(None, action)
+        code, token = await svc.mutate(None, action)
         logger.info("Created room %s", code)
-        return JSONResponse({"code": code, "token": token, "slot": "A", "colour": "white"},
+        return JSONResponse({"code": code, "token": token, "slot": "A", "colour": colour},
                             status_code=201, headers={"Location": f"/r/{code}"})
 
     @app.post("/api/rooms/{code}/join")
@@ -1428,20 +1452,23 @@ def _add_room_routes(app: FastAPI) -> None:
                 return _ask_to_join(svc, conn, code, token, address, now)
             joined = rooms.join_room(conn, code, token, now)
             game = games.current_game(conn, code)
+            event = None
             if joined.created:
                 games.mark_playing(conn, game, now)
                 games.mark_counted(conn, game)
                 rooms.touch_room(conn, code, now)
-                outbox.enqueue(conn, notifications.joined_event(code), now)
-            return joined, game.colour_of(joined.seat.slot)
+                creator = game.colour_of("A")
+                event = notifications.joined_event(code, creator, _side_to_move(game) == creator)
+                outbox.enqueue(conn, event, now)
+            return joined, game.colour_of(joined.seat.slot), event
 
         result = await svc.mutate(code, action, viewer_token=token)
         if isinstance(result, rooms.JoinRequestOutcome):
             return await _join_request_answer(svc, background, code, result)
-        joined, colour = result
+        joined, colour, event = result
         if joined.created:
             await svc.hub.broadcast(code)
-            svc.schedule_alert(background, notifications.joined_event(code))
+            svc.schedule_alert(background, event)
         return {"code": code, "token": joined.token, "slot": joined.seat.slot, "colour": colour}
 
     @app.get("/api/rooms/{code}")
@@ -1641,6 +1668,8 @@ def _add_game_routes(app: FastAPI) -> None:
             seat = rooms.authorize_seat(conn, code, body.token)
             mode = rooms.get_room(conn, code).mode
             pass_along, against_computer = mode == rooms.MODE_PASS_ALONG, mode == rooms.MODE_COMPUTER
+            if mode == rooms.MODE_WAITING and "B" not in rooms.get_seats(conn, code):
+                raise DomainError(409, games.WAITING_FOR_OPPONENT)  # e.g. after leaving pass-along mid-game
             if against_computer and not svc.engine.available:
                 raise DomainError(503, ENGINE_DOWN)  # BR5.5: the game would wait forever on the computer's turn
             game = games.apply_move(conn, games.current_game(conn, code), seat.slot, body.uci, body.version, now,
@@ -1709,6 +1738,23 @@ def _add_game_routes(app: FastAPI) -> None:
             return seat.slot, True, notifications.event_after_claim(code, seat.slot, game)
 
         return await run_and_broadcast(request, code, body.token, action, background)
+
+    @app.post("/api/rooms/{code}/side")
+    async def switch_side(request: Request, code: str, body: SideRequest):
+        """Seat A takes ``colour``: before a friend joins and before the first move, or against the computer any time.
+
+        Answers seat A's snapshot; the computer's reply is asked for at once when it is now its turn.
+        """
+        code = rooms.normalize_code(code)
+
+        def action(conn: sqlite3.Connection, now: float) -> ActionResult:
+            seat = rooms.authorize_seat(conn, code, body.token)
+            changed = rooms.switch_side(conn, code, seat, body.colour)
+            if changed:
+                _after_action(conn, code, seat.slot, now)
+            return seat.slot, changed, None
+
+        return await run_and_broadcast(request, code, body.token, action, reply=True)
 
     @app.post("/api/rooms/{code}/rematch")
     async def rematch(request: Request, code: str, body: RematchRequest):

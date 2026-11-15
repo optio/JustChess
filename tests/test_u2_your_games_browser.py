@@ -38,7 +38,7 @@ def test_main_screen_lists_both_rooms_and_the_your_move_row_opens_its_game(live_
     waiting_code = _start_room(player_a, live_server)
     playing_code = _start_room(player_a, live_server)
     player_b.go(f"{live_server}/r/{playing_code}")
-    player_b.wait(f"{STATUS} === 'Waiting for White'", what="black's first status")
+    player_b.wait(f"{STATUS} === 'Waiting for White to move'", what="black's first status")
 
     player_a.go(live_server + "/")
     player_a.wait("document.querySelector('[data-testid=lobby-title], #lobby-title')?.textContent"
@@ -50,7 +50,7 @@ def test_main_screen_lists_both_rooms_and_the_your_move_row_opens_its_game(live_
     assert rows[playing_code]["pill"] == "Your move" and rows[playing_code]["label"] == f"Friend · {playing_code}"
     assert rows[waiting_code]["pill"] == "Waiting" and rows[waiting_code]["label"] == f"Waiting for a friend · {waiting_code}"
     assert all(row["height"] >= 72 for row in rows.values()), "each row is at least 72 px tall"
-    assert player_a.js("document.querySelector('[data-testid=learn-opening]').textContent") == "Train"
+    assert player_a.js("document.querySelector('[data-testid=learn-opening]').textContent") == "Train tactics"
     assert player_a.js(ROWS)[0]["code"] == playing_code, "the newest activity comes first"
 
     player_a.js(f"document.querySelector('[data-testid=your-games-row][data-code=\"{playing_code}\"]').click()")

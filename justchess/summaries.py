@@ -35,9 +35,9 @@ import json
 import re
 import sqlite3
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from justchess import DomainError, games, rooms
+from justchess import DomainError, games, players, rooms
 from justchess.db import Database
 
 PATH = "/api/rooms/summaries"
@@ -94,6 +94,7 @@ class _RoomFacts:
     seats: dict[str, rooms.Seat]
     game: games.Game
     pending_request: bool
+    nicknames: dict[str, str] = field(default_factory=dict)  # slot -> the seat's player nickname, when it has one
 
 
 def _load_room(conn: sqlite3.Connection, code: str, now: float) -> _RoomFacts | None:
@@ -107,7 +108,8 @@ def _load_room(conn: sqlite3.Connection, code: str, now: float) -> _RoomFacts | 
         "SELECT 1 FROM join_requests WHERE room_code = ? AND status = 'pending' AND expires_at > ?",
         (code, now),
     ).fetchone() is not None
-    return _RoomFacts(rooms.get_room(conn, code), rooms.get_seats(conn, code), game, pending)
+    names = {slot: name for slot, name in players.names(conn, code).items() if name}
+    return _RoomFacts(rooms.get_room(conn, code), rooms.get_seats(conn, code), game, pending, names)
 
 
 def _seat_for(facts: _RoomFacts, token: str) -> rooms.Seat | None:
@@ -160,6 +162,9 @@ def summarize(facts: _RoomFacts, seat: rooms.Seat) -> dict[str, object]:
         "endedAt": game.ended_at,
         "fen": game.fen,
         "pendingJoinRequest": facts.pending_request and seat.slot == "A",
+        # The friend's nickname, when they joined and set one (never the computer's seat).
+        "opponentNickname": facts.nicknames.get(rooms.other_slot(seat.slot)) if _opponent(facts, seat.slot) == "joined" else None,
+        "passAlong": room.mode == rooms.MODE_PASS_ALONG,
     }
 
 

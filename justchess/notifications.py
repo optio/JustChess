@@ -147,9 +147,10 @@ def end_text(end_reason: str | None) -> str:
     return f"Game over — {END_TITLES.get(end_reason or '', 'Game over')}"
 
 
-def joined_event(code: str) -> AlertEvent:
-    """Seat B took its seat: seat A (White in game 1) is told."""
-    return _event("joined", code, "A", "joined", TITLE_JOINED, "The game has started. You play White: your move.")
+def joined_event(code: str, colour: str = "white", your_move: bool = True) -> AlertEvent:
+    """Seat B took its seat: seat A (the creator, playing ``colour``) is told."""
+    body = f"The game has started. You play {colour.capitalize()}" + (": your move." if your_move else ".")
+    return _event("joined", code, "A", "joined", TITLE_JOINED, body)
 
 
 def join_request_event(code: str, request_id: int) -> AlertEvent:

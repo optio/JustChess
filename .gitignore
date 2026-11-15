@@ -261,3 +261,5 @@ aidlc/spaces/*/intents/*/.aidlc-*
 aidlc/diagnostics/
 .claude/settings.local.json
 # END AI-DLC:gitignore
+# written by the Vercel build (justchess.version)
+build-version.txt

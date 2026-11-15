@@ -120,7 +120,10 @@ export function relativeTime(thenMs, nowMs) {
 
 function label(summary) {
   if (summary.kind === "computer") return `Computer, ${LEVEL_NAMES[summary.computerLevel] || "unknown level"}`;
-  return summary.opponent === "joined" ? `Friend · ${summary.code}` : `Waiting for a friend · ${summary.code}`;
+  if (summary.passAlong) return `Pass-along · ${summary.code}`;
+  if (summary.opponent !== "joined") return `Waiting for a friend · ${summary.code}`;
+  const name = typeof summary.opponentNickname === "string" ? summary.opponentNickname.trim() : "";
+  return name ? `${name} · ${summary.code}` : `Friend · ${summary.code}`;
 }
 
 function pill(summary) {
@@ -129,7 +132,10 @@ function pill(summary) {
     const text = RESULT_PILLS[summary.result];
     return text ? { text, tone: summary.result } : { text: "Ended", tone: "ended" };
   }
-  if (summary.status === "waiting") return { text: "Waiting", tone: "waiting" };
+  // A friend room nobody joined yet still waits, also after a left pass-along game.
+  if (summary.status === "waiting" || (summary.kind !== "computer" && summary.opponent === "waiting" && !summary.passAlong)) {
+    return { text: "Waiting", tone: "waiting" };
+  }
   if (summary.yourTurn) return { text: "Your move", tone: "your-move" };
   return { text: "Their move", tone: "their-move" };
 }

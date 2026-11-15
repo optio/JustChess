@@ -36,26 +36,18 @@
  * ``labels`` is accepted for the settings sheet; with the hero board gone,
  * ``setLabels`` has nothing to update.
  *
- * P2 U4 (BR8.1, W1): with ``computer = { storage, loadEngine, onPlay }`` the
- * lobby shows the "Play the computer" panel: a Colour radio group (White,
- * Black, Random) and a Level radio group (Beginner … Maximum), defaulting to
- * Random and Casual and remembered in storage (computer.js readChoice /
- * writeChoice, both in try/catch). ``loadEngine()`` resolves GET /api/engine's
- * answer; while it is unavailable the panel reads "Play the computer is
- * unavailable" with the reason and Play is disabled. Play calls
- * ``onPlay({ colour, level })``.
- *   lobby.setComputerBusy(boolean)     "Starting…" on Play while the room opens
- *   lobby.showComputerError(message)   an error under Play
+ * The lobby's "Play the computer" panel was removed (2026-11-15): a player
+ * starts a game and picks "Play the computer" on the waiting screen, which
+ * asks for the difficulty in a dialog.
  */
 
 import { INVALID_CODE_MESSAGE, normalizeCode } from "../api.js";
 import { clientGameplay } from "../gameplay.js";
-import { COLOURS, COLOUR_NAMES, LEVELS, LEVEL_NAMES, panelModel, readChoice, writeChoice } from "../computer.js";
 import { filterAndSort, reconcile, rowModel, seatsToSend, staleRowModel } from "../your-games.js";
 
 export const HEADLINE = "Play a friend. Play the computer. Get better.";
 export const LOADING_TEXT = "Loading your games…";
-export const EMPTY_TEXT = "No games yet. Start one above or play the computer.";
+export const EMPTY_TEXT = "No games yet. Start one above to play a friend or the computer.";
 export const STALE_TEXT = "Couldn't refresh your games.";
 export const REFRESH_EVERY_MS = 60_000; // built-in value; gameplay.yaml's client.your_games_refresh_seconds wins
 export const MIN_GAP_MS = 30_000;
@@ -214,92 +206,7 @@ function createYourGames({ api, seats, now = Date.now, win = window, doc = docum
   };
 }
 
-function radioGroup(name, legendText, values, names, selected) {
-  const fieldset = make("fieldset", { className: "computer-group", "data-testid": `computer-${name}` });
-  fieldset.append(make("legend", { className: "computer-legend" }, legendText));
-  const options = make("div", { className: "computer-options" });
-  for (const value of values) {
-    const id = `computer-${name}-${value}`;
-    const input = make("input", { type: "radio", name: `computer-${name}`, id, value, "data-testid": id });
-    input.checked = value === selected;
-    const label = make("label", { className: "computer-option", for: id });
-    label.append(input, make("span", {}, names[value]));
-    options.append(label);
-  }
-  fieldset.append(options);
-  return fieldset;
-}
-
-/** P2 U4 BR8.1: the "Play the computer" panel. Returns { element, setBusy, showError, destroy }. */
-function createComputerPanel({ storage = null, loadEngine = null, onPlay }) {
-  let choice = readChoice(storage);
-  const panel = make("section", { className: "computer-panel sheet", "aria-labelledby": "computer-title", "data-testid": "computer-panel" });
-  const title = make("h2", { className: "sheet-title", id: "computer-title" }, "Play the computer");
-  const colours = radioGroup("colour", "Your colour", COLOURS, COLOUR_NAMES, choice.colour);
-  const levels = radioGroup("level", "Level", LEVELS, LEVEL_NAMES, choice.level);
-  const unavailable = make("p", { className: "computer-unavailable", role: "status", "data-testid": "computer-unavailable" });
-  unavailable.hidden = true;
-  const play = make("button", { className: "btn btn-primary", type: "button", "data-testid": "computer-play" }, "Play");
-  const error = make("p", { className: "field-error", role: "alert", "data-testid": "computer-error" });
-  panel.append(title, colours, levels, unavailable, play, error);
-  let engineOk = true;
-  let busy = false;
-  let destroyed = false;
-
-  function applyEngine(status) {
-    const model = panelModel(status);
-    engineOk = model.playEnabled;
-    unavailable.textContent = model.message ? `${model.message}${model.reason ? `: ${model.reason}` : ""}.` : "";
-    unavailable.hidden = !model.message;
-    play.disabled = busy || !engineOk;
-  }
-
-  function onChange(event) {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement) || input.type !== "radio") return;
-    choice = { ...choice, [input.name === "computer-colour" ? "colour" : "level"]: input.value };
-    writeChoice(storage, choice);
-  }
-
-  function onClick() {
-    if (play.disabled) return;
-    error.textContent = "";
-    onPlay({ ...choice });
-  }
-
-  panel.addEventListener("change", onChange);
-  play.addEventListener("click", onClick);
-  if (typeof loadEngine === "function") {
-    Promise.resolve()
-      .then(loadEngine)
-      .then((status) => { if (!destroyed) applyEngine(status); })
-      .catch((failure) => {
-        console.error("JustChess: could not read the engine status", failure && failure.name);
-        if (!destroyed) applyEngine({ available: false, reason: null });
-      });
-  }
-
-  return {
-    element: panel,
-    setBusy(value) {
-      busy = Boolean(value);
-      play.textContent = busy ? "Starting…" : "Play";
-      play.classList.toggle("is-busy", busy);
-      play.toggleAttribute("aria-busy", busy);
-      play.disabled = busy || !engineOk;
-    },
-    showError(message) {
-      error.textContent = message || "";
-    },
-    destroy() {
-      destroyed = true;
-      panel.removeEventListener("change", onChange);
-      play.removeEventListener("click", onClick);
-    },
-  };
-}
-
-export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpenGame = null, games = null, labels = "inside", computer = null } = {}) {
+export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpenGame = null, games = null, labels = "inside" } = {}) {
   if (!(container instanceof Element)) throw new TypeError("renderLobby needs a container element");
   if (typeof onStart !== "function" || typeof onJoin !== "function") throw new TypeError("renderLobby needs onStart and onJoin");
   void labels; // kept for the settings sheet; the lobby no longer draws a board
@@ -315,7 +222,7 @@ export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpen
   actions.append(start);
   let learn = null;
   if (typeof onLearn === "function") {
-    learn = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "learn-opening" }, "Train");
+    learn = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "learn-opening" }, "Train tactics");
     actions.append(learn);
   }
 
@@ -339,8 +246,6 @@ export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpen
   row.append(input, join);
   form.append(label, row, codeError);
   text.append(title, lede, actions, startError, form);
-  const computerPanel = computer && typeof computer.onPlay === "function" ? createComputerPanel(computer) : null;
-  if (computerPanel) text.append(computerPanel.element);
   root.append(text);
   container.append(root);
   const yourGames = games ? createYourGames(games, onOpenGame) : null;
@@ -399,12 +304,6 @@ export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpen
     showStartError(message) {
       startError.textContent = message || "";
     },
-    setComputerBusy(busy) {
-      if (computerPanel) computerPanel.setBusy(busy);
-    },
-    showComputerError(message) {
-      if (computerPanel) computerPanel.showError(message);
-    },
     setLabels() {
       // The P2 U2 lobby has no board; the labels setting applies to the game screen.
     },
@@ -420,7 +319,6 @@ export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpen
       start.removeEventListener("click", onStartClick);
       if (learn) learn.removeEventListener("click", onLearnClick);
       if (yourGames) yourGames.destroy();
-      if (computerPanel) computerPanel.destroy();
       root.remove();
     },
   };

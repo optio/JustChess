@@ -152,8 +152,8 @@ def test_snapshot_numbered_moves_and_per_viewer_fields(db, code, clock):
     assert "b8c6" in seat_b["legalMoves"]
     assert (watcher["slot"], watcher["colour"], watcher["legalMoves"]) == (None, None, [])
     assert seat_a["legalMoves"] == [] and seat_a["colour"] == "white"
-    assert seat_a["seats"] == {"A": {"presence": "connected", "colour": "white"},
-                               "B": {"presence": "away", "colour": "black"}}
+    assert seat_a["seats"] == {"A": {"presence": "connected", "colour": "white", "lastSeenSeconds": None},
+                               "B": {"presence": "away", "colour": "black", "lastSeenSeconds": None}}
     for key in ("fen", "turn", "status", "check", "result", "score", "version", "lastMove", "claimableDrawReason"):
         assert key in watcher
     for legacy in ("moves", "legal", "white_score", "black_score", "outcome"):

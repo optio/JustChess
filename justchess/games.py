@@ -141,6 +141,8 @@ class RoomView:
     join_request: dict[str, float] | None = None  # P2 U3: shown to seat A only
     computer: dict[str, object] | None = None  # P2 U4 BR7.1: the computer's state, None for friend rooms
     stand_in: bool = False  # the computer holds seat B of a friend room until a friend joins
+    can_switch_side: bool = False  # seat A may take the other colour now (rooms.can_switch_side)
+    last_seen: dict[str, int] = field(default_factory=dict)  # slot -> seconds since last seen, whole minutes
 
     @property
     def pass_along(self) -> bool:
@@ -203,9 +205,9 @@ def start_game(conn: sqlite3.Connection, code: str, number: int, white_slot: str
     return current_game(conn, code)
 
 
-def create_first_game(conn: sqlite3.Connection, code: str, now: float) -> Game:
-    """Create game 1 with seat A as white, waiting for seat B."""
-    return start_game(conn, code, 1, "A", WAITING, now)
+def create_first_game(conn: sqlite3.Connection, code: str, now: float, white_slot: str = "A") -> Game:
+    """Create game 1, waiting for seat B; seat A (the creator) plays white unless ``white_slot`` is B."""
+    return start_game(conn, code, 1, white_slot, WAITING, now)
 
 
 def start_rematch(conn: sqlite3.Connection, previous: Game, now: float) -> Game:
@@ -553,7 +555,9 @@ class GameView:
         """Build the snapshot for one viewer (BR2.5); legal moves only for the seat to move."""
         game, board = self.game, self.board
         turn = "white" if board.turn == chess.WHITE else "black"
-        mover = viewer_slot is not None and may_move(game, viewer_slot, board.turn, room.pass_along)
+        # Waiting for a friend: nobody moves until seat B is taken (also after leaving pass-along mid-game).
+        alone = room.mode == "waiting" and room.presence.get("B", "empty") == "empty"
+        mover = viewer_slot is not None and not alone and may_move(game, viewer_slot, board.turn, room.pass_along)
         legal = self.legal_moves if mover else []
         return {
             "code": room.code,
@@ -569,7 +573,8 @@ class GameView:
             "version": game.version,
             "claimableDraw": self.claimable is not None,
             "claimableDrawReason": CLAIM_REASON_NAMES.get(self.claimable) if self.claimable else None,
-            "seats": {slot: {"presence": room.presence.get(slot, "empty"), "colour": game.colour_of(slot)}
+            "seats": {slot: {"presence": room.presence.get(slot, "empty"), "colour": game.colour_of(slot),
+                             "lastSeenSeconds": room.last_seen.get(slot)}
                       for slot in ("A", "B")},
             "score": dict(room.score),
             "rematch": dict(room.rematch),
@@ -583,6 +588,7 @@ class GameView:
             "joinRequest": dict(room.join_request) if room.join_request and viewer_slot == "A" else None,
             "computer": dict(room.computer) if room.computer is not None else None,
             "standIn": room.stand_in,
+            "canSwitchSides": room.can_switch_side and viewer_slot == "A",
         }
 
     @property

@@ -10,9 +10,7 @@
  *                                     3 retries 5 s apart by default (gameplay.js clientGameplay())
  *   hintArrow(hint, orientation)      { shaft, head } in board percent from a hint's from/to squares
  *   scoreLine(score)                  "This level: You 2 · Computer 3 · Draws 1" (BR8.2)
- *   readChoice(storage) / writeChoice(storage, choice)   the lobby panel's remembered colour and level (BR8.1)
- *   panelModel(engineStatus)          { playEnabled, message } for the panel (unavailable engine, BR8.1)
- *   findComputerSeat(seats, level)    the saved seat for a level (BR3.5), most recently saved first
+ *   readChoice(storage) / writeChoice(storage, choice)   the remembered colour and level (the difficulty dialog's last choice)
  *
  * A snapshot's `computer` is { state: idle|queued|thinking|unavailable, queuePosition, reason, level,
  * available, message } (BR7.1); `message` carries a busy refusal in one HTTP answer only.
@@ -33,7 +31,6 @@ export const RETRY_LIMIT = CLIENT_DEFAULTS.computerRetryLimit;
 export const RETRY_DELAY_MS = CLIENT_DEFAULTS.computerRetryDelayMs;
 export const THINKING_TEXT = "Computer is thinking…";
 export const NO_ANSWER_TEXT = "The computer didn't answer.";
-export const UNAVAILABLE_PANEL_TEXT = "Play the computer is unavailable";
 export const RESIGN_QUESTION = "Resign this game? The computer wins it.";
 
 export function levelName(level) {
@@ -150,15 +147,3 @@ export function writeChoice(storage, choice) {
   }
 }
 
-/** BR8.1: Play is enabled only when /api/engine says available; otherwise the panel shows why. */
-export function panelModel(engineStatus) {
-  if (engineStatus && engineStatus.available === true) return { playEnabled: true, message: null, reason: null };
-  const reason = engineStatus && typeof engineStatus.reason === "string" && engineStatus.reason ? engineStatus.reason : null;
-  return { playEnabled: false, message: UNAVAILABLE_PANEL_TEXT, reason };
-}
-
-/** BR3.5: the saved computer seat for this level (most recently saved first), or null. */
-export function findComputerSeat(seats, level) {
-  if (!seats || typeof seats.validSeats !== "function") return null;
-  return seats.validSeats().find((seat) => seat.kind === "computer" && seat.computerLevel === level) || null;
-}

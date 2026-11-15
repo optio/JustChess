@@ -11,7 +11,7 @@ def test_health_is_ok_with_database_and_engine(computer_client) -> None:
     client = computer_client()
     answer = client.get("/api/health")
     assert answer.status_code == 200
-    assert answer.json() == {"status": "ok", "database": "ok", "engine": "available"}
+    assert {k: v for k, v in answer.json().items() if k != "version"} == {"status": "ok", "database": "ok", "engine": "available"}
     assert answer.headers["cache-control"] == "no-store"
 
 
@@ -19,7 +19,7 @@ def test_health_is_503_without_an_engine(make_client) -> None:
     client = make_client()  # the core fixture runs without any engine
     answer = client.get("/api/health")
     assert answer.status_code == 503
-    assert answer.json() == {"status": "degraded", "database": "ok", "engine": "unavailable"}
+    assert {k: v for k, v in answer.json().items() if k != "version"} == {"status": "degraded", "database": "ok", "engine": "unavailable"}
 
 
 def test_health_reports_a_database_failure_without_details(computer_client, monkeypatch) -> None:
@@ -32,5 +32,5 @@ def test_health_reports_a_database_failure_without_details(computer_client, monk
     monkeypatch.setattr(db, "_checkout", broken)
     answer = client.get("/api/health")
     assert answer.status_code == 503
-    assert answer.json() == {"status": "degraded", "database": "down", "engine": "available"}
+    assert {k: v for k, v in answer.json().items() if k != "version"} == {"status": "degraded", "database": "down", "engine": "available"}
     assert "secret-host" not in answer.text

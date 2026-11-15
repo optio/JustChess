@@ -30,7 +30,7 @@ def test_player_bookmark_restores_games_keeps_devices_and_revokes_old_link(live_
     first.wait(f"{STATUS} === 'Your move'", what="original device still authorized")
     second.wait(f"{STATUS} === 'Your move'", what="second device authorized")
     first.move("e2e4")
-    second.wait(f"{STATUS} === 'Waiting for Black'", what="shared seat update")
+    second.wait(f"{STATUS} === 'Waiting for Black to move'", what="shared seat update")
     # Regeneration leaves both sessions valid and makes old bookmarks unusable.
     first.click("player-regenerate")
     first.wait("document.querySelector('[data-testid=player-regenerate-dialog]').open", what="styled regeneration dialog")
@@ -109,7 +109,7 @@ def test_compact_footer_responsive_help_and_clipboard_fallback(live_server, brow
         assert layout["scroll"] <= width and layout["left"] >= 0 and layout["right"] <= width
         assert all(target["w"] >= 44 and target["h"] >= 44 for target in layout["targets"]), layout
         assert layout["height"] < (200 if width < 1000 else 130), layout
-        assert page.js("document.querySelector('[data-testid=player-copy]').textContent") == "Copy player link"
+        assert page.js("document.querySelector('[data-testid=player-copy]').textContent") == "Copy my unique player link"
         assert page.js("document.querySelector('[data-testid=player-save] svg') !== null")
         _footer_screenshot(page, f"footer-{width}.png")
         if width == 375:

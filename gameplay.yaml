@@ -62,6 +62,8 @@ join_requests:
 rooms:
   claim_win_away_hours: 24     # an opponent away this long counts as abandoned, so the win can be claimed (0.01 to 8760)
   idle_room_delete_days: 30    # rooms with no activity for this long are deleted (1 to 3650)
+  creator_colour: random       # the colour a new friend room's creator plays: random, white or black
+                               # (JUSTCHESS_CREATOR_COLOUR overrides it; the test suite pins white)
 
 blunder_check:
   time_budget_ms: 250          # most time the "Warn me before blunders" check may spend on one move (10 to 10000)

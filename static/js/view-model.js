@@ -184,6 +184,33 @@ function slotOfColour(snapshot, colour) {
   return null;
 }
 
+/**
+ * A deliberately vague "last seen" for a seat's age in seconds: "a few minutes
+ * ago", "more than 15 minutes ago", "more than 30 minutes ago", "about an hour
+ * ago", "hours ago", "a day ago", "days ago"; null when unknown.
+ */
+export function lastSeenPhrase(seconds) {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) return null;
+  const minutes = seconds / 60;
+  if (minutes < 15) return "a few minutes ago";
+  if (minutes < 30) return "more than 15 minutes ago";
+  if (minutes < 60) return "more than 30 minutes ago";
+  if (minutes < 120) return "about an hour ago";
+  if (minutes < 24 * 60) return "hours ago";
+  if (minutes < 48 * 60) return "a day ago";
+  return "days ago";
+}
+
+/**
+ * "Waiting for Black to move", or with the opponent's nickname when known:
+ * "Waiting for Bob (Black) to move".
+ */
+export function waitingFor(snapshot, turnSlot) {
+  const colour = colourName(snapshot.turn);
+  const name = turnSlot && snapshot.seats && snapshot.seats[turnSlot] ? String(snapshot.seats[turnSlot].nickname || "").trim() : "";
+  return name ? `Waiting for ${name} (${colour}) to move` : `Waiting for ${colour} to move`;
+}
+
 /** BR3.4: one status, chosen in this order; the text always carries the state. */
 function statusOf(snapshot, ctx, seat, yourMove) {
   if (snapshot.status === "finished") {
@@ -197,8 +224,11 @@ function statusOf(snapshot, ctx, seat, yourMove) {
   if (ctx.connection === "reconnecting") {
     return { text: STATUS_TEXT.reconnecting, sub: "Your game is safe. Trying again…", tone: "surface", dot: "hollow" };
   }
-  if (snapshot.status === "waiting") {
-    return { text: seat ? STATUS_TEXT.waiting : STATUS_TEXT.waitingWatcher, sub: null, tone: "surface", dot: null };
+  // Still waiting for a friend, also when a pass-along or computer game was left mid-game.
+  const alone = snapshot.mode === "waiting" && presenceOf(snapshot, "B") === "empty";
+  if (snapshot.status === "waiting" || alone) {
+    const sub = alone && snapshot.status !== "waiting" ? "They continue from this position." : null;
+    return { text: seat ? STATUS_TEXT.waiting : STATUS_TEXT.waitingWatcher, sub, tone: "surface", dot: null };
   }
   const mover = otherColour(snapshot.turn);
   const san = lastSan(snapshot.moveList);
@@ -212,9 +242,14 @@ function statusOf(snapshot, ctx, seat, yourMove) {
   const away = turnSlot && ["away", "abandoned"].includes(presenceOf(snapshot, turnSlot));
   const extra = [];
   if (snapshot.check) extra.push(`${colourName(snapshot.turn)} is in check`);
-  if (away) extra.push(`${colourName(snapshot.turn)} is away`);
+  if (away) {
+    const seat = snapshot.seats[turnSlot];
+    const seen = lastSeenPhrase(seat && seat.lastSeenSeconds);
+    const who = (seat && String(seat.nickname || "").trim()) || colourName(snapshot.turn);
+    extra.push(seen ? `${who} was last seen ${seen}` : `${colourName(snapshot.turn)} is away`);
+  }
   return {
-    text: `Waiting for ${colourName(snapshot.turn)}`,
+    text: waitingFor(snapshot, turnSlot),
     sub: extra.length ? extra.join(" · ") : null,
     tone: "surface",
     dot: away ? "hollow" : "hourglass", // an hourglass until the opponent answers
@@ -284,14 +319,17 @@ function scoreOf(snapshot, seat) {
   return { left, right, draws, text, line: `Room score: ${text}` };
 }
 
+/** "You (Alice)", "Opponent (Bob)", "Player A (Alice)": the seat's nickname in brackets when known. */
 function playersOf(snapshot, seat) {
   const names = {};
   const computerName = snapshot.mode === "computer" ? opponentLabel(snapshot.computerLevel) : null;
   for (const slot of ["A", "B"]) {
     const colour = snapshot.seats && snapshot.seats[slot] ? snapshot.seats[slot].colour : slot === "A" ? "white" : "black";
+    const nickname = snapshot.seats && snapshot.seats[slot] ? String(snapshot.seats[slot].nickname || "").trim() : "";
+    const withName = (label) => (nickname ? `${label} (${nickname})` : label);
     if (computerName && slot === "B") names[colour] = computerName;
-    else if (seat) names[colour] = slot === snapshot.slot ? "You" : "Opponent";
-    else names[colour] = `Player ${slot}`;
+    else if (seat) names[colour] = withName(slot === snapshot.slot ? "You" : "Opponent");
+    else names[colour] = withName(`Player ${slot}`);
   }
   return { white: names.white || "White", black: names.black || "Black" };
 }
@@ -424,8 +462,8 @@ export function announcement(previous, next, viewerColour = null) {
     const title = endTitle(next.endReason);
     const winner = winnerOf(next.result);
     parts.push(`Game over — ${title}. ${winner ? `${colourName(winner)} wins.` : "Draw."}`);
-  } else if (previous.status === "waiting" && next.status === "playing" && next.mode !== "computer") {
-    parts.push("Your opponent joined.");
+  } else if (["empty", "computer"].includes(presenceOf(previous, "B")) && !["empty", "computer"].includes(presenceOf(next, "B"))) {
+    parts.push("Your opponent joined."); // a person took seat B (never pass-along or the computer)
   } else if (previous.mode === "computer" && previous.standIn && next.mode === "online") {
     parts.push("Your friend took over from the computer.");
   }

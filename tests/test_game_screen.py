@@ -435,7 +435,7 @@ def test_two_player_browser_game(live_server: str, browser: Cdp) -> None:
     assert "token" not in white.js("location.href").lower()
 
     black.go(f"{live_server}/r/{code}")
-    black.wait(f"{STATUS} === 'Waiting for White'", what="black's first status")
+    black.wait(f"{STATUS} === 'Waiting for White to move'", what="black's first status")
     white.wait(f"{STATUS} === 'Your move'", what="white's turn")
 
     # BR5.1 layout: phone top bar <= 56 px, board top <= 72 px, board >= 374 px wide; desktop board 560-640 px
@@ -492,7 +492,7 @@ def test_two_player_browser_game(live_server: str, browser: Cdp) -> None:
         page.wait("document.querySelector('[data-testid=overlay]').hidden", what="the overlay closing")
         page.wait("document.querySelector('[data-testid=result]').textContent === ''", what="a clean scoresheet")
     black.wait(f"{STATUS} === 'Your move'", what="black playing white in game 2")
-    white.wait(f"{STATUS} === 'Waiting for White'", what="white playing black in game 2")
+    white.wait(f"{STATUS} === 'Waiting for White to move'", what="white playing black in game 2")
     assert white.js("document.querySelector('.board-row .sq').dataset.square") == "h1", "player A's board is flipped"
     assert black.js("document.querySelector('.board-row .sq').dataset.square") == "a8"
     assert white.js("document.querySelector('[data-testid=players]').textContent") == "Opponent plays White · You play Black"
@@ -542,7 +542,7 @@ def test_blunder_dialog_browser_run(live_server: str, browser: Cdp) -> None:
     white.wait(f"{PIECE_ON.format(square='g2')} === 'P' && {PIECE_ON.format(square='g4')} === ''", what="the pawn back on g2")
     assert white.js("document.activeElement?.dataset.square") == "g2", "focus returns to the from-square"
     assert white.status() == "Your move"
-    assert black.status() == "Waiting for White"
+    assert black.status() == "Waiting for White to move"
 
     # "Play g4 anyway" sends the move
     white.move("g2g4")
@@ -661,7 +661,7 @@ def test_background_tab_gets_a_local_notification(live_server: str, browser: Cdp
     code = white.wait("(location.pathname.match(/^\\/r\\/([A-Z0-9]{6})$/) || [])[1]", what="the room address")
     black.go(f"{live_server}/r/{code}")
     white.wait(f"{STATUS} === 'Your move'", what="white's turn")
-    black.wait(f"{STATUS} === 'Waiting for White'", what="black's first status")
+    black.wait(f"{STATUS} === 'Waiting for White to move'", what="black's first status")
 
     # turning Notifications on: permission is already granted, the server has no VAPID key -> local only
     black.click("settings-notifications")

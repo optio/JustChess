@@ -4,10 +4,11 @@
  * so tests/js/pass-along.test.mjs drives everything in Node.
  *
  *   controlsFor(snapshot, { watching })
- *     -> { playHere, playComputer, waitForFriend, practiceNote, note }   which controls the game screen shows:
- *        "Play here while waiting" and "Play the computer while waiting" for seat A in a
- *        waiting room with seat B empty; "Wait for a friend instead" and the note
- *        (PRACTICE_NOTE or STAND_IN_NOTE) for seat A in pass-along or with the computer standing in.
+ *     -> { playHere, playComputer, switchTo, waitForFriend, practiceNote, note }   which controls the game screen shows:
+ *        "Play pass-along" and "Play the computer" for seat A in a waiting room with seat B
+ *        empty; "Wait for a friend instead" and the note (PRACTICE_NOTE or STAND_IN_NOTE) for
+ *        seat A in pass-along or with the computer standing in; switchTo ("white" | "black")
+ *        when the snapshot's canSwitchSides lets seat A take the other colour, else null.
  *
  *   countdownText(secondsLeft) -> "m:ss"           never negative
  *   bannerText(colour, secondsLeft)                "Someone wants to join as Black. They will take over
@@ -66,13 +67,15 @@ export function waitingText(colour) {
 }
 
 export function controlsFor(snapshot, { watching = false } = {}) {
-  const none = { playHere: false, playComputer: false, waitForFriend: false, practiceNote: false, note: null };
+  const none = { playHere: false, playComputer: false, switchTo: null, waitForFriend: false, practiceNote: false, note: null };
   if (!snapshot || watching || snapshot.slot !== "A") return none;
   const seatB = snapshot.seats && snapshot.seats.B ? snapshot.seats.B.presence : "empty";
-  if (snapshot.mode === "pass_along") return { ...none, waitForFriend: true, practiceNote: true, note: PRACTICE_NOTE };
-  if (snapshot.mode === "computer" && snapshot.standIn) return { ...none, waitForFriend: true, practiceNote: true, note: STAND_IN_NOTE };
-  if (snapshot.mode === "waiting" && seatB === "empty") return { ...none, playHere: true, playComputer: true };
-  return none;
+  // The server says when seat A may take the other colour (canSwitchSides).
+  const switchTo = snapshot.canSwitchSides ? (snapshot.colour === "white" ? "black" : "white") : null;
+  if (snapshot.mode === "pass_along") return { ...none, switchTo, waitForFriend: true, practiceNote: true, note: PRACTICE_NOTE };
+  if (snapshot.mode === "computer" && snapshot.standIn) return { ...none, switchTo, waitForFriend: true, practiceNote: true, note: STAND_IN_NOTE };
+  if (snapshot.mode === "waiting" && seatB === "empty") return { ...none, switchTo, playHere: true, playComputer: true };
+  return { ...none, switchTo };
 }
 
 export function countdownText(secondsLeft) {
