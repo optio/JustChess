@@ -88,7 +88,24 @@ def test_every_shipped_p2_lesson_loads_annotated_with_its_kind_and_length() -> N
             assert len(lesson["steps"]) >= (6 if kind == "trap" else 8), lesson_id
             assert all(step["note"].strip() for step in lesson["steps"]), lesson_id
             assert lesson["objectives"], f"{lesson_id} has objectives"
-    assert {item["id"] for item in catalog.summaries("trap")} == NEW_LESSONS["trap"]
+    assert {item["id"] for item in catalog.summaries("trap")} == NEW_LESSONS["trap"] | {"battery-mate"}
+
+
+def test_battery_lesson_starts_from_its_position_and_ends_in_mate() -> None:
+    """2026-11-15 follow-up: a beginner lesson on batteries (pieces lined up on one diagonal, file or rank)."""
+    catalog = load_catalog(ROOT / "lessons")
+    lesson = catalog.lessons["battery-mate"]
+    assert (lesson["kind"], lesson["side"]) == ("trap", "white")
+    assert [step["san"] for step in lesson["steps"]] == ["Qd3", "Nf6", "Rfe1", "Ng4", "Qxh7#"]
+    board = chess.Board(lesson["start"])
+    for step in lesson["steps"]:
+        assert step["fenBefore"] == board.fen() and step["note"].strip()
+        board.push_uci(step["uci"])
+    assert board.is_checkmate()
+    assert any("battery" in step["note"].lower() for step in lesson["steps"])
+    assert any("file" in objective or "rank" in objective for objective in lesson["objectives"])
+    first = lesson["steps"][0]
+    assert {alt["san"] for alt in first["alternatives"]} == {"Bxh7", "Qh5"}
 
 
 def test_missing_required_field_is_skipped_with_its_reason(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:

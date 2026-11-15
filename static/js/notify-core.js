@@ -5,7 +5,8 @@
  *   eventFor(prev, next, slot) -> { kind, key, tag, title, body, banner } | null
  *       The alert a new snapshot means for this seat, keyed exactly like the
  *       server (justchess/notifications.py, BR1.1):
- *         joined           seat B's presence leaves "empty" while game 1 is playing (seat A only)
+ *         joined           seat B's presence leaves "empty" while game 1 is playing (seat A only), or a
+ *                          friend takes over the stand-in computer's seat; the computer itself is no join
  *         move:<game>:<ply> a new half-move by the opponent; ply = half-moves in moveList
  *         ended:<game>     status becomes "finished"; only for the seat that did not cause it,
  *                          and instead of the move alert for a final move
@@ -110,7 +111,11 @@ export function eventFor(prev, next, slot) {
 
   const before = prev.seats && prev.seats.B ? prev.seats.B.presence : null;
   const after = next.seats && next.seats.B ? next.seats.B.presence : null;
-  if (slot === "A" && before === "empty" && after && after !== "empty" && next.game === 1 && next.status === "playing") {
+  // The computer standing in for the friend is not a join; a friend taking over from it is.
+  if (slot === "A" && before === "computer" && after && after !== "empty" && after !== "computer" && next.mode !== "computer") {
+    return make("joined", code, "joined", TITLE_JOINED, "Your friend took over from the computer.", TITLE_JOINED);
+  }
+  if (slot === "A" && before === "empty" && after && after !== "empty" && after !== "computer" && next.game === 1 && next.status === "playing") {
     return make("joined", code, "joined", TITLE_JOINED, "The game has started. You play White: your move.", TITLE_JOINED);
   }
 

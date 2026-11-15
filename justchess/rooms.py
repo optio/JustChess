@@ -41,6 +41,22 @@ P2 U4 (computer rooms, BR3.1-BR3.3, BR3.6, ADR-002, ADR-005):
 - ``seat_presence`` reports ``computer`` for the computer's seat.
 - The room score of a computer room is the player (A) against the computer (B)
   at that level; ``record_result`` needs no change for it.
+
+Computer stand-in (2026-11-15 follow-up): a friend room still waiting for its
+second player can let the computer play seat B until a friend arrives.
+
+- ``set_mode(..., "computer", level=...)`` (seat A, room waiting, no human seat
+  B) turns the room into mode ``computer`` at that level, inserts the computer's
+  seat B and marks the room in the additive ``room_stand_ins`` runtime table, so
+  the core schema and its CHECKs are unchanged. A waiting game starts playing,
+  uncounted; a game already under way keeps its position.
+- ``set_mode(..., "waiting")`` on a stand-in room removes the computer's seat,
+  clears the level and keeps the position, so a friend can still join it.
+- ``join_room`` on a stand-in room hands the computer's seat B to the joiner:
+  seat B gets the joiner's token hash, the room turns ``online``, the stand-in
+  mark goes and the game version is bumped, so an engine reply still in flight
+  is discarded. The caller counts the current game (``games.mark_counted``).
+- Plain computer rooms (made from the lobby) still refuse every other token.
 """
 
 from __future__ import annotations
@@ -81,7 +97,9 @@ FINISH_FIRST = "Finish this game first"
 REQUEST_TTL = 10 * 60.0
 DECLINE_MEMORY = 10 * 60.0
 MAX_REMEMBERED_ADDRESSES = 10_000
-SWITCHABLE_MODES = (MODE_WAITING, MODE_PASS_ALONG)
+SWITCHABLE_MODES = (MODE_WAITING, MODE_PASS_ALONG, MODE_COMPUTER)
+WAIT_FIRST = "Switch back to waiting for a friend first"
+STAND_IN_DEFAULT_LEVEL = "casual"
 PENDING, ACCEPTED, DECLINED, LAPSED = "pending", "accepted", "declined", "lapsed"
 CREATOR_ONLY = "Only the creator can do this"
 ALREADY_JOINED = "A friend has already joined"
@@ -293,17 +311,36 @@ def create_computer_room(conn: sqlite3.Connection, now: float, level: str, white
     return get_room(conn, code), seat, token
 
 
+def is_stand_in(conn: sqlite3.Connection, code: str) -> bool:
+    """True while the computer stands in for the friend this room is waiting for."""
+    return conn.execute("SELECT 1 FROM room_stand_ins WHERE room_code = ?", (code,)).fetchone() is not None
+
+
+def _take_over_computer_seat(conn: sqlite3.Connection, code: str, now: float) -> JoinResult:
+    """Give the stand-in computer's seat B to the joiner; the room turns online."""
+    token = issue_token()
+    conn.execute("UPDATE seats SET is_computer = 0, token_hash = ?, last_seen_at = ? "
+                 "WHERE room_code = ? AND slot = 'B' AND is_computer = 1", (hash_token(token), now, code))
+    conn.execute("UPDATE rooms SET mode = ?, computer_level = NULL WHERE code = ?", (MODE_ONLINE, code))
+    conn.execute("DELETE FROM room_stand_ins WHERE room_code = ?", (code,))
+    games.bump_version(conn, games.current_game(conn, code))  # discards an engine reply still in flight
+    return JoinResult(get_seats(conn, code)["B"], token, created=True)
+
+
 def join_room(conn: sqlite3.Connection, code: str, token: str | None, now: float) -> JoinResult:
     """Rejoin by token, take seat B, or refuse a third player (BR1.3).
 
     Taking seat B turns a waiting room online in the same transaction (P2 U2 BR1.2).
-    P2 U4 BR3.2: in a computer room only seat A's token rejoins; anything else is 409.
+    P2 U4 BR3.2: in a computer room only seat A's token rejoins; anything else is 409,
+    except a stand-in room, whose computer seat the joiner takes over.
     """
     room = get_room(conn, code)
     existing = find_seat(conn, code, token)
     if existing is not None:
         return JoinResult(existing, token or "", created=False)
     if room.mode == MODE_COMPUTER:
+        if is_stand_in(conn, code):
+            return _take_over_computer_seat(conn, code, now)
         raise DomainError(409, COMPUTER_ROOM)
     if "B" in get_seats(conn, code):
         raise DomainError(409, ROOM_FULL)
@@ -509,24 +546,38 @@ class ModeChange:
     declined_request: bool = False
 
 
-def set_mode(conn: sqlite3.Connection, code: str, seat: Seat, mode: str, now: float) -> ModeChange:
-    """Switch the room between waiting and pass-along (BR1.1).
+def set_mode(conn: sqlite3.Connection, code: str, seat: Seat, mode: str, now: float,
+             level: str | None = None) -> ModeChange:
+    """Switch the room between waiting, pass-along and the computer stand-in (BR1.1).
 
-    Seat A only (403), never once seat B exists (409) or in a computer room (409).
-    Entering pass-along starts a game still waiting, uncounted; leaving keeps the
-    position and declines any pending join request in the same transaction.
+    Seat A only (403), never once a friend holds seat B (409) or in a computer
+    room made from the lobby (409). Entering pass-along starts a game still
+    waiting, uncounted; leaving keeps the position and declines any pending join
+    request in the same transaction. The stand-in is entered from waiting only
+    and left back to waiting (see the module docstring).
     """
     if mode not in SWITCHABLE_MODES:
         raise DomainError(400, "Unknown mode")
     if seat.slot != "A":
         raise DomainError(403, CREATOR_ONLY)
     room = get_room(conn, code)
-    if room.mode == MODE_COMPUTER:
+    stand_in = room.mode == MODE_COMPUTER and is_stand_in(conn, code)
+    if room.mode == MODE_COMPUTER and not stand_in:
         raise DomainError(409, COMPUTER_ROOM)
-    if "B" in get_seats(conn, code) or room.mode == MODE_ONLINE:
+    if room.mode == MODE_ONLINE or (not stand_in and "B" in get_seats(conn, code)):
         raise DomainError(409, ALREADY_JOINED)
     if room.mode == mode:
         return ModeChange(mode, changed=False)
+    if mode == MODE_COMPUTER:
+        return _start_stand_in(conn, code, room, level or STAND_IN_DEFAULT_LEVEL, now)
+    if stand_in:
+        if mode != MODE_WAITING:
+            raise DomainError(409, WAIT_FIRST)
+        conn.execute("DELETE FROM seats WHERE room_code = ? AND slot = 'B' AND is_computer = 1", (code,))
+        conn.execute("UPDATE rooms SET mode = ?, computer_level = NULL WHERE code = ?", (MODE_WAITING, code))
+        conn.execute("DELETE FROM room_stand_ins WHERE room_code = ?", (code,))
+        games.bump_version(conn, games.current_game(conn, code))
+        return ModeChange(MODE_WAITING, changed=True)
     conn.execute("UPDATE rooms SET mode = ? WHERE code = ?", (mode, code))
     if mode == MODE_PASS_ALONG:
         games.start_pass_along(conn, games.current_game(conn, code), now)
@@ -535,6 +586,22 @@ def set_mode(conn: sqlite3.Connection, code: str, seat: Seat, mode: str, now: fl
     if pending is not None:
         _set_request_status(conn, pending.request_id, DECLINED, now)
     return ModeChange(mode, changed=True, declined_request=pending is not None)
+
+
+def _start_stand_in(conn: sqlite3.Connection, code: str, room: Room, level: str, now: float) -> ModeChange:
+    """The computer takes seat B of a waiting friend room until a friend joins."""
+    if level not in COMPUTER_LEVELS:
+        raise DomainError(400, UNKNOWN_LEVEL)
+    if room.mode != MODE_WAITING:
+        raise DomainError(409, WAIT_FIRST)
+    conn.execute("UPDATE rooms SET mode = ?, computer_level = ? WHERE code = ?", (MODE_COMPUTER, level, code))
+    conn.execute("INSERT INTO seats (room_code, slot, token_hash, last_seen_at, is_computer) VALUES (?, 'B', NULL, ?, 1)",
+                 (code, now))
+    conn.execute("INSERT INTO room_stand_ins (room_code, started_at) VALUES (?, ?)", (code, now))
+    game = games.current_game(conn, code)
+    if not games.start_pass_along(conn, game, now):  # a waiting game starts, uncounted; else keep the position
+        games.bump_version(conn, game)
+    return ModeChange(MODE_COMPUTER, changed=True)
 
 
 # --- P2 U3: join requests (BR2.1-BR2.4) -----------------------------------
@@ -711,5 +778,6 @@ def list_idle_rooms(conn: sqlite3.Connection, cutoff: float) -> list[str]:
 
 def delete_room(conn: sqlite3.Connection, code: str) -> None:
     """Delete the room and its seats. Games data must be deleted first by Games."""
+    conn.execute("DELETE FROM room_stand_ins WHERE room_code = ?", (code,))
     conn.execute("DELETE FROM seats WHERE room_code = ?", (code,))
     conn.execute("DELETE FROM rooms WHERE code = ?", (code,))

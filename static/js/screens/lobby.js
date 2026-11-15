@@ -284,6 +284,8 @@ function createComputerPanel({ storage = null, loadEngine = null, onPlay }) {
     setBusy(value) {
       busy = Boolean(value);
       play.textContent = busy ? "Starting…" : "Play";
+      play.classList.toggle("is-busy", busy);
+      play.toggleAttribute("aria-busy", busy);
       play.disabled = busy || !engineOk;
     },
     showError(message) {
@@ -391,6 +393,8 @@ export function renderLobby(container, { onStart, onJoin, onLearn = null, onOpen
     setBusy(busy) {
       start.disabled = Boolean(busy);
       start.textContent = busy ? "Starting…" : "Start a game";
+      start.classList.toggle("is-busy", Boolean(busy));
+      start.toggleAttribute("aria-busy", Boolean(busy));
     },
     showStartError(message) {
       startError.textContent = message || "";

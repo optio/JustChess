@@ -157,14 +157,15 @@ export function mountPlayerFooter(doc, win, player) {
   if (!root) return { render() {} };
   const part = id => doc.querySelector(`[data-testid="${id}"]`);
   const name = part("player-nickname"), display = part("player-display"), field = part("player-editor");
-  const loading = part("player-loading"), nameForm = root.querySelector("form");
+  const loading = part("player-loading"), header = part("topbar-player");
+  const nameForm = header?.querySelector("form"), nameMessage = part("player-name-message");
   const save = part("player-save"), edit = part("player-edit"), message = part("player-message");
   const copy = part("player-copy"), regenerate = part("player-regenerate"), help = part("player-help");
   const link = part("player-link"), linkField = part("player-link-field");
   const helpMessage = part("player-help-message"), helpClose = part("player-help-close");
   const regenerateElement = part("player-regenerate-dialog"), confirm = part("player-regenerate-confirm");
   const cancel = part("player-regenerate-cancel"), regenerateMessage = part("player-regenerate-message");
-  let feedback = "", copying = false, regenerating = false;
+  let feedback = "", nameFeedback = "", copying = false, regenerating = false;
   const editor = createNicknameEditor({ getName: () => player.nicknameValue, save: value => player.nickname(value), onChange: render });
   const helpDialog = footerDialog(part("player-help-dialog"));
   const regenerateDialog = footerDialog(regenerateElement, { canClose: () => !regenerating });
@@ -172,6 +173,7 @@ export function mountPlayerFooter(doc, win, player) {
   function render() {
     const isLoading = !player.initialized;
     root.hidden = isLoading;
+    if (header) header.hidden = isLoading;
     loading.hidden = !isLoading;
     if (isLoading) return;
 
@@ -183,6 +185,11 @@ export function mountPlayerFooter(doc, win, player) {
     part("player-name").textContent = player.nicknameValue;
     name.disabled = state.pending;
     save.disabled = state.pending;
+    save.classList.toggle("is-busy", state.pending);
+    // A first nickname: the save control appears only once the draft has a character.
+    // An existing nickname can still be cleared, so its save control stays.
+    save.hidden = !state.pending && state.draft.trim().length === 0 && !player.nicknameValue;
+    header?.classList.toggle("is-editing", state.editing);
     edit.disabled = state.pending;
     save.setAttribute("aria-label", state.pending ? "Saving nickname" : "Save nickname");
     nameForm.setAttribute("aria-busy", String(isLoading || state.pending));
@@ -193,18 +200,21 @@ export function mountPlayerFooter(doc, win, player) {
     linkField.disabled = !url;
     copy.disabled = copying || !url;
     regenerate.disabled = regenerating || !player.token;
+    nameMessage.textContent = nameFeedback;
     message.textContent = feedback || player.error || (!player.persistent ? "Storage is blocked. Copy your private player link to keep this player." : "");
   }
 
-  edit.addEventListener("click", () => { feedback = ""; editor.begin(); name.focus(); name.select(); });
-  name.addEventListener("input", () => { editor.change(name.value); feedback = ""; });
-  root.querySelector("form").addEventListener("submit", async event => {
+  edit.addEventListener("click", () => { nameFeedback = ""; editor.begin(); name.focus(); name.select(); });
+  name.addEventListener("input", () => { editor.change(name.value); nameFeedback = ""; render(); });
+  nameForm.addEventListener("submit", async event => {
     event.preventDefault();
     if (editor.state.pending) return;
-    editor.change(name.value); feedback = "";
+    editor.change(name.value); nameFeedback = "";
+    if (!name.value.trim() && !player.nicknameValue) { render(); return; }
     const answer = await editor.submit();
-    if (answer) feedback = answer.ok ? "Nickname saved" : answer.message;
+    if (answer) nameFeedback = answer.ok ? "Nickname saved" : answer.message;
     render();
+    if (answer?.ok) win.setTimeout(() => { if (nameFeedback === "Nickname saved") { nameFeedback = ""; render(); } }, 2500);
   });
   help.addEventListener("click", () => { helpMessage.textContent = ""; render(); helpDialog.open(help, helpClose); });
   helpClose.addEventListener("click", () => helpDialog.close());

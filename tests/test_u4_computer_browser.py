@@ -98,3 +98,39 @@ def test_a_short_game_against_the_computer(computer_server: str, browser: Cdp) -
     assert page.js(TEXT.format(testid="score")) == "This level: You 0 · Computer 1 · Draws 0"
     assert page.js("document.querySelectorAll('[data-testid=hint-arrow] g').length") == 0, "the arrow left with the game"
     assert page.problems() == [], f"the page logged errors: {page.problems()}"
+
+
+def test_waiting_room_plays_the_computer_until_a_friend_takes_over(computer_server: str, browser: Cdp) -> None:
+    """2026-11-15 follow-up: the computer stands in for the friend, who then takes over seat B."""
+    creator = Page(browser, "creator (phone 390 px)", viewport=(390, 844, True))
+    creator.go(computer_server + "/")
+    creator.wait("!!document.querySelector('[data-testid=start-game]')", what="the lobby")
+    creator.click("start-game")
+    code = creator.wait("(location.pathname.match(/^\\/r\\/([A-Z0-9]{6})$/) || [])[1]", what="the room address")
+    creator.wait(f"{STATUS}.startsWith('Waiting for your opponent')", what="the waiting state")
+    creator.js("(() => { const s = document.querySelector('[data-testid=settings-blunderWarnings]'); if (s.checked) s.click(); return true; })()")
+    creator.wait(VISIBLE.format(testid="stand-in-start"), what="Play the computer while waiting")
+    creator.click("stand-in-start")
+    creator.wait(f"{STATUS} === 'Your move'", what="the creator's first move against the computer")
+    assert not creator.js("document.getElementById('share').hidden"), "the invite stays available"
+    assert "joined" not in creator.js(TEXT.format(testid="notify-banner")), "the computer is no friend joining"
+    assert creator.js(VISIBLE.format(testid="pass-along-stop")), "Wait for a friend instead"
+    assert "take over" in creator.js(TEXT.format(testid="pass-along-note"))
+    assert creator.js(VISIBLE.format(testid="computer-controls"))
+    assert creator.js(SMALL_TARGETS) == []
+    creator.move("e2e4")
+    creator.wait(f"{STATUS} === 'Your move' && {PIECE_ON.format(square='a5')} === 'p'", what="the computer's reply")
+
+    friend = Page(browser, "friend (desktop)")
+    friend.go(f"{computer_server}/r/{code}")
+    friend.wait(f"{STATUS} === 'Waiting for White'", what="the friend took over Black")
+    assert friend.js(PIECE_ON.format(square="a5")) == "p", "the friend continues from the same position"
+    creator.wait("!document.querySelector('[data-testid=computer-controls]') || document.querySelector('[data-testid=computer-controls]').hidden",
+                 what="the computer controls left")
+    assert creator.js("document.querySelector('[data-testid=pass-along]').hidden")
+    creator.wait(f"{TEXT.format(testid='notify-banner')}.includes('joined')", what="the takeover is announced")
+    creator.move("g1f3")
+    friend.wait(f"{STATUS} === 'Your move'", what="the friend now answers the moves")
+    assert creator.js(PIECE_ON.format(square="f3")) == "N"
+    for page in (creator, friend):
+        assert page.problems() == [], page.problems()

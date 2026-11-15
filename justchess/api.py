@@ -73,9 +73,12 @@ Trainer (P2 U5, W3, BR1.2, BR2.4):
 
 Pass-along and join requests (P2 U3, BR1.1-BR1.5, BR2.1-BR2.5, BR3.1):
 
-- ``POST /api/rooms/{code}/mode`` ``{token, mode: "pass_along" | "waiting"}``
+- ``POST /api/rooms/{code}/mode`` ``{token, mode: "pass_along" | "waiting" | "computer", level?}``
   switches the room for seat A (``rooms.set_mode``) and answers seat A's
-  snapshot; 403 for another seat, 409 once seat B exists.
+  snapshot; 403 for another seat, 409 once a friend holds seat B. ``computer``
+  lets the computer stand in for the friend (from waiting only; 503 without
+  an engine); a later join takes over the computer's seat. Snapshots carry
+  ``standIn``.
 - ``POST /api/rooms/{code}/join`` runs the seat-token rejoin check first. Only
   then, for a pass-along room: the rate limit for the client address
   (``ratelimit``; 429 ``{error: "too_many"}``), then the visitor's own pending
@@ -277,6 +280,7 @@ class ModeRequest(SeatRequest):
     """P2 U3 mode body: seat A's token and the mode to switch to (checked by ``rooms.set_mode``)."""
 
     mode: str = Field(min_length=1, max_length=16)
+    level: str | None = Field(default=None, max_length=16)  # the computer stand-in's level (mode "computer")
 
 
 class AnswerRequest(SeatRequest):
@@ -439,10 +443,11 @@ class Services:
                     for slot in rooms.SLOTS}
         join_request = rooms.join_request_view(rooms.visible_request(conn, code, now), now)
         computer_view = self.computer_view(code, room, game) if room.mode == rooms.MODE_COMPUTER else None
+        stand_in = room.mode == rooms.MODE_COMPUTER and rooms.is_stand_in(conn, code)
         room_view = games.RoomView(code, {"A": room.wins_a, "B": room.wins_b, "draws": room.draws},
                                    presence, rooms.rematch_state(room, presence),
                                    mode=room.mode, computer_level=room.computer_level, join_request=join_request,
-                                   computer=computer_view)
+                                   computer=computer_view, stand_in=stand_in)
         cache: dict[str | None, dict] = {}
         nicknames = players.names(conn, code)
 
@@ -696,6 +701,8 @@ class Services:
         The level's random-move chance (``flight.random_move_chance``) may swap the
         engine's move for a random other legal move first (``self.move_chooser``).
         """
+        if rooms.get_room(conn, code).mode != rooms.MODE_COMPUTER:
+            return False  # a friend took the computer's seat meanwhile
         game = games.current_game(conn, code)
         if game.game_id != flight.game_id or game.version != flight.version or game.status != games.PLAYING:
             return False
@@ -1522,13 +1529,15 @@ async def _join_request_answer(svc: Services, background: BackgroundTasks, code:
 def _add_join_request_routes(app: FastAPI) -> None:
     @app.post("/api/rooms/{code}/mode")
     async def set_mode(request: Request, code: str, body: ModeRequest):
-        """BR1.1, W1: seat A switches between pass-along and waiting; answers seat A's snapshot."""
+        """BR1.1, W1: seat A switches between waiting, pass-along and the computer stand-in; answers seat A's snapshot."""
         code = rooms.normalize_code(code)
         svc = services(request)
 
         def action(conn: sqlite3.Connection, now: float) -> rooms.ModeChange:
             seat = rooms.authorize_seat(conn, code, body.token)
-            change = rooms.set_mode(conn, code, seat, body.mode, now)
+            change = rooms.set_mode(conn, code, seat, body.mode, now, level=body.level)
+            if change.changed and change.mode == rooms.MODE_COMPUTER and not svc.engine.available:
+                raise DomainError(503, ENGINE_DOWN)  # rolls the switch back: the computer could never answer
             if change.changed:
                 _after_action(conn, code, seat.slot, now)
             return change
@@ -1693,7 +1702,8 @@ def _add_game_routes(app: FastAPI) -> None:
             room, game = rooms.get_room(conn, code), games.current_game(conn, code)
             if room.mode == rooms.MODE_COMPUTER:
                 colour = _valid_colour(body.colour, allow_none=True)
-                games.start_computer_rematch(conn, game, now, colour)
+                # A stand-in's games never count toward the friends' room score.
+                games.start_computer_rematch(conn, game, now, colour, counted=not rooms.is_stand_in(conn, code))
                 _after_action(conn, code, seat.slot, now)
                 return seat.slot, True, None
             if room.mode == rooms.MODE_PASS_ALONG and seat.slot == "A":

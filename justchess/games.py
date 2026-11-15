@@ -140,6 +140,7 @@ class RoomView:
     computer_level: str | None = None
     join_request: dict[str, float] | None = None  # P2 U3: shown to seat A only
     computer: dict[str, object] | None = None  # P2 U4 BR7.1: the computer's state, None for friend rooms
+    stand_in: bool = False  # the computer holds seat B of a friend room until a friend joins
 
     @property
     def pass_along(self) -> bool:
@@ -265,12 +266,16 @@ def white_slot_for(colour: str | None, previous_white: str) -> str:
     return "B" if previous_white == "A" else "A"
 
 
-def start_computer_rematch(conn: sqlite3.Connection, previous: Game, now: float, colour: str | None = None) -> Game:
-    """P2 U4 BR3.4: the next computer game at once; colours swap unless the player named one."""
+def start_computer_rematch(conn: sqlite3.Connection, previous: Game, now: float, colour: str | None = None,
+                           counted: bool = True) -> Game:
+    """P2 U4 BR3.4: the next computer game at once; colours swap unless the player named one.
+
+    A computer stand-in's games pass ``counted=False`` (they never touch the friends' score).
+    """
     if previous.status != FINISHED:
         raise DomainError(409, NOT_OVER_YET)
     white = white_slot_for(colour, previous.white_slot)
-    return start_game(conn, previous.room_code, previous.number + 1, white, PLAYING, now)
+    return start_game(conn, previous.room_code, previous.number + 1, white, PLAYING, now, counted=counted)
 
 
 def bump_version(conn: sqlite3.Connection, game: Game) -> None:
@@ -577,6 +582,7 @@ class GameView:
             "counted": game.counted,
             "joinRequest": dict(room.join_request) if room.join_request and viewer_slot == "A" else None,
             "computer": dict(room.computer) if room.computer is not None else None,
+            "standIn": room.stand_in,
         }
 
     @property

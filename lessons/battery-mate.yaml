@@ -1,0 +1,55 @@
+# Batteries: line two pieces up on one diagonal, file or rank so the front piece
+# attacks with the back piece's support. A beginner lesson from a middlegame
+# position: queen and bishop on the b1-h7 diagonal, a rook on the open e-file.
+# Line (verified with python-chess): 1.Qd3 Nf6 2.Rfe1 Ng4 3.Qxh7#.
+# Schema: see "Opening lessons" in README.md. Every move needs a note.
+name: "Batteries: queen and bishop mate"
+kind: trap
+aliases:
+  - Battery
+  - Queen and bishop battery
+side: white
+start: "r1br3k/pp1n1ppp/1qp5/8/8/2P5/PPB2PPP/R2Q1RK1 w - - 0 14"
+moves:
+  - san: Qd3
+    note: >-
+      Form a battery. The queen steps in front of the bishop on the same
+      diagonal (c2-d3-e4-f5-g6-h7). The queen attacks h7 and the bishop backs
+      it up, so Qxh7 would be checkmate.
+    alternatives:
+      - san: Bxh7
+        note: >-
+          Too soon. The bishop alone is taken by the king. Put the queen in
+          front first, so the bishop supports her instead.
+      - san: Qh5
+        note: >-
+          The queen attacks h7 from the side, but nothing supports her there:
+          the king or a knight on f6 would deal with it. Line her up with the
+          bishop instead.
+  - san: Nf6
+    note: >-
+      Good defence. The knight on f6 guards h7. Moving g6 or f5 to block the
+      diagonal also works; h6 would not, because Qh7 is still mate.
+  - san: Rfe1
+    note: >-
+      Bring a rook to the open e-file. Rooks form batteries too: two rooks, or
+      a queen and a rook, on the same file or rank hit the same squares twice.
+    alternatives:
+      - san: Qxh7+
+        note: >-
+          Not yet: the knight on f6 guards h7 and simply takes your queen. A
+          battery only wins when it attacks a square more times than it is
+          defended.
+  - san: Ng4
+    note: >-
+      A mistake. The knight goes after f2 and h2, but it stops guarding h7.
+      Always ask what a defending piece was protecting before you move it.
+  - san: "Qxh7#"
+    note: >-
+      Checkmate. The bishop behind the queen protects her, so the king cannot
+      take, and the queen covers g8. The battery hit h7 twice; only the king
+      defended it.
+objectives:
+  - Line up two pieces on one diagonal, file or rank so the front piece attacks with the back piece's support.
+  - Count attackers and defenders of the target square before you strike.
+  - As the defender, block the line or guard the square, and don't move a guard away.

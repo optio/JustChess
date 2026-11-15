@@ -279,3 +279,33 @@ def test_app_uses_configured_postgres_without_sqlite_fallback(pg_database, tmp_p
                                json={"token": room["token"], "uci": "e2e4", "version": 1})
         assert response.status_code == 200
     assert not unused.exists()
+
+
+def _stand_in_scenario(db):
+    """The computer stand-in on either backend: enter, take over, leave, clean up."""
+    now = 1800000100.0
+    with db.transaction() as conn:
+        room, seat, _token = rooms.create_room(conn, now, lambda: "STD001")
+        games.create_first_game(conn, room.code, now)
+        rooms.set_mode(conn, room.code, seat, rooms.MODE_COMPUTER, now, level="club")
+        assert rooms.is_stand_in(conn, room.code)
+        game = games.current_game(conn, room.code)
+        games.apply_move(conn, game, "A", "e2e4", game.version, now + 1, computer=True)
+        joined = rooms.join_room(conn, room.code, None, now + 2)
+        took_over = (joined.created, joined.seat.slot, rooms.get_room(conn, room.code).mode, rooms.is_stand_in(conn, room.code))
+        other, seat_b, _ = rooms.create_room(conn, now, lambda: "STD002")
+        games.create_first_game(conn, other.code, now)
+        rooms.set_mode(conn, other.code, seat_b, rooms.MODE_COMPUTER, now)
+        rooms.set_mode(conn, other.code, seat_b, rooms.MODE_WAITING, now + 1)
+        left = (rooms.get_room(conn, other.code).mode, "B" in rooms.get_seats(conn, other.code), rooms.is_stand_in(conn, other.code))
+        rooms.set_mode(conn, other.code, seat_b, rooms.MODE_COMPUTER, now + 2)
+    assert housekeeping.run_cleanup(db, now + 10000000, hooks=(notifications.delete_room_data,), retention=1) == 2
+    with db.read() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM room_stand_ins").fetchone()[0] == 0
+    return took_over, left
+
+
+def test_postgres_stand_in_matches_sqlite(pg_database, tmp_path):
+    pg, _ = pg_database
+    sqlite = database.prepare_database(tmp_path / "stand-in.sqlite3")
+    assert _stand_in_scenario(pg) == _stand_in_scenario(sqlite) == ((True, "B", "online", False), ("waiting", False, False))

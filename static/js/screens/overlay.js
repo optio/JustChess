@@ -15,6 +15,7 @@
  *   lapsed         "Your opponent left. Share the link to play again." and a Share button
  *   none           a watcher: no rematch button
  */
+import { runBusy } from "../busy.js";
 
 export const REMATCH_LABELS = Object.freeze({
   offer: "Play again",
@@ -57,7 +58,7 @@ export function createOverlay(container, { onPlayAgain, onShareResult, onShareLi
 
   function onAgain() {
     if (again.getAttribute("aria-disabled") === "true") return;
-    if (typeof onPlayAgain === "function") onPlayAgain();
+    if (typeof onPlayAgain === "function") runBusy(again, () => onPlayAgain());
   }
 
   again.addEventListener("click", onAgain);

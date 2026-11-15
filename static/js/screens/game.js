@@ -56,6 +56,7 @@
  */
 
 import { createBoard } from "../board/board.js";
+import { busyClick, isBusy, runBusy } from "../busy.js";
 import { parseUci } from "../board/geometry.js";
 import { createHintArrow } from "../board/hint-arrow.js";
 import { captureLabel, capturedPieces } from "../captures.js";
@@ -70,6 +71,7 @@ export const PHONE_ROWS = 6;
 export const BANNER_TEXT = "Your move in the game. Back to the board";
 export const CONTINUE_WARNING = "Anyone with this link can play your side. Don't share it.";
 export const CONTINUE_FAILED = "Couldn't make a link. Try again.";
+export const SAVING_STATUS = Object.freeze({ text: "Saving your move…", sub: null, tone: "surface", dot: "saving" });
 
 function make(tag, attributes = {}, text) {
   const node = document.createElement(tag);
@@ -178,18 +180,22 @@ function buildCapturedRow() {
 function buildPassAlongRow(call) {
   const row = make("div", { className: "pass-along", "data-testid": "pass-along" });
   const start = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "pass-along-start" }, "Play here while waiting");
+  const computer = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "stand-in-start" }, "Play the computer while waiting");
   const stop = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "pass-along-stop" }, "Wait for a friend instead");
   const note = make("p", { className: "t-small t-muted pass-along-note", "data-testid": "pass-along-note" }, PRACTICE_NOTE);
-  row.append(start, stop, note);
-  start.addEventListener("click", () => call("onEnterPassAlong"));
-  stop.addEventListener("click", () => call("onLeavePassAlong"));
+  row.append(start, computer, stop, note);
+  busyClick(start, () => call("onEnterPassAlong"));
+  busyClick(computer, () => call("onPlayComputerWhileWaiting"));
+  busyClick(stop, () => call("onLeavePassAlong"));
   return {
     row,
     render(controls) {
       start.hidden = !controls.playHere;
+      computer.hidden = !controls.playComputer;
       stop.hidden = !controls.waitForFriend;
       note.hidden = !controls.practiceNote;
-      row.hidden = start.hidden && stop.hidden && note.hidden;
+      note.textContent = controls.note || PRACTICE_NOTE;
+      row.hidden = start.hidden && computer.hidden && stop.hidden && note.hidden;
     },
   };
 }
@@ -240,17 +246,18 @@ function buildRequestBanner(call) {
     hide();
   }
 
-  async function answer(acceptIt) {
+  async function answer(button, acceptIt) {
+    if (isBusy(accept) || isBusy(decline)) return;
     accept.disabled = decline.disabled = true;
     try {
-      await call("onAnswerRequest", acceptIt);
+      await runBusy(button, () => call("onAnswerRequest", acceptIt));
     } finally {
       accept.disabled = decline.disabled = false;
     }
   }
 
-  accept.addEventListener("click", () => answer(true));
-  decline.addEventListener("click", () => answer(false));
+  accept.addEventListener("click", () => answer(accept, true));
+  decline.addEventListener("click", () => answer(decline, false));
 
   return {
     root,
@@ -305,16 +312,17 @@ function buildComputerRow(call) {
     if (returnFocus) resign.focus({ preventScroll: true });
   }
 
-  takeback.addEventListener("click", () => call("onTakeback"));
-  hint.addEventListener("click", () => call("onHint"));
+  busyClick(takeback, () => call("onTakeback"));
+  busyClick(hint, () => call("onHint"));
   resign.addEventListener("click", () => {
+    if (isBusy(resign)) return;
     confirm.hidden = false;
     no.focus({ preventScroll: true });
   });
   no.addEventListener("click", () => closeConfirm());
   yes.addEventListener("click", () => {
     closeConfirm({ returnFocus: false });
-    call("onResign");
+    runBusy(resign, () => call("onResign"));
   });
   confirm.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
@@ -322,7 +330,7 @@ function buildComputerRow(call) {
     event.stopPropagation();
     closeConfirm();
   });
-  retry.addEventListener("click", () => call("onComputerRetry"));
+  busyClick(retry, () => call("onComputerRetry"));
 
   return {
     root,
@@ -361,7 +369,7 @@ function buildContinueRow(onContinueLink, onCopy) {
   const error = make("p", { className: "field-error", role: "alert", "data-testid": "continue-error" });
   row.append(heading, get, result, error);
 
-  get.addEventListener("click", async () => {
+  get.addEventListener("click", () => runBusy(get, async () => {
     error.textContent = "";
     get.disabled = true;
     try {
@@ -380,7 +388,7 @@ function buildContinueRow(onContinueLink, onCopy) {
     } finally {
       get.disabled = false;
     }
-  });
+  }));
   copy.addEventListener("click", async () => {
     const outcome = await onCopy(field.value);
     if (outcome === "copied") {
@@ -498,6 +506,7 @@ export function createGameScreen(container, deps = {}) {
   // P2 U1, BR1.6: what the captured row was last drawn from, and the player's move awaiting the server.
   const capturedInput = { rows: [], pending: null, seat: false, colour: "white" };
   let lastPlies = null;
+  let lastStatus = null;
   const repaintPending = () => {
     if (capturedInput.pending) captured.paint(capturedInput, "settle");
   };
@@ -507,6 +516,7 @@ export function createGameScreen(container, deps = {}) {
     labels: settings.get("labels"),
     onMove: (uci) => {
       capturedInput.pending = uci;
+      renderStatus(SAVING_STATUS, { keep: false }); // until the server answers
       call("onMove", uci);
     },
     onCaptureShown: repaintPending,
@@ -518,6 +528,7 @@ export function createGameScreen(container, deps = {}) {
       const hadPending = capturedInput.pending !== null;
       capturedInput.pending = null;
       innerBoard.reject();
+      if (hadPending && lastStatus) renderStatus(lastStatus);
       if (hadPending && lastPlies !== null) captured.paint(capturedInput, "none");
     },
     focus: () => innerBoard.focus(),
@@ -562,8 +573,8 @@ export function createGameScreen(container, deps = {}) {
   settingsToggle.addEventListener("click", () => setSettingsOpen(sheetPanel.hidden));
   sheetClose.addEventListener("click", () => setSettingsOpen(false));
   root.addEventListener("keydown", onKeydown);
-  claimDraw.addEventListener("click", () => call("onClaimDraw"));
-  claimWin.addEventListener("click", () => call("onClaimWin"));
+  busyClick(claimDraw, () => call("onClaimDraw"));
+  busyClick(claimWin, () => call("onClaimWin"));
   sheetToggle.addEventListener("click", () => {
     sheetExpanded = !sheetExpanded;
     applySheetCollapse();
@@ -627,7 +638,9 @@ export function createGameScreen(container, deps = {}) {
     boardRoot.classList.toggle("is-reconnecting", reconnecting);
   }
 
-  function renderStatus(statusView) {
+  function renderStatus(statusView, { keep = true } = {}) {
+    if (keep) lastStatus = statusView;
+    status.setAttribute("aria-busy", String(statusView === SAVING_STATUS));
     statusText.textContent = statusView.text;
     statusSub.textContent = statusView.sub || "";
     statusSub.hidden = !statusView.sub;
@@ -649,7 +662,7 @@ export function createGameScreen(container, deps = {}) {
       item.append(make("span", {}, notice.text));
       if (notice.action === "startNew") {
         const button = make("button", { className: "btn btn-secondary", type: "button", "data-testid": "start-new-game" }, "Start a new game");
-        button.addEventListener("click", () => call("onStartNew"));
+        busyClick(button, () => call("onStartNew"));
         item.append(button);
       }
       return item;
@@ -696,11 +709,13 @@ export function createGameScreen(container, deps = {}) {
   function render(view, { endPhase = null, reconnecting = false } = {}) {
     const fenChanged = view.board.fen !== applied.fen;
     renderBoard(view, reconnecting);
+    const savingMove = capturedInput.pending !== null && !fenChanged && board.mode === "pending";
     renderCaptured(view, reconnecting, fenChanged);
     players.textContent = `${playsLine(view.players.white, "White")} · ${playsLine(view.players.black, "Black")}`;
-    renderStatus(view.status);
+    if (savingMove) lastStatus = view.status; // the move is still on its way: keep "Saving your move…"
+    else renderStatus(view.status);
     renderClaims(view);
-    passAlong.render(view.passAlong || { playHere: false, waitForFriend: false, practiceNote: false });
+    passAlong.render(view.passAlong || { playHere: false, playComputer: false, waitForFriend: false, practiceNote: false });
     requestBanner.render(view.joinRequest || null);
     computerRow.render(view.computer || null);
     hintArrow.show(view.computer ? view.computer.hint : null, view.board.orientation);
@@ -721,7 +736,7 @@ export function createGameScreen(container, deps = {}) {
     capturedKey = null;
     lastPlies = null;
     renderClaims({ claims: { draw: null, win: false, winLabel: "" } });
-    passAlong.render({ playHere: false, waitForFriend: false, practiceNote: false });
+    passAlong.render({ playHere: false, playComputer: false, waitForFriend: false, practiceNote: false });
     requestBanner.render(null);
     computerRow.render(null);
     hintArrow.clear();

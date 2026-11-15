@@ -189,7 +189,7 @@ export function createApi(fetchImpl = globalThis.fetch, { base = "", player = nu
     },
     continueLink: (code, token) => seatAction(code, token, "continue-link"),
     /** P2 U3: seat A switches the room to "pass_along" or back to "waiting"; resolves with seat A's snapshot. */
-    setMode: (code, token, mode) => seatAction(code, token, "mode", { mode }),
+    setMode: (code, token, mode, level = null) => seatAction(code, token, "mode", level ? { mode, level } : { mode }),
     /** P2 U3: seat A accepts (true) or declines (false) the pending join request; resolves with the snapshot. */
     answerRequest: (code, token, accept) => seatAction(code, token, "join-request/answer", { accept: Boolean(accept) }),
     /** P2 U3: the joiner's poll; the request token travels in the body only. Resolves { status, expiresAt? }. */

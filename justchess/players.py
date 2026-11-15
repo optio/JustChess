@@ -70,9 +70,18 @@ def create(conn, now):
 
 def profile(conn, token):
     player = authenticate(conn, token)
-    rows = conn.execute("SELECT s.room_code, s.slot, r.mode, r.computer_level FROM seats s JOIN rooms r ON r.code = s.room_code WHERE s.player_id = ? ORDER BY r.last_activity_at DESC LIMIT 50", (player["player_id"],)).fetchall()
+    # A friend room whose seat B the computer only stands in for stays a friend seat, so the
+    # lobby's "Play the computer" never reopens it as that level's computer room.
+    rows = conn.execute("SELECT s.room_code, s.slot, r.mode, r.computer_level, st.room_code AS stand_in FROM seats s "
+                        "JOIN rooms r ON r.code = s.room_code LEFT JOIN room_stand_ins st ON st.room_code = s.room_code "
+                        "WHERE s.player_id = ? ORDER BY r.last_activity_at DESC LIMIT 50", (player["player_id"],)).fetchall()
+
+    def computer_room(row) -> bool:
+        return row["mode"] == "computer" and row["stand_in"] is None
+
     return {"playerId": player["player_id"], "nickname": player["nickname"], "seats": [
-        {"code": row["room_code"], "slot": row["slot"], "token": token, "kind": "computer" if row["mode"] == "computer" else "friend", "computerLevel": row["computer_level"]} for row in rows]}
+        {"code": row["room_code"], "slot": row["slot"], "token": token, "kind": "computer" if computer_room(row) else "friend",
+         "computerLevel": row["computer_level"] if computer_room(row) else None} for row in rows]}
 
 
 def restore(conn, recovery, now):

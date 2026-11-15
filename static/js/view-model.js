@@ -15,7 +15,7 @@
  *
  * View: {
  *   board:      { fen, orientation, legalMoves, lastMove (UCI or null), check, interactive }
- *   status:     { text, sub, tone: "baize" | "surface", dot: "solid" | "hollow" | "red" | null }   BR3.4
+ *   status:     { text, sub, tone: "baize" | "surface", dot: "solid" | "hollow" | "red" | "hourglass" | null }   BR3.4
  *   claims:     { draw: null | "threefold" | "fifty_moves" | "unknown", drawLabel, win }  BR3.7
  *   scoresheet: { rows: [{ number, white, black }], latest: { row, side } | null, result }  BR3.5
  *   score:      { left: { label, wins }, right: { label, wins }, draws, text }        BR3.6
@@ -217,7 +217,7 @@ function statusOf(snapshot, ctx, seat, yourMove) {
     text: `Waiting for ${colourName(snapshot.turn)}`,
     sub: extra.length ? extra.join(" · ") : null,
     tone: "surface",
-    dot: away ? "hollow" : null,
+    dot: away ? "hollow" : "hourglass", // an hourglass until the opponent answers
   };
 }
 
@@ -229,7 +229,7 @@ function computerStatus(snapshot, ctx, yourMove) {
   if (yourMove) return null;
   const san = lastSan(snapshot.moveList);
   const played = san ? `${colourName(otherColour(snapshot.turn))} played ${san}` : null;
-  return { text: computerStatusText(computer) || "Waiting for the computer", sub: played, tone: "surface", dot: null };
+  return { text: computerStatusText(computer) || "Waiting for the computer", sub: played, tone: "surface", dot: "hourglass" };
 }
 
 function computerViewOf(snapshot, seat, ctx) {
@@ -424,8 +424,10 @@ export function announcement(previous, next, viewerColour = null) {
     const title = endTitle(next.endReason);
     const winner = winnerOf(next.result);
     parts.push(`Game over — ${title}. ${winner ? `${colourName(winner)} wins.` : "Draw."}`);
-  } else if (previous.status === "waiting" && next.status === "playing") {
+  } else if (previous.status === "waiting" && next.status === "playing" && next.mode !== "computer") {
     parts.push("Your opponent joined.");
+  } else if (previous.mode === "computer" && previous.standIn && next.mode === "online") {
+    parts.push("Your friend took over from the computer.");
   }
   return parts.length ? parts.join(" ") : null;
 }

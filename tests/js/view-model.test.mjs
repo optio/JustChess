@@ -60,6 +60,7 @@ test("the status line follows the BR3.4 order: game over, reconnecting, waiting,
 
   const theirs = viewModel(snap(AFTER_D4));
   assert.deepEqual([theirs.status.text, theirs.status.tone, theirs.status.sub], ["Waiting for Black", "surface", null]);
+  assert.equal(theirs.status.dot, "hourglass", "an hourglass while the opponent has to answer");
   assert.equal(theirs.board.interactive, false);
   assert.deepEqual(theirs.board.legalMoves, []);
 

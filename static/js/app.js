@@ -109,7 +109,7 @@ import { createLive, socketUrl } from "./live.js";
 import { createBlunderHook } from "./blunder.js";
 import { createNotifications } from "./notifications.js";
 import { actionAnswer, applyRefusal, enterRoom, playComputer, settleRequest, submitMove } from "./room-flow.js";
-import { nextRetry, shouldResume } from "./computer.js";
+import { nextRetry, readChoice, shouldResume } from "./computer.js";
 import { clientGameplay, loadFromDocument } from "./gameplay.js";
 import { JOINER_TEXT, createJoinerPoller, waitingText } from "./pass-along.js";
 import { initialState, reduce } from "./screen-state.js";
@@ -327,6 +327,8 @@ export function startApp({
         onPlayAgain: () => seatAction((code, token) => api.rematch(code, token)),
         onEnterPassAlong: () => seatAction((code, token) => api.setMode(code, token, "pass_along")),
         onLeavePassAlong: () => seatAction((code, token) => api.setMode(code, token, "waiting")),
+        // The computer plays seat B until a friend opens the link; the lobby panel's remembered level is used.
+        onPlayComputerWhileWaiting: () => seatAction((code, token) => api.setMode(code, token, "computer", readChoice(choiceStorage).level)),
         onAnswerRequest: (accept) => seatAction((code, token) => api.answerRequest(code, token, accept)),
         onTakeback: () => versionedAction((code, token, version) => api.takeback(code, token, version)),
         onResign: () => versionedAction((code, token, version) => api.resign(code, token, version)),
@@ -335,6 +337,7 @@ export function startApp({
         onBackToGames: () => {
           if (win.location.pathname !== "/") win.history.pushState(null, "", "/");
           goLobby();
+          refreshLobbyGames();
         },
         onShareResult: shareResult,
         onShareLink: shareInvite,
@@ -412,7 +415,8 @@ export function startApp({
     roomCode.textContent = state.code;
     roomCode.setAttribute("aria-label", `Room code ${state.code}`);
     doc.title = `Room ${state.code} — JustChess`;
-    shareButton.hidden = Boolean(state.snapshot && state.snapshot.mode === "computer"); // P2 U4: nobody to invite
+    // P2 U4: nobody to invite against the computer, unless it only stands in for a friend.
+    shareButton.hidden = Boolean(state.snapshot && state.snapshot.mode === "computer" && !state.snapshot.standIn);
     if (!state.snapshot) {
       if (joiner) game.renderJoiner(joiner.text, { waiting: joiner.waiting });
       else game.renderJoining(state.code);
@@ -609,6 +613,11 @@ export function startApp({
     closeRoom();
     dispatch({ type: "route" });
     if (error) dispatch({ type: "lobbyError", message: error, code });
+  }
+
+  /** Force the lobby's "Your games" list to refresh (used when coming back to the lobby). */
+  function refreshLobbyGames() {
+    if (screen && screen.kind === "lobby") screen.ui.refreshGames();
   }
 
   /** Leave any room and set the page up for one of the trainer screens. */
@@ -964,6 +973,7 @@ export function startApp({
     event.preventDefault();
     if (win.location.pathname !== "/") win.history.pushState(null, "", "/");
     goLobby();
+    refreshLobbyGames(); // the room just left may have moved on: fetch the list now, past the 30 s cap
   });
   win.addEventListener("popstate", () => route());
   settings.subscribe((key, value) => {

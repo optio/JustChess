@@ -4,9 +4,10 @@
  * so tests/js/pass-along.test.mjs drives everything in Node.
  *
  *   controlsFor(snapshot, { watching })
- *     -> { playHere, waitForFriend, practiceNote }   which pass-along controls the game screen shows:
- *        "Play here while waiting" for seat A in a waiting room with seat B empty;
- *        "Wait for a friend instead" and the practice note for seat A in pass-along.
+ *     -> { playHere, playComputer, waitForFriend, practiceNote, note }   which controls the game screen shows:
+ *        "Play here while waiting" and "Play the computer while waiting" for seat A in a
+ *        waiting room with seat B empty; "Wait for a friend instead" and the note
+ *        (PRACTICE_NOTE or STAND_IN_NOTE) for seat A in pass-along or with the computer standing in.
  *
  *   countdownText(secondsLeft) -> "m:ss"           never negative
  *   bannerText(colour, secondsLeft)                "Someone wants to join as Black. They will take over
@@ -48,6 +49,7 @@ export const JOINER_TEXT = Object.freeze({
 
 export const PASS_ALONG_SUB = "Hand the device over after each move. The invite link still works.";
 export const PRACTICE_NOTE = "Practice game: the room score changes only once a friend joins.";
+export const STAND_IN_NOTE = "The computer plays until your friend opens the invite link, then they take over from this position. The room score starts counting then.";
 export const PRACTICE_OVER = "Practice game over";
 
 const FINAL_PHASES = new Set(["accepted", "declined", "lapsed", "unknown"]);
@@ -64,11 +66,12 @@ export function waitingText(colour) {
 }
 
 export function controlsFor(snapshot, { watching = false } = {}) {
-  const none = { playHere: false, waitForFriend: false, practiceNote: false };
+  const none = { playHere: false, playComputer: false, waitForFriend: false, practiceNote: false, note: null };
   if (!snapshot || watching || snapshot.slot !== "A") return none;
   const seatB = snapshot.seats && snapshot.seats.B ? snapshot.seats.B.presence : "empty";
-  if (snapshot.mode === "pass_along") return { playHere: false, waitForFriend: true, practiceNote: true };
-  if (snapshot.mode === "waiting" && seatB === "empty") return { ...none, playHere: true };
+  if (snapshot.mode === "pass_along") return { ...none, waitForFriend: true, practiceNote: true, note: PRACTICE_NOTE };
+  if (snapshot.mode === "computer" && snapshot.standIn) return { ...none, waitForFriend: true, practiceNote: true, note: STAND_IN_NOTE };
+  if (snapshot.mode === "waiting" && seatB === "empty") return { ...none, playHere: true, playComputer: true };
   return none;
 }
 

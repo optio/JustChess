@@ -396,6 +396,10 @@ CREATE TABLE IF NOT EXISTS request_addresses (
     request_id INTEGER PRIMARY KEY REFERENCES join_requests(request_id) ON DELETE CASCADE,
     address_hash TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS room_stand_ins (
+    room_code TEXT PRIMARY KEY REFERENCES rooms(code) ON DELETE CASCADE,
+    started_at DOUBLE PRECISION NOT NULL
+);
 CREATE TABLE IF NOT EXISTS room_declines (
     room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
     address_hash TEXT NOT NULL,

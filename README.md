@@ -74,7 +74,7 @@ The protected `/api/cron/maintenance` endpoint accepts only `Authorization: Bear
 
 ### Save your player and nickname
 
-The compact footer automatically creates an anonymous player. Enter an optional nickname and press the inline checkmark or Enter to save it; a saved name appears as text with a pencil to edit. Clearing and saving returns to the empty field. An unsaved draft stays intact when your profile refreshes.
+The app automatically creates an anonymous player; "Loading JustChess…" shows until it is ready. Your nickname sits in the top bar on every screen. Type an optional nickname and press the diskette button (it appears once you have typed a character) or Enter to save it; a saved name appears as text with a pencil to edit. Clearing and saving returns to the empty field. An unsaved draft stays intact when your profile refreshes. On a phone in a game, the field takes its own row only while you type in it. The player-link controls stay in the compact footer.
 
 Use **Copy player link** to copy your private recovery URL to another device. The **?** button explains the system and offers a selectable link plus **Bookmark my player**; this same dialog opens automatically if the clipboard is unavailable. Bookmark that private link itself, rather than the ordinary page address after recovery. It restores your nickname and up to 50 recent saved game seats; both devices can continue playing. Keep it private—anyone holding it can use your player and games. It has no expiry. **New link** opens a confirmation dialog before invalidating old bookmarks while leaving signed-in devices connected; save the replacement afterwards. Other devices with an older cached link can generate a replacement too. There is no email/password recovery, identity merging or cross-device training-progress sync.
 
@@ -109,6 +109,8 @@ See the [product requirements](aidlc/spaces/default/intents/261111-requirements-
 
 **Play here while waiting.** While nobody has joined your room, the waiting screen offers **Play here while waiting**. The room switches to pass-along: the game starts and you move both colours on this device ("Pass-along: White to move"), handing it over after each move if you like. These are practice games: the room score changes only once a friend joins, and a game that ends in pass-along shows "Practice game over". **Play again** starts the next practice game at once, colours swapped. **Wait for a friend instead** switches back, keeping the position; the side that is not yours then locks. The mode is kept with the room, so it survives a reload. A computer room has no pass-along, and once a friend has joined it is gone for good.
 
+**Play the computer while waiting.** The waiting screen also offers **Play the computer while waiting**. The computer takes the free seat at the level you last chose in the lobby's "Play the computer" panel (Casual by default), and the game starts at once with the usual Take back, Hint and Resign. Share stays in the top bar. A friend who opens the invite link then joins directly and takes over the computer's seat from the current position; you see "Your opponent has joined", and that game, if it is not over, counts for the room score from then on. Games against the stand-in computer, including any **Play again**, never count. **Wait for a friend instead** removes the computer and keeps the position. This needs the engine: without it the switch is refused with "The computer is not available right now". Computer rooms made from the lobby still refuse other visitors.
+
 **Join requests.** In pass-along, opening the invite link does not take the free seat. It sends a join request, and the visitor sees "Waiting for the creator to accept. You'll play Black from the current position." (naming whichever colour is free). The creator gets a banner above the status, "Someone wants to join as Black. … Expires in 9:41.", with **Accept** and **Decline**, plus the usual notification ("Someone wants to join") when the page is in the background or closed; without notifications, the "Join request" pill in "Your games" shows it the next time you open the app.
 
 - **Accept** gives the visitor the free seat from the current position; that game, if it is not over, now counts for the score. The visitor's page learns the answer within 3 seconds and opens the game.
@@ -117,7 +119,7 @@ See the [product requirements](aidlc/spaces/default/intents/261111-requirements-
 - Only one request can be pending per room: a second visitor sees "Someone else is already asking to join. Try again in a few minutes."
 - One client address can send at most **5 join requests a minute** ("Too many requests. Try again shortly.", HTTP 429). Behind a reverse proxy see [Client address behind a proxy](#client-address-behind-a-proxy).
 
-The visitor's page polls `POST /api/rooms/{code}/join-request/status` with its request token, which lives in the tab's session storage only. On acceptance that same token becomes the visitor's seat token (the server only ever stores its hash), so a refresh or a server restart loses nothing. The routes are `POST /api/rooms/{code}/mode` (`{token, mode: "pass_along" | "waiting"}`), `POST /api/rooms/{code}/join` (202 with a request token for a pass-along room), `POST /api/rooms/{code}/join-request/answer` (`{token, accept}`) and `.../join-request/status` (`{requestToken}`). Tokens travel only in request bodies and are never logged.
+The visitor's page polls `POST /api/rooms/{code}/join-request/status` with its request token, which lives in the tab's session storage only. On acceptance that same token becomes the visitor's seat token (the server only ever stores its hash), so a refresh or a server restart loses nothing. The routes are `POST /api/rooms/{code}/mode` (`{token, mode: "pass_along" | "waiting" | "computer", level?}`; the computer stand-in starts from waiting only), `POST /api/rooms/{code}/join` (202 with a request token for a pass-along room), `POST /api/rooms/{code}/join-request/answer` (`{token, accept}`) and `.../join-request/status` (`{requestToken}`). Tokens travel only in request bodies and are never logged.
 
 ## Play the computer
 
@@ -230,10 +232,10 @@ Open a lesson from the hub's Openings, Traps or Defence tab, or open `/learn/{id
 - **Walkthrough:** Next plays each move with its note beside the scoresheet row; Back and Restart step back.
 - **Practise:** you play the lesson's side (switch with **Practise as White / Black**) and the trainer plays the replies. **Hint** marks the piece to move. After 3 misses on a move, a dashed arrow shows it, with its note. An illegal move is refused as illegal. A legal move off the line is shown as "Legal, but not this line", with **Keep playing freely** (both sides, not part of the lesson) or **Back to the line**.
 
-The app ships 18 lessons in `lessons/`:
+The app ships 19 lessons in `lessons/`:
 
 - **Openings (10):** `italian`, `monte-carlo`, `ruy-lopez`, `sicilian`, `french`, `caro-kann`, `queens-gambit`, `london`, `kings-indian`, `scandinavian`.
-- **Traps (4):** `legals-mate`, `fried-liver`, `fishing-pole`, `englund-gambit-trap`.
+- **Traps (5):** `legals-mate`, `fried-liver`, `fishing-pole`, `englund-gambit-trap`, and `battery-mate`, a beginner lesson on batteries (two pieces lined up on one diagonal, file or rank). It starts from a middlegame position, not the opening.
 - **Defence (4):** `scholars-mate-defence`, `fried-liver-defence`, `early-queen-raids`, `wayward-queen`.
 
 The lines are standard theory and the notes are written for JustChess. `tests/test_lessons.py` loads every file and fails on any skip.

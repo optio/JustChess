@@ -46,6 +46,17 @@ test("join: seat A gets 'joined' when seat B leaves empty in game 1; seat B and 
   assert.equal(eventFor(null, after, "A"), null, "the first snapshot of a room is not an event");
 });
 
+test("join: the stand-in computer taking seat B is no join; a friend taking over from it is", () => {
+  const waiting = snap({ status: "waiting", bPresence: "empty" });
+  const computer = { ...snap({ status: "playing", bPresence: "computer" }), mode: "computer", standIn: true };
+  assert.equal(eventFor(waiting, computer, "A"), null, "the computer is not the opponent the creator waits for");
+  const friend = { ...snap({ status: "playing", bPresence: "connected", sans: ["e4", "a5"] }), mode: "online" };
+  const event = eventFor({ ...computer, moveList: friend.moveList, turn: friend.turn }, friend, "A");
+  assert.equal(event.key, "joined");
+  assert.equal(event.body, "Your friend took over from the computer.");
+  assert.equal(eventFor(computer, friend, "B"), null);
+});
+
 test("move keys use the game number and the half-move count, for the side to move only", () => {
   const e4 = snap({ sans: ["e4"] });
   const event = eventFor(snap(), e4, "B");

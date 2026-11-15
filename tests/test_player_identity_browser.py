@@ -7,9 +7,9 @@ def _nickname(page, value):
     import json
     if page.js("!document.querySelector('[data-testid=player-display]').hidden"):
         page.click("player-edit")
-    page.js(f"document.querySelector('[data-testid=player-nickname]').value = {json.dumps(value)}")
+    page.js(f"(() => {{ const f = document.querySelector('[data-testid=player-nickname]'); f.value = {json.dumps(value)}; f.dispatchEvent(new Event('input')); return true; }})()")
     page.click("player-save")
-    page.wait("document.querySelector('[data-testid=player-message]').textContent === 'Nickname saved'", what="nickname saved")
+    page.wait("document.querySelector('[data-testid=player-name-message]').textContent === 'Nickname saved'", what="nickname saved")
 
 
 def test_player_bookmark_restores_games_keeps_devices_and_revokes_old_link(live_server, browser):
@@ -147,6 +147,13 @@ def test_nickname_display_edit_draft_pending_and_validation(live_server, browser
     page.go(live_server + "/")
     page.wait("!!document.querySelector('[data-testid=start-game]')", what="lobby")
     assert not page.js("document.querySelector('[data-testid=player-editor]').hidden")
+    # A first nickname: the diskette save control appears only once the draft has a character.
+    assert page.js("document.querySelector('[data-testid=player-save]').hidden")
+    assert page.js("!!document.querySelector('.topbar [data-testid=player-nickname]')")
+    page.js("(() => { const f = document.querySelector('[data-testid=player-nickname]'); f.value = ' '; f.dispatchEvent(new Event('input')); return true; })()")
+    assert page.js("document.querySelector('[data-testid=player-save]').hidden")
+    page.js("(() => { const f = document.querySelector('[data-testid=player-nickname]'); f.value = 'A'; f.dispatchEvent(new Event('input')); return true; })()")
+    assert not page.js("document.querySelector('[data-testid=player-save]').hidden")
     _nickname(page, "Alice")
     assert page.js("document.querySelector('[data-testid=player-editor]').hidden")
     assert page.js("document.querySelector('[data-testid=player-name]').textContent") == "Alice"
@@ -157,7 +164,7 @@ def test_nickname_display_edit_draft_pending_and_validation(live_server, browser
     assert page.js("document.querySelector('[data-testid=player-nickname]').selectionEnd") == 5
     page.js("(() => {const f=document.querySelector('[data-testid=player-nickname]'); f.value='f.u.c.k'; f.dispatchEvent(new Event('input')); return true;})()")
     page.click("player-save")
-    page.wait("document.querySelector('[data-testid=player-message]').textContent.includes('profanity')", what="validation feedback")
+    page.wait("document.querySelector('[data-testid=player-name-message]').textContent.includes('profanity')", what="validation feedback")
     assert page.js("document.querySelector('[data-testid=player-name]').textContent") == "Alice"
     assert not page.js("document.querySelector('[data-testid=player-editor]').hidden")
     page.js("""(() => { window.__nicknameCalls=0; const original=window.fetch.bind(window);

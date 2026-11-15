@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import {
   JOINER_TEXT,
   POLL_MS,
+  PRACTICE_NOTE,
+  STAND_IN_NOTE,
   bannerText,
   controlsFor,
   countdownText,
@@ -43,10 +45,14 @@ function fakeTimers() {
 }
 
 test("controls: Play here for seat A while waiting alone; Wait for a friend and the note in pass-along; nothing otherwise", () => {
-  assert.deepEqual(controlsFor({ ...BASE, mode: "waiting" }), { playHere: true, waitForFriend: false, practiceNote: false });
-  assert.deepEqual(controlsFor(BASE), { playHere: false, waitForFriend: true, practiceNote: true });
+  const none = { playHere: false, playComputer: false, waitForFriend: false, practiceNote: false, note: null };
+  assert.deepEqual(controlsFor({ ...BASE, mode: "waiting" }), { ...none, playHere: true, playComputer: true });
+  assert.deepEqual(controlsFor(BASE), { ...none, waitForFriend: true, practiceNote: true, note: PRACTICE_NOTE });
+  const standIn = { ...BASE, mode: "computer", standIn: true, seats: { ...BASE.seats, B: { presence: "computer", colour: "black" } } };
+  assert.deepEqual(controlsFor(standIn), { ...none, waitForFriend: true, practiceNote: true, note: STAND_IN_NOTE });
+  assert.deepEqual(controlsFor({ ...standIn, standIn: false }), none, "a lobby computer room has no friend to wait for");
   const joined = { ...BASE, mode: "online", seats: { ...BASE.seats, B: { presence: "connected", colour: "black" } } };
-  assert.deepEqual(controlsFor(joined), { playHere: false, waitForFriend: false, practiceNote: false });
+  assert.deepEqual(controlsFor(joined), none);
   assert.equal(controlsFor({ ...BASE, slot: "B" }).waitForFriend, false, "only the creator");
   assert.equal(controlsFor({ ...BASE, mode: "waiting" }, { watching: true }).playHere, false, "never a watcher");
   assert.equal(controlsFor(null).playHere, false);

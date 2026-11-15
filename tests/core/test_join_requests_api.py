@@ -60,7 +60,9 @@ def test_refusals_403_and_409(make_client):
     client = make_client()
     code, token_a = pass_along(client)
     assert client.post(MODE.format(code=code), json={"token": "not-a-seat-token", "mode": "waiting"}).status_code == 403
-    assert client.post(MODE.format(code=code), json={"token": token_a, "mode": "computer"}).status_code == 400
+    # The computer stand-in starts from waiting only: from pass-along it is a 409.
+    assert client.post(MODE.format(code=code), json={"token": token_a, "mode": "computer"}).status_code == 409
+    assert client.post(MODE.format(code=code), json={"token": token_a, "mode": "online"}).status_code == 400
     none = client.post(ANSWER.format(code=code), json={"token": token_a, "accept": True})
     assert (none.status_code, none.json()["detail"]) == (409, "No pending request")
     assert none.json()["snapshot"]["mode"] == "pass_along", "a 409 carries the latest snapshot"

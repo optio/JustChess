@@ -29,6 +29,25 @@
       </svg>
       <span class="logo-word">JustChess</span>
     </a>
+    <!-- The player's nickname lives in the header on every screen; hidden until the player loads. -->
+    <div class="topbar-player" data-testid="topbar-player" hidden>
+      <form class="player-name-form" aria-label="Your nickname" aria-busy="true">
+        <div class="nickname-editor" data-testid="player-editor" hidden>
+          <label class="visually-hidden" for="player-nickname">Your nickname</label>
+          <input id="player-nickname" data-testid="player-nickname" maxlength="24" autocomplete="nickname" placeholder="Nickname" aria-describedby="player-name-message">
+          <button class="footer-icon nickname-save" type="submit" data-testid="player-save" aria-label="Save nickname" title="Save nickname" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M8 3v5h7V3"/><path d="M7 21v-7h10v7"/></svg>
+          </button>
+        </div>
+        <div class="nickname-display" data-testid="player-display" hidden>
+          <span class="nickname-text" data-testid="player-name"></span>
+          <button class="footer-icon" type="button" data-testid="player-edit" aria-label="Edit nickname" title="Edit nickname">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>
+          </button>
+        </div>
+      </form>
+      <p id="player-name-message" class="player-name-message" data-testid="player-name-message" role="status"></p>
+    </div>
     <div class="topbar-room" id="room-bar" hidden>
       <span class="room-code t-code" id="room-code" data-testid="room-code"></span>
       <button class="btn btn-primary" id="share" type="button" data-testid="share">Share</button>
@@ -62,24 +81,9 @@
     <noscript><p>JustChess needs JavaScript to play.</p></noscript>
   </main>
   <div id="announcer" class="visually-hidden" role="status" aria-live="polite" data-testid="announcer"></div>
-  <p class="player-loading" data-testid="player-loading" role="status" aria-live="polite">Loading your player…</p>
+  <p class="player-loading" data-testid="player-loading" role="status" aria-live="polite">Loading JustChess…</p>
   <footer id="player-footer" class="player-footer" data-testid="player-footer" aria-label="Your player" hidden>
     <div class="player-footer-inner">
-      <form class="player-name-form" aria-label="Your nickname" aria-busy="true">
-        <div class="nickname-editor" data-testid="player-editor" hidden>
-          <label class="visually-hidden" for="player-nickname">Your nickname</label>
-          <input id="player-nickname" data-testid="player-nickname" maxlength="24" autocomplete="nickname" placeholder="Your nickname" aria-describedby="player-message">
-          <button class="footer-icon nickname-save" type="submit" data-testid="player-save" aria-label="Save nickname" title="Save nickname">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
-          </button>
-        </div>
-        <div class="nickname-display" data-testid="player-display" hidden>
-          <span data-testid="player-name"></span>
-          <button class="footer-icon" type="button" data-testid="player-edit" aria-label="Edit nickname" title="Edit nickname">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>
-          </button>
-        </div>
-      </form>
       <div class="player-links" role="group" aria-label="Your private player link">
         <button class="footer-action" type="button" data-testid="player-copy" disabled>Copy player link</button>
         <button class="footer-action" type="button" data-testid="player-regenerate" title="Replace old saved player links" disabled>New link</button>
