@@ -62,7 +62,7 @@ Create the PostgreSQL database and grant its role access to an empty schema with
 
 ### Vercel Hobby
 
-`vercel.json` selects the FastAPI preset, installs runtime dependencies with `uv sync --frozen --no-dev`, bundles the templates/static/training content and sets a 300-second function limit. `.vercelignore` excludes secrets, databases, downloaded engines, tests and framework records. Set `DATABASE_URL` to a **direct, non-pooled** Neon URL, preserve `JUSTCHESS_VAPID_PRIVATE_KEY`, and set a random `CRON_SECRET` privately in the selected Vercel environments. Vercel startup ignores local `.env` and downloads the checksum-verified Stockfish build to `/tmp/justchess-engines/` when absent; preparation completes before serving requests. Cold download failures leave computer features unavailable with the existing useful error.
+`vercel.json` selects the FastAPI preset, installs runtime dependencies with `uv sync --frozen --no-dev`, and runs `prepare_vercel_stockfish.py` during the Vercel build. The build downloads Stockfish 19 for the Vercel function's default `x86_64` architecture, verifies the pinned SHA-256 checksum, and bundles the executable into the function alongside templates/static/training content. It also includes Stockfish's GPLv3 license and a pointer to the corresponding source release. At runtime the app uses this read-only bundled binary, so startup does not fetch Stockfish. A checksum-verified `/tmp` download remains as a fallback if the matching bundled binary is absent. `.vercelignore` excludes secrets, databases, locally downloaded engines, tests and framework records; `.vercel-stockfish/` is generated during deployment and is git-ignored. Set `DATABASE_URL` to a **direct, non-pooled** Neon URL, preserve `JUSTCHESS_VAPID_PRIVATE_KEY`, and set a random `CRON_SECRET` privately in the selected Vercel environments. Cold download failures in the fallback leave computer features unavailable with the existing useful error.
 
 [Vercel supports FastAPI WebSockets with Fluid Compute on all plans](https://vercel.com/docs/functions/websockets). Each open socket owns one PostgreSQL LISTEN connection; budget Neon connection capacity accordingly. Room changes emit only room identifiers through transactional NOTIFY. Listener reconnection and browser reconnection resync authoritative state; function duration limits can disconnect sockets. Shared presence expires after 10 seconds and suppresses push only while visible and fresh within 6 seconds. PostgreSQL rate caps use shared fixed windows; SQLite retains its local sliding windows.
 
@@ -70,7 +70,7 @@ On Vercel, a computer reply finishes within its triggering request, with a 30-se
 
 Game actions durably enqueue the intended recipient's push, then attempt delivery within the ASGI invocation, including when that recipient has no open tab. Pending jobs survive interruption; endpoint acknowledgements avoid replaying known successes, leases prevent concurrent ownership, obsolete turn alerts coalesce, and retries recheck the current game/recipient. Jobs attempt at most five times; failures remain recorded. Initial sends have a 25-second budget, a 3-second endpoint timeout and 300-second push TTL. A crash during remote acceptance can cause an at-least-once resend; stable tags replace the same alert on devices.
 
-The protected `/api/cron/maintenance` endpoint accepts only `Authorization: Bearer <CRON_SECRET>`. A daily 03:17 UTC cron drains at most two global jobs with a 25-second budget and deletes at most 20 idle rooms. Daily execution is an eventual safety net: it cannot guarantee prompt retry while nobody uses the app. Turn alerts older than five minutes and obsolete game events are skipped, rather than replaying a backlog; game-end alerts expire after one hour. Vercel branch `production` is reserved for future Production releases; a Preview must be smoke-tested before release. Preview and Production sharing a database must never be used for destructive tests.
+The protected `/api/cron/maintenance` endpoint accepts only `Authorization: Bearer <CRON_SECRET>`. A daily 03:17 UTC cron drains at most two global jobs with a 25-second budget and deletes at most 20 idle rooms. Daily execution is an eventual safety net: it cannot guarantee prompt retry while nobody uses the app. Turn alerts older than five minutes and obsolete game events are skipped, rather than replaying a backlog; game-end alerts expire after one hour. Vercel Production deploys from `main`; a Preview must be smoke-tested before release. Preview and Production sharing a database must never be used for destructive tests.
 
 ### Save your player and nickname
 
@@ -266,16 +266,16 @@ The routes: `GET /api/lessons` lists the lessons (id, name, kind, aliases, eco, 
 
 ## Stockfish
 
-When the app starts it makes the [Stockfish](https://stockfishchess.org/) chess engine available in the background, so the app serves requests straight away. It looks for an engine in this order:
+The app makes the [Stockfish](https://stockfishchess.org/) chess engine available during startup. Outside Vercel, it looks for an engine in this order:
 
 1. `STOCKFISH_PATH`, when it points to an executable file;
 2. `stockfish` on the system `PATH`;
 3. a copy this app installed earlier under `.engines/stockfish-sf_19/`;
 4. otherwise it downloads the pinned official `sf_19` build for Linux (aarch64 or x86-64) or macOS from GitHub, checks its SHA-256 checksum before extracting anything, and installs only the engine binary into `.engines/stockfish-sf_19/`.
 
-Set `STOCKFISH_AUTO_INSTALL=0` to turn off the download. If no engine can be found or installed, the failure is logged and the app starts normally without one. Once a binary is found the app opens one Stockfish process for [Play the computer](#play-the-computer), and stops it when the app stops. `GET /api/engine` reports whether the computer is available (the process is running), where the binary came from (`env`, `path`, `cached` or `downloaded`), its version, and the `reason` when it is unavailable. The binary's path is never exposed. The `.engines/` folder is ignored by git.
+On Vercel, startup first uses the pinned binary bundled at build time; if it is missing, the normal checksum-verified download to `/tmp` remains available as fallback. Set `STOCKFISH_AUTO_INSTALL=0` to turn off runtime downloads. If no engine can be found or installed, the failure is logged and the app starts normally without one. Once a binary is found the app opens one Stockfish process for [Play the computer](#play-the-computer), and stops it when the app stops. `GET /api/engine` reports whether the computer is available (the process is running), where the binary came from (`env`, `path`, `cached` or `downloaded`), its version, and the `reason` when it is unavailable. The binary's path is never exposed. The `.engines/` and generated `.vercel-stockfish/` folders are ignored by git.
 
-Stockfish is licensed under the GPLv3. Downloading it on the server at runtime does not redistribute it, but a published image or package that includes the binary takes on the GPLv3 obligations (shipping the licence and offering the corresponding source).
+Stockfish is licensed under the GPLv3. The Vercel function bundle includes the license and a source pointer for the exact `sf_19` release. See the [Stockfish source and license guidance](https://github.com/official-stockfish/Stockfish#terms-of-use) for the corresponding-source terms.
 
 ## Design system and demo page
 
@@ -299,4 +299,4 @@ Credits. All assets are self-hosted and listed with their pinned source and sha2
 
 ## Current limitations
 
-SQLite requires one Uvicorn worker; PostgreSQL supports shared room coordination. Vercel Preview runtime verification remains a release prerequisite. Web Push for closed tabs needs VAPID keys and HTTPS beyond localhost. Lessons are curated linear lines; no opponent-branching decision tree, arbitrary-move evaluation or Monaco lesson yet. Preserve the private player bookmark before clearing browser data.
+SQLite requires one Uvicorn worker; PostgreSQL supports shared room coordination. Vercel Production deploys from `main`; Preview runtime verification remains a release prerequisite. Web Push for closed tabs needs VAPID keys and HTTPS beyond localhost. Lessons are curated linear lines; no opponent-branching decision tree, arbitrary-move evaluation or Monaco lesson yet. Preserve the private player bookmark before clearing browser data.

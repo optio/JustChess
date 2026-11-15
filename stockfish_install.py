@@ -230,6 +230,20 @@ def _install(install_dir: Path, release: Release, downloader: Downloader) -> Pat
             logger.warning("could not remove %s: %s", archive, exc)
 
 
+def install_pinned_stockfish(install_dir: Path, *, platform: str | None = None) -> Path:
+    """Download, checksum and extract the pinned release for a build artifact.
+
+    Unlike ``ensure_stockfish``, this intentionally ignores PATH and cached
+    installations so deployment builds package the release selected by this
+    source tree's pinned version and checksum.
+    """
+    key = platform if platform is not None else platform_key()
+    release = RELEASES.get(key) if key else None
+    if release is None:
+        raise InstallError(f"no pinned Stockfish build for platform {key!r}")
+    return _install(Path(install_dir), release, download)
+
+
 def ensure_stockfish(
     install_dir: Path,
     env: Mapping[str, str] | None = None,

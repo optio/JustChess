@@ -229,6 +229,7 @@ aidlc/.aidlc-subagent-inflight
 
 # Stockfish binary auto-installed at boot (GPLv3, not committed)
 .engines/
+.vercel-stockfish/
 
 # Downloaded source data (the Lichess puzzle dump, used once by scripts/curate_puzzles.py)
 /data/
